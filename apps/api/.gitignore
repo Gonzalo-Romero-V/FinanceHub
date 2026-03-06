@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+.env
+.env.local
+.env.remote
+# Mantener .env.example en el repositorio
+!.env.example
+

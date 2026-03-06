@@ -1,0 +1,496 @@
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766583604736,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583604737,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583604737,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766583604739,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766583604738,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583604741,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583604742,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766583604743,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766583604745,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583604746,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583604746,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766583604747,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766583604747,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583604747,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583604748,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766583604748,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583605348,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583605348,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583605389,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583605390,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583605391,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583605391,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583605392,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583605392,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583605392,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583605399,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766583686841,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583686842,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583686842,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766583686843,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766583686842,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583686843,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583686843,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766583686844,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766583686845,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583686845,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583686846,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766583686846,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766583686846,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583686846,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583686847,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766583686847,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583686897,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583686897,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583686906,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583686915,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583686915,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583686918,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583686923,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583686924,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583686929,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583686930,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583686930,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583686936,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766583720777,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583720778,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583720778,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766583720783,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583720850,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583720850,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583720854,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766583833477,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766583833478,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766583833478,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766583833484,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766583833870,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766583833871,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766583833875,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584457151,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584457153,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584457152,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584457171,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584457543,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584457544,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584457550,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584460130,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584460130,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584460131,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584460132,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584460134,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584460133,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584460135,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584460136,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584460143,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584460144,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584460144,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584460145,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584460147,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584460148,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584460148,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584460149,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584460203,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584460205,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584460205,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584460206,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584460230,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584460231,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584460244,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584460246,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584460260,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584460273,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584518954,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584518954,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584518954,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584518961,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584519298,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584519298,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584519304,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584521255,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584521255,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584521255,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584521256,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584521256,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584521257,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584521257,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584521257,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584521304,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584521304,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584521305,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584521306,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584521335,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584530073,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584530074,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584530074,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584530074,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584530075,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584530075,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584530075,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584530076,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584530076,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584530076,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584530077,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584530077,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584530077,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584530077,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584530078,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584530078,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584530139,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584530140,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584530150,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584530152,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584530153,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584530154,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584530155,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584530160,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584530160,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584530161,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584530168,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584545907,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584545907,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584545908,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584545910,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584545931,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584545932,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584545938,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584561517,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584561517,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584561518,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584561518,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584561518,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584561518,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584561519,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584561519,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584561520,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584561520,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584561520,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584561521,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584561521,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584561521,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584561521,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584561522,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584561588,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584561588,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584561598,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584561602,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584561602,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584561607,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584561607,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584561609,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584561616,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584561617,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584561626,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584561619,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584602831,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584602833,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584602838,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584602832,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584602928,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584602928,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584602934,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584689283,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584689284,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584689284,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584689289,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584689657,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584689658,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584689663,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584709638,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584709639,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584709639,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584709642,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584709662,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584709662,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584709669,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584813125,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584813125,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584813125,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584813129,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584813485,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584813485,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584813490,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584816749,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584816750,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584816750,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584816750,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584816751,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584816751,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584816751,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584816752,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584816811,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584816812,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584816812,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584816813,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584816841,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584824203,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584824202,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584824203,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584824203,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584824204,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584824204,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584824204,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584824205,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766584824206,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584824207,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584824207,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766584824207,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766584824208,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584824208,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584824208,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766584824209,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584824274,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584824274,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584824285,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584824290,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584824290,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584824291,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584824291,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584824292,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584824292,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584824301,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766584841668,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766584841675,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766584841669,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766584841669,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766584841696,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766584841697,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766584841704,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766585652157,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585652158,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585652158,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766585652175,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585653602,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766585654455,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585654456,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585654457,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766585654458,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766585654458,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585654458,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585654459,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766585654466,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585654467,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585654467,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766585654468,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766585654468,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766585654459,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585654468,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585654468,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766585654469,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585654806,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766585654806,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":false},"timestamp":1766585654837,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585656813,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766585656813,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585656813,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766585656813,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585656846,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766585656847,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766585661829,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585661830,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585661830,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766585661831,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766585661832,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766585661832,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766585661832,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766585661833,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585664168,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766585664168,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":false},"timestamp":1766585664172,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766585664183,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766585664184,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766594257543,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594257544,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594257557,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594257544,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594259996,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594259996,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594259997,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594259998,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594259997,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594259998,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594259998,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594259998,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766594260175,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594260176,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":false},"timestamp":1766594260190,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":false},"timestamp":1766594262335,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594262336,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594274993,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594274993,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594274994,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594274994,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594274995,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594274995,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594274995,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594274996,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594275635,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594275635,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594275643,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594275645,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594275645,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594275650,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594290011,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594290011,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594290011,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594290012,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594290012,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594290012,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594290013,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594290013,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594290014,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594290015,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594290015,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594290016,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594290015,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594290016,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594290016,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594290016,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594290128,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594290129,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594290137,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594290161,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594290161,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594290167,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594290170,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594290170,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594290175,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594290178,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594290178,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594290182,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594306726,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594306727,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594306728,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594306726,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594306727,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594306728,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594306728,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594306729,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594306730,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594306730,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594306731,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594306731,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594306731,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594306732,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594306732,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594306733,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594306816,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594306817,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594306824,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594306844,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594306844,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594306850,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594306864,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594306865,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594306870,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594306877,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594306878,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594306883,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766594479342,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594479343,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766594479353,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594479342,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594479698,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594479699,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594479703,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594493004,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594493004,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594493004,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594493005,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594493005,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594493006,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594493006,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594493007,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594493007,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594493008,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594493008,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594493009,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594493009,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594493009,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594493010,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594493010,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594493083,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594493084,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594493089,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594493097,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594493098,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594493099,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594493099,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594493105,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594493106,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594493107,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594493115,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594514719,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594514720,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594514720,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594514720,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594514721,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594514721,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594514721,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594514721,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594514722,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594514722,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594514722,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594514723,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594514723,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594514723,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594514723,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594514724,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594514778,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594514779,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594514792,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594514789,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594514793,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594514797,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594514798,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594514799,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594514799,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594514801,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594514806,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766594620314,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594620315,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594620315,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766594620323,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594620676,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594620676,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594620681,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594647362,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594647363,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594647363,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594647364,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594647363,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594647364,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594647364,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594647365,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:55","message":"Hook useEffect executed (initial load)","data":{},"timestamp":1766594647366,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594647366,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594647367,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":false,"loading":true},"timestamp":1766594647367,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:26","message":"Dashboard useEffect executed","data":{"hasTotales":false,"loading":true},"timestamp":1766594647368,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594647368,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594647368,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:30","message":"Refetch called from dashboard useEffect","data":{},"timestamp":1766594647368,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594647427,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594647427,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594647438,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594647441,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594647441,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594647443,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594647444,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594647449,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594647449,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594647456,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594647451,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766594920020,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766594920021,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766594920029,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766594920021,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766594920387,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766594920387,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766594920392,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"dashboard/page.tsx:37","message":"Visibility change - refetch called","data":{},"timestamp":1766599831187,"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}
+{"location":"useTotalesFinancieros.ts:23","message":"fetchTotales called","data":{},"timestamp":1766599831188,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:27","message":"Before API call","data":{"loading":true},"timestamp":1766599831188,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":true},"timestamp":1766599831200,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"useTotalesFinancieros.ts:35","message":"API call completed","data":{"success":true},"timestamp":1766599831581,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"useTotalesFinancieros.ts:49","message":"Loading set to false","data":{},"timestamp":1766599831582,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"dashboard/page.tsx:19","message":"Dashboard render","data":{"hasTotales":true,"loading":false},"timestamp":1766599831591,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}

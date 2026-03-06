@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finance Hub
 
-## Getting Started
+Sistema de gestión financiera personal para el control de cuentas, movimientos y conceptos financieros.
 
-First, run the development server:
+## Descripción
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Finance Hub es una aplicación web full-stack diseñada para gestionar finanzas personales. Permite registrar cuentas (activos y pasivos), crear movimientos financieros (ingresos, egresos y transferencias), y organizar conceptos por tipo de movimiento.
+
+## Intención y Propósito
+
+El proyecto tiene como objetivo proporcionar una herramienta simple pero completa para:
+- Gestionar múltiples cuentas financieras (activos y pasivos)
+- Registrar movimientos financieros con conceptos categorizados
+- Realizar transferencias entre cuentas
+- Visualizar totales financieros y balances
+
+## Organización del Proyecto
+
+Este es un monorepo que contiene:
+
+- **`apps/api/`** - Backend REST API (Express + TypeScript + PostgreSQL)
+- **`apps/web/`** - Frontend web (Next.js + React + TypeScript)
+- **`docs/`** - Documentación del proyecto
+- **`FinanceHub.sql`** - Esquema de base de datos (PostgreSQL)
+
+## Requisitos Previos
+
+- **Node.js** (v20 o superior)
+- **PostgreSQL** (v12 o superior)
+- **npm** o gestor de paquetes compatible
+
+## Estructura de Directorios
+
+```
+finance-hub/
+├── apps/
+│   ├── api/          # Backend REST API
+│   │   ├── src/
+│   │   │   ├── controllers/
+│   │   │   ├── services/
+│   │   │   ├── repositories/
+│   │   │   ├── routes/
+│   │   │   └── database/
+│   │   └── README.md
+│   └── web/          # Frontend Next.js
+│       ├── app/
+│       ├── components/
+│       ├── lib/
+│       └── README.md
+├── docs/
+│   └── DATABASE.md   # Documentación de base de datos
+├── FinanceHub.sql    # Esquema SQL
+└── README.md         # Este archivo
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Inicio Rápido
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Configurar Base de Datos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Crear la base de datos PostgreSQL y ejecutar el esquema:
 
-## Learn More
+```bash
+psql -U postgres -d finance_hub -f FinanceHub.sql
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Configurar Backend
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd apps/api
+npm install
+# Configurar variables de entorno (ver apps/api/README.env.md)
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+El backend estará disponible en `http://localhost:3001`
 
-## Deploy on Vercel
+### 3. Configurar Frontend
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cd apps/web
+npm install
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+El frontend estará disponible en `http://localhost:3000`
+
+## Documentación
+
+- **[Backend API](apps/api/README.md)** - Documentación completa del backend
+- **[Frontend Web](apps/web/README.md)** - Documentación del frontend
+- **[Base de Datos](docs/DATABASE.md)** - Esquema y convenciones de base de datos
+- **[Variables de Entorno](apps/api/README.env.md)** - Configuración de entorno
+
+## Tecnologías Principales
+
+- **Backend**: Express.js, TypeScript, PostgreSQL (pg), Swagger
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS 4
+- **Base de Datos**: PostgreSQL
+
+## Desarrollo
+
+Cada aplicación tiene su propio `package.json` y puede ejecutarse independientemente. Consulta los README específicos para más detalles sobre cada componente.
