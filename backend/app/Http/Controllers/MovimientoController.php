@@ -11,7 +11,11 @@ class MovimientoController
 
     public function index()
     {
-        //MOSTRAR POR TEMPORALIDAD
+        $data = MovimientoModel::all();
+        return response()->json([
+            'mensaje' => 'Listado de Movimientos',
+            'data' => $data
+        ], 200);
     }
 
 public function store(Request $request)
