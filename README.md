@@ -91,6 +91,3 @@ python main.py
 
 ---
 
-## Documentación y Contexto AI
-
-Si buscas expandir la plataforma, conocer sobre la arquitectura o empaparte del contexto y la toma de decisiones, por favor visita y lee los documentos de la carpeta `ia_context/`. En ellos encontrarás el mapeo lógico de interacción entre los 3 servicios y el pipeline detallado del flujo `NL2SQL`.
