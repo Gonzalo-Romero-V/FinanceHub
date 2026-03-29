@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { Send, LayoutDashboard, Loader2, Activity } from "lucide-react";
 import { WidgetRenderer, AnalysisResponse } from "@/components/charts";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function DashboardPage() {
   const [prompt, setPrompt] = useState("");
@@ -34,9 +37,9 @@ export default function DashboardPage() {
       if (!resp.ok) {
         throw new Error("No se pudo conectar con el servicio de análisis de IA.");
       }
-      
+
       const res: AnalysisResponse = await resp.json();
-      
+
       const applyMode = modeConfig === "auto" ? res.mode : modeConfig;
 
       if (!analysis || applyMode === "replace") {
@@ -52,10 +55,10 @@ export default function DashboardPage() {
           const updateData = res.widgets.find((newW) => newW.id === w.id);
           return updateData ? { ...w, ...updateData } : w;
         });
-        
+
         const existingIds = new Set(analysis.widgets.map((w) => w.id));
         const purelyNewWidgets = res.widgets.filter((w) => !existingIds.has(w.id));
-        
+
         setAnalysis({
           ...analysis,
           intent: res.intent || analysis.intent,
@@ -71,31 +74,35 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] bg-zinc-50 dark:bg-black p-4 gap-6">
-      
-      <aside className="w-full lg:w-80 xl:w-96 flex flex-col gap-5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] p-6 shadow-sm h-fit lg:sticky lg:top-6 shrink-0">
-        <h2 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-3">
-          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-500/20">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] bg-background p-4 gap-6">
+
+      <aside className="w-full lg:w-80 xl:w-96 flex flex-col gap-5 bg-card border border-border rounded-[2rem] p-6 shadow-sm h-fit lg:sticky lg:top-6 shrink-0">
+        <h2 className="h3 text-foreground flex items-center gap-3">
+          <div className="p-2 bg-brand-1 rounded-lg text-white shadow-md shadow-brand-1/20">
             <LayoutDashboard size={20} />
           </div>
           AI Builder
         </h2>
-        
+
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Modo de Inserción</label>
-          <select 
-            value={modeConfig} 
-            onChange={(e) => setModeConfig(e.target.value as any)}
-            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow"
+          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest">Modo de Inserción</Label>
+          <Select
+            value={modeConfig}
+            onValueChange={(value) => setModeConfig(value as any)}
           >
-            <option value="auto">Auto (Por Intención AI)</option>
-            <option value="replace">Reemplazar Todo</option>
-            <option value="append">Mantener y Añadir</option>
-          </select>
+            <SelectTrigger className="small w-full bg-muted/50 dark:bg-zinc-900 border border-border text-foreground rounded-xl p-3 h-auto focus:ring-2 focus:ring-brand-1/50 transition-shadow">
+              <SelectValue placeholder="Seleccionar modo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto (Por Intención AI)</SelectItem>
+              <SelectItem value="replace">Reemplazar Todo</SelectItem>
+              <SelectItem value="append">Mantener y Añadir</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="relative group">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Prompt</label>
+          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Prompt</Label>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -107,53 +114,53 @@ export default function DashboardPage() {
               }
             }}
             placeholder="Ej: Muestra el crecimiento mensual de usuarios en una gráfica de líneas..."
-            className="w-full bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 border border-zinc-200 dark:border-zinc-800 resize-none h-32 transition-all disabled:opacity-50"
+            className="small w-full bg-muted/50 dark:bg-zinc-900 text-foreground rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-brand-1/50 border border-border resize-none h-32 transition-all disabled:opacity-50"
           />
         </div>
 
         {error && (
-          <div className="text-red-600 dark:text-red-400 text-sm font-medium p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl">
+          <div className="small text-destructive p-3 bg-destructive/10 border border-destructive/20 rounded-xl font-medium">
             {error}
           </div>
         )}
 
-        <button
+        <Button
           onClick={handleGenerate}
           disabled={isLoading || !prompt.trim()}
-          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white p-3.5 rounded-xl font-bold transition-all disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-95"
+          className="w-full h-12 bg-brand-1 hover:bg-brand-1/90 text-white rounded-xl font-bold shadow-lg shadow-brand-1/20 transition-all active:scale-95"
         >
           {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
           {isLoading ? "Analizando & Dibujando..." : "Generar Insights"}
-        </button>
+        </Button>
       </aside>
 
       <main className="flex-1 w-full overflow-hidden">
         {analysis?.widgets?.length ? (
-           <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6">
             {analysis.intent && (
-               <div className="bg-white dark:bg-zinc-950 px-6 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center justify-between gap-4">
-                 <div>
-                   <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Intención Identificada</p>
-                   <p className="text-zinc-900 dark:text-white font-medium">{analysis.intent}</p>
-                 </div>
-                 <div className="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
-                    {modeConfig === "auto" ? analysis.mode : modeConfig}
-                 </div>
-               </div>
+              <div className="bg-card px-6 py-4 rounded-xl border border-border shadow-sm flex items-center justify-between gap-4">
+                <div>
+                  <p className="xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Intención Identificada</p>
+                  <p className="text-foreground font-medium">{analysis.intent}</p>
+                </div>
+                <div className="xs px-3 py-1 rounded-full bg-brand-1/10 text-brand-1 font-bold uppercase tracking-wider">
+                  {modeConfig === "auto" ? analysis.mode : modeConfig}
+                </div>
+              </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-min">
               {analysis.widgets.map((widget) => (
                 <WidgetRenderer key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
               ))}
             </div>
-           </div>
+          </div>
         ) : (
-          <div className="h-full min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-zinc-50 dark:bg-zinc-950/50 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2rem]">
-            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6">
-              <Activity size={32} className="text-zinc-400 dark:text-zinc-600" />
+          <div className="h-full min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-muted/10 border-2 border-dashed border-border rounded-[2rem]">
+            <div className="w-20 h-20 bg-muted/20 rounded-full flex items-center justify-center mb-6">
+              <Activity size={32} className="text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Lienzo en Blanco</h2>
-            <p className="text-zinc-500 dark:text-zinc-400 max-w-sm text-sm">
+            <h2 className="h2 text-foreground mb-2">Lienzo en Blanco</h2>
+            <p className="small text-muted-foreground max-w-sm">
               Describe los datos, gráficos o indicadores que necesitas ver, y el motor de IA los construirá en segundos.
             </p>
           </div>
