@@ -11,70 +11,90 @@ class CuentaController
 
 
     // CREAR       C
-    public function store(Request $request){
-               
+    public function store(Request $request)
+    {
+
         $request->validate([
             'nombre' => 'required|string|max:100',
-            'tipo_cuenta' => 'required|string',
+            'tipo_cuenta_id' => 'required|integer',
             'saldo' => 'required|numeric|min:0',
             'activa' => 'required|boolean'
         ]);
 
-        try{
-            $nuevaCuenta = CuentaModel::create($request->only(['nombre', 'tipo_cuenta', 'saldo', 'activa']));
-            return response ()->json([
-                                    'mensaje'=>'Nuevo registro agregado exitosamente con ID = '. $nuevaCuenta->id,
-                                    'data'=>$nuevaCuenta
-                                    ],
-                                    201);
-        }catch(Exception $e){
-            return response()->json([
-                                    'mensaje'=>'Hubo un problema, NO se agrego NINGUN REGISTRO'
-                                    ],
-                                    500);        
+        try {
+            $data = $request->only(['nombre', 'tipo_cuenta_id', 'saldo', 'activa']);
+            $data['user_id'] = auth()->id();
+
+            $nuevaCuenta = CuentaModel::create($data);
+            return response()->json(
+                [
+                    'mensaje' => 'Nuevo registro agregado exitosamente con ID = ' . $nuevaCuenta->id,
+                    'data' => $nuevaCuenta
+                ],
+                201
+            );
+        } catch (Exception $e) {
+            return response()->json(
+                [
+                    'mensaje' => 'Hubo un problema, NO se agrego NINGUN REGISTRO'
+                ],
+                500
+            );
         }
     }
-    
+
     // LISTAR      R 
-    public function index(){
-        $indexCuentas = CuentaModel::all();
-        return response()->json([
-                                'mensaje'=>'Listado de Cuentas',
-                                'data'=>$indexCuentas
-                                ],
-                                200);
+    public function index()
+    {
+        $indexCuentas = CuentaModel::where('user_id', auth()->id())->get();
+        return response()->json(
+            [
+                'mensaje' => 'Listado de Cuentas',
+                'data' => $indexCuentas
+            ],
+            200
+        );
     }
-    
+
 
     // BUSCAR      R
-    public function show($id){
-        $data = CuentaModel::find($id);
-        if($data !== null){
-            return response()->json([
-                                    'mensaje'=>'El Registro con ID = '.$id.' fue encontrado',
-                                    'data'=>$data
-                                    ],
-                                    200);    
-        }else{
-            return response()->json([
-                                    'mensaje'=>'El Registro con ID = '.$id.' NO fue encontrado'
-                                    ],
-                                    404);    
+    public function show($id)
+    {
+        $data = CuentaModel::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if ($data !== null) {
+            return response()->json(
+                [
+                    'mensaje' => 'El Registro con ID = ' . $id . ' fue encontrado',
+                    'data' => $data
+                ],
+                200
+            );
+        } else {
+            return response()->json(
+                [
+                    'mensaje' => 'El Registro con ID = ' . $id . ' NO fue encontrado'
+                ],
+                404
+            );
         }
 
     }
 
     // EDITAR      U
-    public function update(Request $request, $id ){
+    public function update(Request $request, $id)
+    {
 
         $request->validate([
             'nombre' => 'sometimes|string|max:100',
-            'tipo_cuenta' => 'sometimes|string',
+            'tipo_cuenta_id' => 'sometimes|integer',
             'saldo' => 'sometimes|numeric|min:0',
             'activa' => 'sometimes|boolean'
         ]);
 
-        $datos = $request->only(['nombre','tipo_cuenta','saldo','activa']);
+        $datos = $request->only(['nombre', 'tipo_cuenta_id', 'saldo', 'activa']);
 
         if (empty($datos)) {
             return response()->json([
@@ -82,73 +102,95 @@ class CuentaController
             ], 400);
         }
 
-        $row = CuentaModel::find($id);
+        $row = CuentaModel::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
 
-        if ($row !== null){
-            try{
+        if ($row !== null) {
+            try {
                 $row->update($datos);
-                return response()->json([
-                                        'mensaje'=>'El Registro con ID = '.$id.' fue actualizado ',
-                                        'data'=>$row
-                                        ],
-                                        200);
-            }catch(Exception $e){
-                return response()->json([
-                                        'mensaje'=>'Hubo un problema, el registro con ID ='. $id . ' NO fue actualizado.'
-                                        ],
-                                        500);                        
+                return response()->json(
+                    [
+                        'mensaje' => 'El Registro con ID = ' . $id . ' fue actualizado ',
+                        'data' => $row
+                    ],
+                    200
+                );
+            } catch (Exception $e) {
+                return response()->json(
+                    [
+                        'mensaje' => 'Hubo un problema, el registro con ID =' . $id . ' NO fue actualizado.'
+                    ],
+                    500
+                );
             }
-        }else{
-            return response()->json([
-                                    'mensaje'=>'El Registro con ID = '.$id.' NO fue encontrado',
-                                    ],
-                                    404);
+        } else {
+            return response()->json(
+                [
+                    'mensaje' => 'El Registro con ID = ' . $id . ' NO fue encontrado',
+                ],
+                404
+            );
         }
     }
 
-    public function destroy($id){
 
-    $cuenta = CuentaModel::findOrFail($id);
+    // DESACTIVAR (soft)
+    public function deactivate($id)
+    {
 
-    if (!$cuenta->activa) {
+        $cuenta = CuentaModel::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        if (!$cuenta->activa) {
+            return response()->json([
+                'mensaje' => 'La cuenta ya se encuentra desactivada'
+            ], 200);
+        }
+
+        $cuenta->activa = false;
+        $cuenta->save();
+
         return response()->json([
-            'mensaje' => 'La cuenta ya se encuentra desactivada'
+            'mensaje' => 'La cuenta fue desactivada correctamente'
         ], 200);
-    }
 
-    $cuenta->activa = false;
-    $cuenta->save();
-
-    return response()->json([
-        'mensaje' => 'La cuenta fue desactivada correctamente'
-    ], 200);
-    
     }
 
 
+    // ELIMINAR (hard)
+    public function destroy($id)
+    {
 
+        $row = CuentaModel::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
 
-   /*  // ELMIMINAR   D
-    public function destroy($id){
-        $row = CuentaModel::find($id);
-        if ($row !== null){
-            try{
+        if ($row !== null) {
+            try {
                 $row->delete();
-                return response()->json([
-                                        'mensaje'=>'El registro con ID = '. $id .' fue eliminado de forma exitosa'
-                                        ],
-                                        200);
-            }catch(Exception $e){
-                return response()->json([
-                                        'mensaje'=>'Hubo un problema, el registro con ID ='. $id . ' NO fue eliminado.'                                        ],
-                                        500);
+                return response()->json(
+                    [
+                        'mensaje' => 'El registro con ID = ' . $id . ' fue eliminado de forma exitosa'
+                    ],
+                    200
+                );
+            } catch (Exception $e) {
+                return response()->json(
+                    [
+                        'mensaje' => 'Hubo un problema, el registro con ID =' . $id . ' NO fue eliminado.'
+                    ],
+                    500
+                );
             }
-        }else{
-            return response()->json([
-                                    'mensaje'=>'El registro con ID = '. $id. ' NO fue encontrado'
-                                    ],
-                                    404
-                                    );
+        } else {
+            return response()->json(
+                [
+                    'mensaje' => 'El registro con ID = ' . $id . ' NO fue encontrado'
+                ],
+                404
+            );
         }
-    } */
+    }
 }
