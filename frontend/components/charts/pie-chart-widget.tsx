@@ -4,7 +4,14 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 import { Trash2 } from "lucide-react";
 import { Widget } from "./types";
 
-const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+const DEFAULT_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-8)"
+];
 
 interface PieChartWidgetProps {
   widget: Widget;
@@ -23,10 +30,19 @@ export function PieChartWidget({ widget, onRemove, colors = DEFAULT_COLORS }: Pi
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={widget.data} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={2} dataKey={widget.valueKey!} nameKey={widget.categoryKey!}>
-              {widget.data.map((_, index) => <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />)}
+              {widget.data.map((_, index) => <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke="rgba(0,0,0,0.1)" />)}
             </Pie>
-            <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #27272a", backgroundColor: "#18181b", color: "#fff" }} itemStyle={{ color: "#fff" }} />
-            <Legend wrapperStyle={{ fontSize: "12px" }} />
+            <Tooltip 
+              contentStyle={{ 
+                borderRadius: "12px", 
+                border: "1px solid var(--border)", 
+                backgroundColor: "var(--popover)", 
+                color: "var(--popover-foreground)",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" 
+              }} 
+              itemStyle={{ color: "var(--popover-foreground)" }} 
+            />
+            <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }} />
           </PieChart>
         </ResponsiveContainer>
       </div>

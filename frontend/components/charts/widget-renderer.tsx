@@ -49,6 +49,29 @@ export function normalizeWidget(w: Widget): Widget {
   return normalized;
 }
 
+function getSemanticColor(title: string, index: number = 0): string {
+  const t = title.toLowerCase();
+  
+  // Métricas Positivas (Green)
+  if (t.includes("ingreso") || t.includes("growth") || t.includes("crecimiento") || t.includes("roi") || t.includes("ganancia") || t.includes("profit") || t.includes("retorno")) {
+    return "var(--chart-3)";
+  }
+  
+  // Métricas de Advertencia/Gasto (Red)
+  if (t.includes("gasto") || t.includes("expense") || t.includes("churn") || t.includes("abandono") || t.includes("deuda") || t.includes("pérdida") || t.includes("loss")) {
+    return "var(--chart-7)";
+  }
+  
+  // Métricas Principales (Purple/Blue)
+  if (t.includes("usuario") || t.includes("user") || t.includes("balance") || t.includes("total")) {
+    return index % 2 === 0 ? "var(--chart-1)" : "var(--chart-2)";
+  }
+
+  // Por defecto, rotar entre colores secundarios
+  const defaults = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)"];
+  return defaults[index % defaults.length];
+}
+
 export function WidgetRenderer({ widget, onRemove }: WidgetRendererProps) {
   if (!widget) return null;
 
@@ -66,14 +89,15 @@ export function WidgetRenderer({ widget, onRemove }: WidgetRendererProps) {
   }
 
   const normalized = normalizeWidget(widget);
+  const semanticColor = getSemanticColor(normalized.title);
 
   try {
     switch (normalized.type) {
-      case "bar": return <BarChartWidget widget={normalized} onRemove={onRemove} />;
-      case "line": return <LineChartWidget widget={normalized} onRemove={onRemove} />;
+      case "bar": return <BarChartWidget widget={normalized} onRemove={onRemove} fillColor={semanticColor} />;
+      case "line": return <LineChartWidget widget={normalized} onRemove={onRemove} strokeColor={semanticColor} />;
       case "pie": return <PieChartWidget widget={normalized} onRemove={onRemove} />;
       case "table": return <TableWidget widget={normalized} onRemove={onRemove} />;
-      case "kpi": return <KPIWidget widget={normalized} onRemove={onRemove} />;
+      case "kpi": return <KPIWidget widget={normalized} onRemove={onRemove} color={semanticColor} />;
       default: return null;
     }
   } catch (error) {

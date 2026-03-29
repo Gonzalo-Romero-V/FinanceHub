@@ -18,11 +18,17 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
+
+  /* Paleta de gráficos ampliada a 8 colores */
   --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -46,19 +52,32 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-   /* Paleta de tipografía semántica */
-  --font-h1: 2.5rem;           /* text-4xl */
-  --font-h1-weight: 800;       /* font-extrabold */
-  --font-h2: 1.75rem;          /* text-2xl */
-  --font-h2-weight: 700;       /* font-bold */
-  --font-h3: 1.25rem;          /* text-xl */
-  --font-h3-weight: 700;       /* font-bold */
-  --font-body: 1rem;           /* text-base */
-  --font-body-weight: 400;     /* font-normal */
-  --font-small: 0.875rem;      /* text-sm */
-  --font-small-weight: 500;    /* font-medium */
-  --font-xs: 0.75rem;          /* text-xs */
-  --font-xs-weight: 400;       /* font-normal */
+
+  /* Paleta de tipografía semántica */
+  --font-h1: 2.5rem;
+  /* text-4xl */
+  --font-h1-weight: 800;
+  /* font-extrabold */
+  --font-h2: 1.75rem;
+  /* text-2xl */
+  --font-h2-weight: 700;
+  /* font-bold */
+  --font-h3: 1.25rem;
+  /* text-xl */
+  --font-h3-weight: 700;
+  /* font-bold */
+  --font-body: 1rem;
+  /* text-base */
+  --font-body-weight: 400;
+  /* font-normal */
+  --font-small: 0.875rem;
+  /* text-sm */
+  --font-small-weight: 500;
+  /* font-medium */
+  --font-xs: 0.75rem;
+  /* text-xs */
+  --font-xs-weight: 400;
+  /* font-normal */
   --line-h1: 1.2;
   --line-h2: 1.3;
   --line-h3: 1.4;
@@ -88,11 +107,25 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* COLORES DE GRÁFICOS - LIGHT THEME (Contrastes fuertes sobre fondo blanco) */
+  --chart-1: oklch(0.55 0.22 280);
+  /* Púrpura (Anclado al brand) */
+  --chart-2: oklch(0.65 0.14 230);
+  /* Azul vibrante (Datos primarios B) */
+  --chart-3: oklch(0.70 0.15 160);
+  /* Verde Esmeralda (Finanzas/Positivo) */
+  --chart-4: oklch(0.75 0.17 60);
+  /* Dorado/Naranja (Atención/Ingresos) */
+  --chart-5: oklch(0.65 0.20 340);
+  /* Rosa Magenta (Contraste visual) */
+  --chart-6: oklch(0.80 0.13 90);
+  /* Amarillo Lima (Categorías menores) */
+  --chart-7: oklch(0.60 0.16 20);
+  /* Coral/Rojo (Gastos/Negativo) */
+  --chart-8: oklch(0.45 0.12 260);
+  /* Índigo Profundo (Datos de contexto) */
+
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -123,11 +156,25 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+
+  /* COLORES DE GRÁFICOS - DARK THEME (Mayor luminosidad para brillar en fondo oscuro) */
+  --chart-1: oklch(0.70 0.20 280);
+  /* Púrpura brillante */
+  --chart-2: oklch(0.75 0.14 230);
+  /* Azul neón suave */
+  --chart-3: oklch(0.80 0.15 160);
+  /* Menta financiero */
+  --chart-4: oklch(0.85 0.17 60);
+  /* Dorado brillante */
+  --chart-5: oklch(0.75 0.20 340);
+  /* Rosa brillante */
+  --chart-6: oklch(0.90 0.13 90);
+  /* Amarillo brillante */
+  --chart-7: oklch(0.75 0.16 20);
+  /* Coral claro */
+  --chart-8: oklch(0.60 0.12 260);
+  /* Azul/Índigo medio */
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -154,26 +201,31 @@
     font-weight: var(--font-h1-weight);
     line-height: var(--line-h1);
   }
+
   .h2 {
     font-size: var(--font-h2);
     font-weight: var(--font-h2-weight);
     line-height: var(--line-h2);
   }
+
   .h3 {
     font-size: var(--font-h3);
     font-weight: var(--font-h3-weight);
     line-height: var(--line-h3);
   }
+
   .body {
     font-size: var(--font-body);
     font-weight: var(--font-body-weight);
     line-height: var(--line-body);
   }
+
   .small {
     font-size: var(--font-small);
     font-weight: var(--font-small-weight);
     line-height: var(--line-small);
   }
+
   .xs {
     font-size: var(--font-xs);
     font-weight: var(--font-xs-weight);

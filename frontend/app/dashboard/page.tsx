@@ -28,7 +28,8 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      const resp = await fetch("http://localhost:8001/api/analyze", {
+      const baseUrl = process.env.NEXT_PUBLIC_LLM_API_BASE_URL;
+      const resp = await fetch(`${baseUrl}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
