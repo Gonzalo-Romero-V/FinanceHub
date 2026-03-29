@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import { useAuth } from "@/app/context/AuthContext";
+
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,6 +81,11 @@ export default function DashboardPage() {
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] bg-background p-4 gap-6">
 
       <aside className="w-full lg:w-80 xl:w-96 flex flex-col gap-5 bg-card border border-border rounded-[2rem] p-6 shadow-sm h-fit lg:sticky lg:top-6 shrink-0">
+        <div className="mb-2">
+          <p className="small text-muted-foreground mb-1">Bienvenido de vuelta,</p>
+          <h2 className="h3 text-foreground font-bold">{user?.name || 'Cargando...'}</h2>
+        </div>
+        <hr className="border-border" />
         <h2 className="h3 text-foreground flex items-center gap-3">
           <div className="p-2 bg-brand-1 rounded-lg text-white shadow-md shadow-brand-1/20">
             <LayoutDashboard size={20} />
