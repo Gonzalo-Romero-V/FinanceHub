@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('movimientos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->decimal('monto', 14);
-            $table->bigInteger('cuenta_origen_id');
-            $table->bigInteger('cuenta_destino_id');
+            $table->bigInteger('cuenta_origen_id')->nullable();
+            $table->bigInteger('cuenta_destino_id')->nullable();
             $table->bigInteger('concepto_id');
             $table->string('nota')->nullable();
             $table->timestamp('fecha')->nullable()->useCurrent();
