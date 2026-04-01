@@ -30,7 +30,7 @@ export function Header() {
             <Link href="/tutorial">Tutorial</Link>
           </Button>
           <Button className="hover:text-brand-1 hover:no-underline hover:-translate-y-1 transition-all duration-300" variant="link" asChild>
-            <Link href="/about">About Us</Link>
+            <Link href="/about-us">About Us</Link>
           </Button>
 
           {user ? (
