@@ -11,19 +11,21 @@ use Exception;
 class MovimientoController
 {
     // LISTAR movimientos del usuario
+
     public function index()
     {
         $userId = auth()->id();
 
-        $data = MovimientoModel::whereHas('cuentaOrigen', fn($q) => $q->where('user_id', $userId))
+        // CORRECCIÓN: Cargamos la relación anidada 'concepto.tipoMovimiento'
+        $data = MovimientoModel::with(['concepto.tipoMovimiento', 'cuentaOrigen', 'cuentaDestino'])
+            ->whereHas('cuentaOrigen', fn($q) => $q->where('user_id', $userId))
             ->orWhereHas('cuentaDestino', fn($q) => $q->where('user_id', $userId))
+            ->orderBy('fecha', 'desc') // Ordenamos por fecha descendente
             ->get();
 
-        return response()->json([
-            'mensaje' => 'Listado de Movimientos',
-            'data' => $data
-        ], 200);
+        return response()->json($data, 200);
     }
+
 
     // CREAR nuevo movimiento
     public function store(Request $request)
