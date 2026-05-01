@@ -22,7 +22,7 @@ export function CuentasTableTest() {
 
   // Obtener total de cuentas
   useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
     fetch(`${baseUrl}/cuentas`)
       .then(res => res.json())
       .then(json => {
@@ -35,7 +35,7 @@ export function CuentasTableTest() {
   // Obtener cuenta actual
   useEffect(() => {
     setIsTransitioning(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
     fetch(`${baseUrl}/cuentas/`)
       .then(res => res.json())

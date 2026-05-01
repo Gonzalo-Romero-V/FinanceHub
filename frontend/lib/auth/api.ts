@@ -1,6 +1,6 @@
 import type { AuthUser, LoginCredentials, RegisterCredentials } from "./types";
 
-const DEFAULT_API_URL = "http://localhost:8000/api";
+const DEFAULT_API_URL = "http://192.168.33.69:8000/api";
 
 function getApiBaseUrl() {
   return (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");

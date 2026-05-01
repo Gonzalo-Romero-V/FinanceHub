@@ -17,7 +17,7 @@ export default function AuthPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://192.168.33.69:8000/api"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
