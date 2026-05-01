@@ -13,17 +13,28 @@ class PlannerService:
         Eres un Diseñador de Dashboards de BI para Finanzas Personales.
         Tu misión es interpretar la solicitud del usuario y planificar los widgets necesarios.
 
+        CONTEXTO FINANCIERO:
+        - Los movimientos están clasificados por tipo (tipos_movimiento): 
+          * tipo_id=1: INGRESOS (dinero entrante)
+          * tipo_id=2: EGRESOS (dinero saliente)
+          * tipo_id=3: TRANSFERENCIAS (movimientos internos)
+        - Cada movimiento tiene una cuenta origen y destino
+        - Los conceptos categorizan movimientos (Salario, Alimentación, etc.)
+
         Reglas Clave:
         1. Determina el 'mode': 'replace' para consultas o tableros nuevos; 'append' para seguimientos.
         2. Analiza la intención:
-           - Si pide un dato específico, histórico o tabla (ej. "todos los movimientos históricos"): Devuelve UN SOLO widget del tipo adecuado (table) y pon de título exactamente lo pedido (ej. "Todos los Movimientos Históricos").
-           - Si pide un reporte GENERAL (ej. "dime cómo voy"): Incluye varios widgets como un KPI, un gráfico y una tabla.
-        3. Sé ultra específico en los 'goals' (el objetivo que el generador SQL debe cumplir). Si el usuario pide todo el histórico, indícalo expresamente.
-        4. No supongas límites de tiempo si el usuario pide historial o "todos", pero asume el mes actual si la consulta es genérica.
+           - Si pide "ingresos vs egresos", "pie de ingresos y egresos": Crea un pie chart agrupando por tipo_movimiento (1=Ingresos, 2=Egresos)
+           - Si pide datos específicos, histórico o tabla: Devuelve UN SOLO widget del tipo adecuado
+           - Si pide un reporte GENERAL: Incluye varios widgets (KPI, gráfico, tabla)
+        3. Sé ultra específico en los 'goals' del SQL. Ejemplos:
+           - "Agregar montos de movimientos por tipo_movimiento (Ingresos vs Egresos)"
+           - "Contar movimientos agrupados por concepto"
+        4. No supongas límites de tiempo si el usuario pide historial o "todos"
 
         Esquema: {json.dumps(schema)}
         
-        Responde SOLO JSON:
+        Responde SOLO JSON (sin bloques markdown):
         {{
           "dashboard_title": "...",
           "mode": "replace | append",

@@ -48,21 +48,29 @@ class DatabaseService:
             columns = inspector.get_columns(table_name)
             schema_info[table_name] = {
                 "columns": [{"name": col["name"], "type": str(col["type"])} for col in columns],
-                "sample_values": []
+                "sample_values": [],
+                "description": ""
             }
             
             # Si es una tabla maestra/específica, traemos los valores reales para ayudar al LLM
-            if table_name in ["tipos_movimiento", "cuentas", "conceptos"]:
+            if table_name == "tipos_movimiento":
+                try:
+                    with self.engine.connect() as conn:
+                        query = "SELECT id, nombre FROM tipos_movimiento ORDER BY id"
+                        res = conn.execute(text(query))
+                        schema_info[table_name]["sample_values"] = [{"id": r[0], "nombre": r[1]} for r in res]
+                        schema_info[table_name]["description"] = "Clasificación de movimientos: 1=Ingreso, 2=Egreso, 3=Transferencia"
+                except:
+                    pass
+            elif table_name in ["cuentas", "conceptos"]:
                 try:
                     with self.engine.connect() as conn:
                         query = f"SELECT nombre FROM {table_name}"
-                        if table_name in ["cuentas", "conceptos"]:
-                            if user_id:
-                                query += f" WHERE user_id = {user_id}"
-                            else:
-                                # Si no hay usuario, no devolvemos muestras de estas tablas
-                                schema_info[table_name]["sample_values"] = []
-                                continue
+                        if user_id:
+                            query += f" WHERE user_id = {user_id}"
+                        else:
+                            schema_info[table_name]["sample_values"] = []
+                            continue
                         query += " LIMIT 10"
                         
                         res = conn.execute(text(query))
