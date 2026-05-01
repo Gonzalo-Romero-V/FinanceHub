@@ -1,12 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CustomTable } from "@/components/custom/custom-table";
 import { useAuth } from "@/app/context/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownLeft, ArrowRightLeft, Plus } from "lucide-react";
+import { MovimientoForm } from "@/components/forms/movimiento-form";
+import { MovimientoEditForm } from "@/components/forms/movimiento-edit-form";
+import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
 
-// Definimos el tipo para un movimiento
+// Definimos el tipo para un movimiento en la tabla
 interface Movimiento {
   id: number;
   fecha: string;
@@ -16,97 +19,120 @@ interface Movimiento {
   tipo_movimiento: 'Ingreso' | 'Egreso' | 'Transferencia';
 }
 
+// Tipo interno con datos crudos del API para formularios
+interface MovimientoRaw {
+  id: number;
+  fecha: string;
+  concepto_id?: number;
+  cuenta_origen_id?: number;
+  cuenta_destino_id?: number;
+  monto: number;
+  nota?: string;
+  concepto?: { id: number; nombre: string; tipo_movimiento?: { nombre: string } };
+  cuenta_origen?: { nombre: string };
+  cuenta_destino?: { nombre: string };
+}
+
 export default function MovimientosPage() {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
+  const [rawMovimientos, setRawMovimientos] = useState<MovimientoRaw[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMovimientos = async () => {
-      if (!token) {
-        setIsLoading(false);
-        setError("Usuario no autenticado.");
-        return;
-      }
+  // Modal state
+  const [showCreate, setShowCreate] = useState(false);
+  const [editItem, setEditItem] = useState<MovimientoRaw | null>(null);
+  const [deleteItem, setDeleteItem] = useState<Movimiento | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const response = await fetch(`${baseUrl}/movimientos`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+  const fetchMovimientos = useCallback(async () => {
+    if (!token) { setIsLoading(false); return; }
+    setIsLoading(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const response = await fetch(`${baseUrl}/movimientos`, {
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error(`Error ${response.status}`);
 
-        if (!response.ok) {
-          // Leemos el cuerpo de la respuesta UNA SOLA VEZ como texto.
-          const errorText = await response.text();
-          let errorMessage = errorText;
-          try {
-            // Intentamos interpretar el texto como JSON.
-            const errorJson = JSON.parse(errorText);
-            // Si es JSON y tiene una propiedad 'message', la usamos.
-            errorMessage = errorJson.message || errorText;
-          } catch (e) {
-            // Si no es JSON, simplemente usamos el texto del error.
-          }
-          throw new Error(`Error ${response.status}: ${errorMessage}`);
-        }
+      const data = await response.json();
+      const arrayData: MovimientoRaw[] = Array.isArray(data.data) ? data.data : [];
+      setRawMovimientos(arrayData);
 
-        const data = await response.json();
-        
-        const formattedData: Movimiento[] = data.map((item: any) => ({
+      const formatted: Movimiento[] = arrayData.map((item) => {
+        const tipo = item.concepto?.tipo_movimiento?.nombre as Movimiento['tipo_movimiento'] ?? 'Egreso';
+        const cuentaOrigen = item.cuenta_origen?.nombre ?? 'N/A';
+        const cuentaDestino = item.cuenta_destino?.nombre ?? 'N/A';
+
+        let cuenta: string;
+        if (tipo === 'Ingreso') cuenta = cuentaDestino;
+        else if (tipo === 'Transferencia') cuenta = `${cuentaOrigen} / ${cuentaDestino}`;
+        else cuenta = cuentaOrigen;
+
+        return {
           id: item.id,
-          fecha: new Date(item.fecha).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+          fecha: item.fecha,
           concepto: item.concepto?.nombre ?? 'N/A',
-          monto: item.monto,
-          cuenta: item.cuenta_origen?.nombre ?? 'N/A', 
-          tipo_movimiento: item.concepto?.tipo_movimiento?.nombre ?? 'N/A',
-        }));
-
-        setMovimientos(formattedData);
-      } catch (err: any) {
-        setError(err.message || "Ocurrió un error inesperado.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (token) {
-      fetchMovimientos();
+          monto: Number(item.monto) || 0,
+          cuenta,
+          tipo_movimiento: tipo,
+        };
+      });
+      setMovimientos(formatted);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Ocurrió un error inesperado.");
+    } finally {
+      setIsLoading(false);
     }
-  // CORRECCIÓN 1: La dependencia debe ser el token, no el usuario.
   }, [token]);
 
+  useEffect(() => {
+    fetchMovimientos();
+  }, [fetchMovimientos]);
 
+  const handleDelete = async () => {
+    if (!deleteItem || !token) return;
+    setIsDeleting(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await fetch(`${baseUrl}/movimientos/${deleteItem.id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      setDeleteItem(null);
+      fetchMovimientos();
+    } catch (err: any) {
+      console.error("Error al eliminar:", err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEdit = (item: Movimiento) => {
+    const raw = rawMovimientos.find((r) => r.id === item.id);
+    if (raw) setEditItem(raw);
+  };
 
   const columns: (keyof Movimiento)[] = ['fecha', 'concepto', 'monto', 'cuenta', 'tipo_movimiento'];
   const columnHeaders: Record<keyof Movimiento, string> = {
-    id: "ID",
-    fecha: "Fecha",
-    concepto: "Concepto",
-    monto: "Monto",
-    cuenta: "Cuenta",
-    tipo_movimiento: "Tipo",
+    id: "ID", fecha: "Fecha", concepto: "Concepto", monto: "Monto", cuenta: "Cuenta", tipo_movimiento: "Tipo",
   };
 
-  if (isLoading) {
-    return (
-      <section className="mx-auto max-w-4xl px-6 py-20 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-1" />
-      </section>
-    )
-  }
+  if (isLoading) return (
+    <section className="mx-auto max-w-4xl px-6 py-20 flex justify-center items-center">
+      <Loader2 className="h-8 w-8 animate-spin text-brand-1" />
+    </section>
+  );
 
-  if (error) {
-    return (
-      <section className="mx-auto max-w-4xl px-6 py-20 text-center">
-        <h2 className="h2 text-destructive">Error</h2>
-        <p className="body text-muted-foreground">{error}</p>
-      </section>
-    )
-  }
+  if (error) return (
+    <section className="mx-auto max-w-4xl px-6 py-20 text-center">
+      <h2 className="h2 text-destructive">Error</h2>
+      <p className="body text-muted-foreground">{error}</p>
+    </section>
+  );
 
   return (
     <section className="mx-auto max-w-5xl px-4 md:px-6 py-12 md:py-16 bg-background text-foreground">
@@ -118,8 +144,12 @@ export default function MovimientosPage() {
             Filtra por fecha para analizar períodos específicos.
           </p>
         </div>
-        <Button className="small mt-4 md:mt-0 hover:bg-brand-1 hover:text-white">
-          Agregar Movimiento
+        <Button
+          className="small mt-4 md:mt-0 bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
+          onClick={() => setShowCreate(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Registrar movimiento
         </Button>
       </div>
 
@@ -128,10 +158,86 @@ export default function MovimientosPage() {
         data={movimientos}
         columns={columns}
         columnHeaders={columnHeaders}
+        columnConfig={{
+          fecha: {
+            render: (val) => {
+              const dateStr = String(val).split('T')[0].split(' ')[0];
+              const [y, m, d] = dateStr.split('-').map(Number);
+              return new Date(y, m - 1, d).toLocaleDateString('es-ES', { 
+                year: 'numeric', month: '2-digit', day: '2-digit' 
+              });
+            }
+          },
+          tipo_movimiento: {
+            render: (val) => {
+              if (val === 'Ingreso') return (
+                <div className="flex items-center justify-between w-full">
+                  <span>{val}</span>
+                  <ArrowDownLeft className="h-4 w-4 text-chart-2" />
+                </div>
+              );
+              if (val === 'Egreso') return (
+                <div className="flex items-center justify-between w-full">
+                  <span>{val}</span>
+                  <ArrowUpRight className="h-4 w-4 text-destructive" />
+                </div>
+              );
+              if (val === 'Transferencia') return (
+                <div className="flex items-center justify-between w-full">
+                  <span>{val}</span>
+                  <ArrowRightLeft className="h-4 w-4 text-brand-1" />
+                </div>
+              );
+              return val;
+            }
+          },
+          monto: {
+            align: "right",
+            render: (val) => (
+              <div className="flex items-center justify-between w-full font-medium tabular-nums text-foreground/80">
+                <span className="text-muted-foreground/30 font-normal mr-4">$</span>
+                <span>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)}</span>
+              </div>
+            )
+          }
+        }}
+        onEdit={handleEdit}
+        onDelete={(item) => setDeleteItem(item)}
         rowsOnDisplay={8}
         dateFilter={true}
         dateFilterColumn="fecha"
       />
+
+      {/* Modales */}
+      <MovimientoForm
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onSuccess={fetchMovimientos}
+      />
+
+      <MovimientoEditForm
+        open={!!editItem}
+        onClose={() => setEditItem(null)}
+        onSuccess={fetchMovimientos}
+        editItem={editItem ? {
+          id: editItem.id,
+          concepto_id: editItem.concepto?.id,
+          cuenta_origen_id: editItem.cuenta_origen_id,
+          cuenta_destino_id: editItem.cuenta_destino_id,
+          monto: editItem.monto,
+          nota: editItem.nota,
+          fecha: editItem.fecha,
+          tipo_movimiento: editItem.concepto?.tipo_movimiento?.nombre,
+        } : null}
+      />
+
+      <ConfirmDeleteModal
+        open={!!deleteItem}
+        onClose={() => setDeleteItem(null)}
+        onConfirm={handleDelete}
+        itemName={deleteItem?.concepto}
+        isLoading={isDeleting}
+      />
     </section>
-  )
+  );
 }

@@ -22,23 +22,28 @@ export function CuentasTableTest() {
 
   // Obtener total de cuentas
   useEffect(() => {
-    fetch("http://localhost:8000/api/cuentas")
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+    fetch(`${baseUrl}/cuentas`)
       .then(res => res.json())
       .then(json => {
-        setMaxCuentas(json.data.length);
+        if (json.data && Array.isArray(json.data)) {
+          setMaxCuentas(json.data.length);
+        }
       });
   }, []);
 
   // Obtener cuenta actual
   useEffect(() => {
     setIsTransitioning(true);
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
 
-    fetch(`http://localhost:8000/api/cuentas/`)
+    fetch(`${baseUrl}/cuentas/`)
       .then(res => res.json())
       .then(json => {
-        const normalizado = Array.isArray(json.data)
-          ? json.data
-          : [json.data];
+        const dataToNormalize = json.data;
+        const normalizado = Array.isArray(dataToNormalize)
+          ? dataToNormalize
+          : dataToNormalize ? [dataToNormalize] : [];
 
         setCuentas(normalizado);
         setLoadingInicial(false);
