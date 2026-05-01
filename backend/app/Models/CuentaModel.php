@@ -10,7 +10,7 @@ class CuentaModel extends Model
     protected $table = 'cuentas';
     protected $primaryKey = 'id';
 
-    protected $fillable = ['nombre', 'tipo_cuenta_id', 'saldo', 'activa', 'user_id'];
+    protected $fillable = ['nombre', 'tipo_cuenta_id', 'saldo', 'saldo_inicial', 'activa', 'user_id'];
 
     protected $casts = [
         'saldo' => 'float',

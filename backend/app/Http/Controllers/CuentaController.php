@@ -12,20 +12,22 @@ class CuentaController
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:100',
-            'tipo_cuenta_id' => 'required|integer',
-            'saldo' => 'required|numeric|min:0',
-            'activa' => 'required|boolean'
+            'nombre'        => 'required|string|max:100',
+            'tipo_cuenta_id'=> 'required|integer',
+            'saldo'         => 'required|numeric|min:0',
+            'activa'        => 'required|boolean'
         ]);
 
         $data = $request->only(['nombre', 'tipo_cuenta_id', 'saldo', 'activa']);
-        $data['user_id'] = auth()->id();
+        $data['user_id']       = auth()->id();
+        // El saldo inicial es el saldo de apertura; el saldo corriente parte igual.
+        $data['saldo_inicial'] = $data['saldo'];
 
         try {
             $cuenta = CuentaModel::create($data);
             return response()->json([
                 'mensaje' => 'Cuenta creada exitosamente',
-                'data' => $cuenta
+                'data'    => $cuenta
             ], 201);
         } catch (Exception $e) {
             return response()->json(['mensaje' => 'Error al crear la cuenta'], 500);
@@ -35,7 +37,7 @@ class CuentaController
     // LISTAR
     public function index()
     {
-        $cuentas = CuentaModel::where('user_id', auth()->id())->get();
+        $cuentas = CuentaModel::with('tipoCuenta')->where('user_id', auth()->id())->get();
         return response()->json([
             'mensaje' => 'Listado de Cuentas',
             'data' => $cuentas
@@ -45,7 +47,7 @@ class CuentaController
     // BUSCAR
     public function show($id)
     {
-        $cuenta = CuentaModel::where('id', $id)
+        $cuenta = CuentaModel::with('tipoCuenta')->where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
@@ -59,21 +61,22 @@ class CuentaController
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'sometimes|string|max:100',
-            'tipo_cuenta_id' => 'sometimes|integer',
-            'saldo' => 'sometimes|numeric|min:0',
-            'activa' => 'sometimes|boolean'
+            'nombre'        => 'sometimes|string|max:100',
+            'tipo_cuenta_id'=> 'sometimes|integer',
+            // 'saldo' está intencionalmente excluido: solo se modifica mediante movimientos.
+            'activa'        => 'sometimes|boolean'
         ]);
 
         $cuenta = CuentaModel::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $cuenta->update($request->only(['nombre', 'tipo_cuenta_id', 'saldo', 'activa']));
+        // Solo permitimos editar metadatos; el saldo es gestionado por movimientos.
+        $cuenta->update($request->only(['nombre', 'tipo_cuenta_id', 'activa']));
 
         return response()->json([
             'mensaje' => 'Cuenta actualizada exitosamente',
-            'data' => $cuenta
+            'data'    => $cuenta
         ], 200);
     }
 
