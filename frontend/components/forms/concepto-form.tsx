@@ -34,7 +34,7 @@ interface ConceptoFormProps {
 export function ConceptoForm({ open, onClose, onSuccess, editItem }: ConceptoFormProps) {
   const { token } = useAuth()
   const isEdit = !!editItem
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
   const [tipos, setTipos] = useState<TipoMovimiento[]>([])
   const [isLoading, setIsLoading] = useState(false)

@@ -44,7 +44,7 @@ interface CuentaFormProps {
 export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormProps) {
   const { token } = useAuth()
   const isEdit = !!editItem
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
   const [tiposCuenta, setTiposCuenta] = useState<TipoCuenta[]>([])
   const [isLoading, setIsLoading] = useState(false)

@@ -58,7 +58,7 @@ export function MovimientoEditForm({
   editItem,
 }: MovimientoEditFormProps) {
   const { token } = useAuth()
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
   const [conceptos, setConceptos] = useState<Concepto[]>([])
   const [cuentas, setCuentas] = useState<Cuenta[]>([])

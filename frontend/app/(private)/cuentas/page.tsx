@@ -42,7 +42,7 @@ export default function CuentasPage() {
     if (!token) { setIsLoading(false); setError("Usuario no autenticado."); return; }
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${baseUrl}/cuentas`, {
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -82,7 +82,7 @@ export default function CuentasPage() {
     if (!deleteItem || !token) return;
     setIsDeleting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${baseUrl}/cuentas/${deleteItem.id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },

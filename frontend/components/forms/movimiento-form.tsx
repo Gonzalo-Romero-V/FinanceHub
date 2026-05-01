@@ -149,7 +149,7 @@ function TipoButton({
 
 export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps) {
   const { token } = useAuth()
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<MovimientoFormState>(EMPTY_STATE)

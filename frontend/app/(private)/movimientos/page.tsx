@@ -50,7 +50,7 @@ export default function MovimientosPage() {
     if (!token) { setIsLoading(false); return; }
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${baseUrl}/movimientos`, {
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -96,7 +96,7 @@ export default function MovimientosPage() {
     if (!deleteItem || !token) return;
     setIsDeleting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${baseUrl}/movimientos/${deleteItem.id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
