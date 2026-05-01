@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoCuentaModel extends Model
 {
-    protected $table = 'tipo_cuenta';
+    protected $table = 'tipos_cuenta';
     protected $primaryKey = 'id';
 
     protected $fillable = ['nombre'];

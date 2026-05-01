@@ -54,6 +54,17 @@ Route::middleware('auth:sanctum')->group(function () {
         require __DIR__ . '/tipo_movimiento/TiposMovimientoRouter.php';
     });
 
+    // =====================
+    // TIPOS CUENTA
+    // =====================
+    Route::get('tipos-cuenta', [\App\Http\Controllers\TipoCuentaController::class, 'index']);
+
+    // =====================
+    // BALANCE
+    // =====================
+    Route::prefix('balance')->group(function () {
+        require __DIR__ . '/balance/BalanceRouter.php';
+    });
 
     // =====================
     // USERS

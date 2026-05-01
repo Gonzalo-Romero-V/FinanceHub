@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\ConceptoModel;
 use Exception;
 
-class ConceptoController extends Controller
+class ConceptoController
 {
     // Crear nuevo concepto
     public function store(Request $request)
@@ -39,7 +39,16 @@ class ConceptoController extends Controller
     // Listar todos los conceptos del usuario autenticado
     public function index()
     {
-        $data = ConceptoModel::where('user_id', auth()->id())->get();
+        $userId = auth()->id();
+
+        $data = ConceptoModel::where('user_id', $userId)
+            ->with(['tipoMovimiento'])
+            ->withSum(['movimientos as total_monto' => function ($query) use ($userId) {
+                $query->whereHas('cuentaOrigen', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                });
+            }], 'monto')
+            ->get();
 
         return response()->json([
             'mensaje' => 'Lista de Conceptos',
