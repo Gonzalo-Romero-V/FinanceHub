@@ -19,8 +19,8 @@ class SQLGenerationService:
                 return False
         return True
 
-    async def generate_sql_for_widget(self, widget_spec: dict, user_prompt: str) -> str:
-        schema = db_service.get_schema_info()
+    async def generate_sql_for_widget(self, widget_spec: dict, user_prompt: str, user_id: int) -> str:
+        schema = db_service.get_schema_info(user_id)
         widget_type = widget_spec.get("type", "table")
         goal = widget_spec.get("goal", "")
 
@@ -32,11 +32,12 @@ class SQLGenerationService:
         Meta: {goal}
 
         Reglas Estrictas:
-        1. Temporalidad: Si la meta implica historial o 'todos los registros', NO APLIQUES ningún filtro temporal. Solo asume el mes actual (Marzo 2026) si la consulta es genérica o pide explícitamente contexto presente.
-        2. Límites: NO utilices la cláusula LIMIT a menos que el usuario pida explícitamente 'los N principales', 'top' o limite la cantidad de resultados.
-        3. Agrupación: Para gráficos, agrupa pertinentemente por fecha o categoría.
-        4. KPIs: Devuelve un solo valor numérico bajo un alias (ej. 'metric').
-        5. Formato: Devuelve STRICTAMENTE y solo el código SQL ejecutable, sin explicaciones ni bloques Markdown.
+        1. SEGURIDAD DE USUARIO: DEBES FILTRAR SIEMPRE POR user_id = {user_id} en todas las tablas que contengan esta columna (cuentas, conceptos, movimientos). Esto es MANDATORIO para la privacidad de datos.
+        2. Temporalidad: Si la meta implica historial o 'todos los registros', NO APLIQUES ningún filtro temporal. Solo asume el mes actual (Marzo 2026) si la consulta es genérica o pide explícitamente contexto presente.
+        3. Límites: NO utilices la cláusula LIMIT a menos que el usuario pida explícitamente 'los N principales', 'top' o limite la cantidad de resultados.
+        4. Agrupación: Para gráficos, agrupa pertinentemente por fecha o categoría.
+        5. KPIs: Devuelve un solo valor numérico bajo un alias (ej. 'metric').
+        6. Formato: Devuelve STRICTAMENTE y solo el código SQL ejecutable, sin explicaciones ni bloques Markdown.
 
         Esquema: {json.dumps(schema)}
         """

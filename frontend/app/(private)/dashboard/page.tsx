@@ -26,7 +26,7 @@ export default function DashboardPage() {
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !user?.id) return;
     setIsLoading(true);
     setError(null);
 
@@ -35,7 +35,10 @@ export default function DashboardPage() {
       const resp = await fetch(`${baseUrl}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt,
+          user_id: user?.id
+        }),
       });
 
       if (!resp.ok) {

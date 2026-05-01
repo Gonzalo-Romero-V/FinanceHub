@@ -22,19 +22,20 @@ app.add_middleware(
 
 class AnalyzeRequest(BaseModel):
     prompt: str
+    user_id: int
 
 @app.post("/api/analyze")
 async def analyze(request: AnalyzeRequest):
     try:
         # 1. DISEÑO
-        plan = await semantic_service.design_dashboard(request.prompt)
+        plan = await semantic_service.design_dashboard(request.prompt, request.user_id)
         
         final_widgets = []
         
         # 2. EJECUCIÓN
         for spec in plan.get("widgets", []):
             try:
-                sql = await sql_gen_service.generate_sql_for_widget(spec, request.prompt)
+                sql = await sql_gen_service.generate_sql_for_widget(spec, request.prompt, request.user_id)
                 results = db_service.execute_query(sql)
                 
                 if results or spec["type"] == "table":

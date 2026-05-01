@@ -35,8 +35,8 @@ class DatabaseService:
                 return sanitized_rows
             return []
 
-    def get_schema_info(self):
-        """Obtiene informacion sobre las tablas, columnas y VALORES únicos de tablas maestras."""
+    def get_schema_info(self, user_id: int = None):
+        """Obtiene informacion sobre las tablas, columnas y VALORES únicos de tablas maestras filtrado por usuario si aplica."""
         inspector = inspect(self.engine)
         schema_info = {}
         
@@ -51,11 +51,21 @@ class DatabaseService:
                 "sample_values": []
             }
             
-            # Si es una tabla maestra (pocos registros), traemos los valores reales para ayudar al LLM
+            # Si es una tabla maestra/específica, traemos los valores reales para ayudar al LLM
             if table_name in ["tipos_movimiento", "cuentas", "conceptos"]:
                 try:
                     with self.engine.connect() as conn:
-                        res = conn.execute(text(f"SELECT nombre FROM {table_name} LIMIT 10"))
+                        query = f"SELECT nombre FROM {table_name}"
+                        if table_name in ["cuentas", "conceptos"]:
+                            if user_id:
+                                query += f" WHERE user_id = {user_id}"
+                            else:
+                                # Si no hay usuario, no devolvemos muestras de estas tablas
+                                schema_info[table_name]["sample_values"] = []
+                                continue
+                        query += " LIMIT 10"
+                        
+                        res = conn.execute(text(query))
                         schema_info[table_name]["sample_values"] = [r[0] for r in res]
                 except:
                     pass

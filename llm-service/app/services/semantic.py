@@ -6,8 +6,8 @@ class PlannerService:
     def __init__(self):
         self.llm = LLMFactory.get_adapter()
 
-    async def design_dashboard(self, user_prompt: str) -> dict:
-        schema = db_service.get_schema_info()
+    async def design_dashboard(self, user_prompt: str, user_id: int) -> dict:
+        schema = db_service.get_schema_info(user_id)
         
         system_prompt = f"""
         Eres un Diseñador de Dashboards de BI para Finanzas Personales.
