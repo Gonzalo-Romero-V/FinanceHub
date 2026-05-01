@@ -1,134 +1,121 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  provider?: string;
-}
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { clearAuthToken, getAuthToken, persistAuthToken } from "@/lib/auth/storage";
+import { fetchCurrentUser, logoutRequest } from "@/lib/auth/api";
+import type { AuthUser } from "@/lib/auth/types";
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
-  login: (token: string, userData: User) => void;
+  login: (token: string, userData: AuthUser, redirectTo?: string) => void;
+  loginWithToken: (token: string, redirectTo?: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   login: () => {},
+  loginWithToken: async () => {},
   logout: () => {},
   loading: true,
+  refreshSession: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
-
-  // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/', '/tutorial'];
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
   useEffect(() => {
-    // Check local storage for token on mount
-    const storedToken = localStorage.getItem('auth_token');
-    
+    const storedToken = getAuthToken();
+
     if (storedToken) {
       setToken(storedToken);
-      fetchUser(storedToken);
+      void refreshSessionFromToken(storedToken);
     } else {
       setLoading(false);
-      checkProtectedRoutes();
     }
   }, []);
 
-  const fetchUser = async (authToken: string) => {
-    try {
-      const res = await fetch(`${apiUrl}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Accept': 'application/json'
-        }
-      });
+  const syncSession = (authToken: string, currentUser: AuthUser) => {
+    persistAuthToken(authToken);
+    setToken(authToken);
+    setUser(currentUser);
+  };
 
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.data);
-      } else {
-        // Token invalid or expired
-        handleLogout();
-      }
+  const refreshSessionFromToken = async (authToken: string) => {
+    try {
+      const currentUser = await fetchCurrentUser(authToken);
+      syncSession(authToken, currentUser);
     } catch (error) {
-      console.error('Error fetching user:', error);
-      handleLogout();
+      console.error("Error fetching user:", error);
+      clearSession();
     } finally {
       setLoading(false);
     }
   };
 
-  const login = (newToken: string, userData: User) => {
-    localStorage.setItem('auth_token', newToken);
-    // Also save in cookie for middleware if needed
-    document.cookie = `auth_token=${newToken}; path=/; max-age=86400; SameSite=Lax`;
-    setToken(newToken);
-    setUser(userData);
-    
-    // Redirect to dashboard after login
-    router.push('/dashboard');
+  const login = (newToken: string, userData: AuthUser, redirectTo = "/dashboard") => {
+    syncSession(newToken, userData);
+    router.push(redirectTo);
+  };
+
+  const loginWithToken = async (newToken: string, redirectTo = "/dashboard") => {
+    try {
+      const currentUser = await fetchCurrentUser(newToken);
+      syncSession(newToken, currentUser);
+      router.push(redirectTo);
+    } catch (error) {
+      console.error("Error completing login:", error);
+      clearSession();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {
     if (token) {
       try {
-        await fetch(`${apiUrl}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
+        await logoutRequest(token);
       } catch (error) {
-        console.error('Error during logout:', error);
+        console.error("Error during logout:", error);
       }
     }
-    handleLogout();
+    clearSession();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Lax'; // Delete cookie
+  const clearSession = (redirectTo = "/login") => {
+    clearAuthToken();
     setToken(null);
     setUser(null);
-    router.push('/login');
-  };
-
-  const checkProtectedRoutes = () => {
-    // If not loading, no user, and trying to access a protected route
-    if (!publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
-       router.push('/login');
+    if (redirectTo) {
+      router.push(redirectTo);
     }
   };
 
-  useEffect(() => {
-    if (!loading && !user) {
-      checkProtectedRoutes();
+  const refreshSession = async () => {
+    const currentToken = token || getAuthToken();
+
+    if (!currentToken) {
+      clearSession("");
+      setLoading(false);
+      return;
     }
-  }, [pathname, loading, user]);
+
+    setLoading(true);
+    await refreshSessionFromToken(currentToken);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, loginWithToken, logout, loading, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

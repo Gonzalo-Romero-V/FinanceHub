@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/app/context/AuthContext"
+import { loginRequest, registerRequest } from "@/lib/auth/api"
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -17,9 +17,7 @@ export default function AuthPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
-  const router = useRouter()
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,52 +26,20 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        // Login Flow
-        const res = await fetch(`${apiUrl}/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        })
+        const data = await loginRequest({ email, password })
+        login(data.token, data.data)
+      } else {
+        const data = await registerRequest({ name, email, password })
 
-        const data = await res.json()
-
-        if (res.ok) {
+        if (data.token) {
           login(data.token, data.data)
         } else {
-          setError(data.mensaje || "Credenciales incorrectas")
-        }
-      } else {
-        // Registration Flow (assuming there is a register endpoint or similar logic in auth/register)
-        // Adjust endpoint as necessary
-        const res = await fetch(`${apiUrl}/auth/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({ name, email, password }),
-        })
-
-        const data = await res.json()
-
-        if (res.ok) {
-          // If login is required after register, you might redirect to login view
-          // Let's assume the API returns the token on register or we show success message
-          if (data.token) {
-             login(data.token, data.data)
-          } else {
-             setIsLogin(true)
-             setError("Registro exitoso. Por favor inicia sesión.") // treating error state as generic info in this basic setup
-          }
-        } else {
-          setError(data.message || data.mensaje || "Error al registrar cuenta")
+          setIsLogin(true)
+          setError("Registro exitoso. Por favor inicia sesión.")
         }
       }
     } catch (err) {
-      setError("Error de conexión. Intenta nuevamente.")
+      setError(err instanceof Error ? err.message : "Error de conexión. Intenta nuevamente.")
       console.error(err)
     } finally {
       setLoading(false)

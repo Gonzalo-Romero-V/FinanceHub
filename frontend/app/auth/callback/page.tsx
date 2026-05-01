@@ -7,20 +7,17 @@ import { useAuth } from "@/app/context/AuthContext";
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { loginWithToken } = useAuth();
   
   useEffect(() => {
     const token = searchParams.get("token");
     
     if (token) {
-      localStorage.setItem('auth_token', token);
-      document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-      
-      window.location.href = '/dashboard';
+      void loginWithToken(token);
     } else {
       router.push("/login?error=no_token");
     }
-  }, [searchParams, router]);
+  }, [loginWithToken, router, searchParams]);
 
   return (
     <div className="flex-1 flex items-center justify-center p-6 md:p-10 min-h-screen">
