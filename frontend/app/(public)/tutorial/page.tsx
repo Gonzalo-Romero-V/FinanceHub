@@ -10,7 +10,7 @@ import { Logo } from "@/components/layout/logo";
 export default function Tutorial() {
   return (
     <section className="mx-auto max-w-4xl px-6 py-20 bg-background text-foreground">
-      
+
       {/* HEADER PRINCIPAL */}
       <div className="mb-16 space-y-6 text-center md:text-left">
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 small text-primary mb-4">
@@ -18,7 +18,7 @@ export default function Tutorial() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-1 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-1" />
           </span>
-          Guía de Usuario
+          Nosotros
         </div>
 
         <Logo />
@@ -99,12 +99,12 @@ export default function Tutorial() {
 
             <ul className="space-y-2">
               <li className="flex items-center gap-2 small">
-                <ArrowUpRight className="w-4 h-4 text-chart-2" />
+                <ArrowDownLeft className="w-4 h-4 text-chart-2" />
                 <span className="font-medium">Ingreso</span>
               </li>
 
               <li className="flex items-center gap-2 small">
-                <ArrowDownLeft className="w-4 h-4 text-destructive" />
+                <ArrowUpRight className="w-4 h-4 text-destructive" />
                 <span className="font-medium">Egreso</span>
               </li>
 

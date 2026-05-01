@@ -2,13 +2,13 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import {Logo} from "@/components/layout/logo";
+import { Logo } from "@/components/layout/logo";
 import { MobileAside } from "@/components/layout/mobile-aside";
 import { useAuth } from "@/app/context/AuthContext";
 
 export function Header() {
   const { user, logout } = useAuth();
-  
+
   return (
     <header className="w-full border-b bg-background">
       <div className="container mx-auto max-w-4xl flex h-16 items-center justify-between px-4">
@@ -20,13 +20,13 @@ export function Header() {
         </div>
 
         <MobileAside />
-        
+
         {/* Navigation */}
         <nav className="hidden md:flex items-center gap-2">
           <Button className="hover:text-brand-1 hover:no-underline hover:-translate-y-1 transition-all duration-300" variant="link" asChild>
             <Link href="/">Home</Link>
           </Button>
-          <Button className="hover:text-brand-1 hover:no-underline hover:-translate-y-1 transition-all duration-300"  variant="link" asChild>
+          <Button className="hover:text-brand-1 hover:no-underline hover:-translate-y-1 transition-all duration-300" variant="link" asChild>
             <Link href="/tutorial">Tutorial</Link>
           </Button>
           <Button className="hover:text-brand-1 hover:no-underline hover:-translate-y-1 transition-all duration-300" variant="link" asChild>
@@ -35,12 +35,9 @@ export function Header() {
 
           {user ? (
             <>
-              <Button className="hover:text-brand-1 hover:no-underline hover:-translate-y-1 transition-all duration-300" variant="link" asChild>
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-              <Button 
+              <Button
                 onClick={logout}
-                className="hover:text-red-500 hover:no-underline hover:-translate-y-1 transition-all duration-300 text-muted-foreground" 
+                className="hover:text-red-500 hover:no-underline hover:-translate-y-1 transition-all duration-300 text-muted-foreground"
                 variant="link"
               >
                 Cerrar Sesión
