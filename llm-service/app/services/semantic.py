@@ -1,5 +1,6 @@
 from app.services.database import db_service
 from app.services.llm.factory import LLMFactory
+from app.utils.json_helper import extract_json
 import json
 
 class PlannerService:
@@ -34,7 +35,7 @@ class PlannerService:
 
         Esquema: {json.dumps(schema)}
         
-        Responde SOLO JSON (sin bloques markdown):
+        Responde SOLO JSON con este formato:
         {{
           "dashboard_title": "...",
           "mode": "replace | append",
@@ -45,7 +46,6 @@ class PlannerService:
         """
         
         response_raw = await self.llm.generate_response(system_prompt, user_prompt)
-        clean_json = response_raw.replace("```json", "").replace("```", "").strip()
-        return json.loads(clean_json)
+        return extract_json(response_raw)
 
 semantic_service = PlannerService()

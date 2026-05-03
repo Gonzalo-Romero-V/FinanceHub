@@ -36,43 +36,36 @@ class DatabaseService:
             return []
 
     def get_schema_info(self, user_id: int = None):
-        """Obtiene informacion sobre las tablas, columnas y VALORES únicos de tablas maestras filtrado por usuario si aplica."""
+        """Obtiene informacion detallada sobre las tablas, columnas, FKs y valores de ejemplo."""
         inspector = inspect(self.engine)
         schema_info = {}
         
         tables = inspector.get_table_names()
         for table_name in tables:
-            if table_name in ["migrations", "cache", "users", "jobs", "failed_jobs", "sessions"]:
+            if table_name in ["migrations", "cache", "cache_locks", "users", "jobs", "failed_jobs", "sessions", "password_reset_tokens", "personal_access_tokens"]:
                 continue
                 
             columns = inspector.get_columns(table_name)
+            fks = inspector.get_foreign_keys(table_name)
+            
             schema_info[table_name] = {
                 "columns": [{"name": col["name"], "type": str(col["type"])} for col in columns],
-                "sample_values": [],
-                "description": ""
+                "foreign_keys": [
+                    {"column": fk["constrained_columns"][0], "ref_table": fk["referred_table"], "ref_column": fk["referred_columns"][0]}
+                    for fk in fks if fk["constrained_columns"]
+                ],
+                "sample_values": []
             }
             
-            # Si es una tabla maestra/específica, traemos los valores reales para ayudar al LLM
-            if table_name == "tipos_movimiento":
-                try:
-                    with self.engine.connect() as conn:
-                        query = "SELECT id, nombre FROM tipos_movimiento ORDER BY id"
-                        res = conn.execute(text(query))
-                        schema_info[table_name]["sample_values"] = [{"id": r[0], "nombre": r[1]} for r in res]
-                        schema_info[table_name]["description"] = "Clasificación de movimientos: 1=Ingreso, 2=Egreso, 3=Transferencia"
-                except:
-                    pass
-            elif table_name in ["cuentas", "conceptos"]:
+            # Traer valores de ejemplo para tablas maestras
+            if table_name in ["tipos_movimiento", "cuentas", "conceptos", "tipos_cuenta"]:
                 try:
                     with self.engine.connect() as conn:
                         query = f"SELECT nombre FROM {table_name}"
-                        if user_id:
+                        if table_name in ["cuentas", "conceptos"] and user_id:
                             query += f" WHERE user_id = {user_id}"
-                        else:
-                            schema_info[table_name]["sample_values"] = []
-                            continue
-                        query += " LIMIT 10"
                         
+                        query += " LIMIT 5"
                         res = conn.execute(text(query))
                         schema_info[table_name]["sample_values"] = [r[0] for r in res]
                 except:

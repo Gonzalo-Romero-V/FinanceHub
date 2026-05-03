@@ -28,7 +28,11 @@ class AnalyzeRequest(BaseModel):
 async def analyze(request: AnalyzeRequest):
     try:
         # 1. DISEÑO
-        plan = await semantic_service.design_dashboard(request.prompt, request.user_id)
+        try:
+            plan = await semantic_service.design_dashboard(request.prompt, request.user_id)
+        except Exception as e:
+            print(f"Error en Planner: {e}")
+            plan = {"dashboard_title": "Análisis General", "mode": "replace", "widgets": [{"id_ref": "w1", "type": "table", "goal": "Listado de movimientos recientes"}]}
         
         final_widgets = []
         
@@ -38,6 +42,8 @@ async def analyze(request: AnalyzeRequest):
                 sql = await sql_gen_service.generate_sql_for_widget(spec, request.prompt, request.user_id)
                 results = db_service.execute_query(sql)
                 
+                # Si es una tabla y no hay resultados, igual la mostramos vacía. 
+                # Si es otro tipo y no hay resultados, lo omitimos para no ensuciar el dashboard.
                 if results or spec["type"] == "table":
                     safe_results = results[:500] if results else []
                     
@@ -47,22 +53,30 @@ async def analyze(request: AnalyzeRequest):
                         "title": spec.get("goal", "Reporte"),
                         "data": safe_results,
                         "raw_total_records": len(results) if results else 0,
+                        "sql": sql if settings.DEBUG else None
                     }
                     
-                    # Manejo minimalista de KPI: busca 'metric' o el primer valor de la primera fila
-                    if spec["type"] == "kpi" and results:
-                        first_row = results[0]
-                        val = first_row.get("metric") or list(first_row.values())[0]
-                        widget["metric"] = val if val is not None else 0
+                    # Manejo de KPI
+                    if spec["type"] == "kpi":
+                        if results:
+                            first_row = results[0]
+                            val = first_row.get("metric") or list(first_row.values())[0]
+                            widget["metric"] = val if val is not None else 0
+                        else:
+                            widget["metric"] = 0
                         
                     final_widgets.append(widget)
             except Exception as e:
-                print(f"Error procesando widget {spec['id_ref']}: {e}")
+                print(f"Error procesando widget {spec.get('id_ref')}: {e}")
 
         # 3. ANÁLISIS
         summary = "No se encontraron datos suficientes para un análisis detallado."
         if final_widgets:
-            summary = await analyst_service.generate_executive_summary(request.prompt, final_widgets)
+            try:
+                summary = await analyst_service.generate_executive_summary(request.prompt, final_widgets)
+            except Exception as e:
+                print(f"Error en Analyst: {e}")
+                summary = "Se generó el reporte pero hubo un error al crear el resumen ejecutivo."
 
         return {
             "intent": request.prompt,

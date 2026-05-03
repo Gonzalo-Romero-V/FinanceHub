@@ -1,5 +1,5 @@
 import re
-import json
+from datetime import datetime
 from app.services.llm.factory import LLMFactory
 from app.services.database import db_service
 
@@ -13,27 +13,27 @@ class SQLGenerationService:
         ]
 
     def is_safe(self, sql: str) -> bool:
+        # Eliminar comentarios antes de validar
         clean_sql = re.sub(r'--.*', '', sql)
         clean_sql = re.sub(r'/\*.*?\*/', '', clean_sql, flags=re.DOTALL)
 
         sql_upper = clean_sql.upper().strip()
-
+        
+        # Debe empezar con SELECT (después de limpiar espacios y comentarios)
         if not sql_upper.startswith("SELECT"):
             return False
-
-        return not any(
-            re.search(rf"\b{kw}\b", sql_upper)
-            for kw in self.forbidden_keywords
-        )
-
-    def _clean_sql(self, sql: str) -> str:
-        return sql.replace("```sql", "").replace("```", "").strip()
+            
+        for keyword in self.forbidden_keywords:
+            if re.search(rf"\b{keyword}\b", sql_upper):
+                return False
+        return True
 
     async def generate_sql_for_widget(self, widget_spec: dict, user_prompt: str, user_id: int) -> str:
         schema = db_service.get_schema_info(user_id)
 
         widget_type = widget_spec.get("type", "table")
         goal = widget_spec.get("goal", "")
+        current_date = datetime.now().strftime("%Y-%m-%d")
 
         # CONTRATO ESTRICTO POR WIDGET
         output_contract = ""
@@ -57,11 +57,17 @@ class SQLGenerationService:
             """
 
         system_prompt = f"""
+<<<<<<< HEAD
 Eres un generador experto de SQL para PostgreSQL en una app de finanzas personales.
+=======
+        Eres un experto generador de SQL para PostgreSQL enfocado en Finanzas.
+        Fecha actual del sistema: {current_date}.
+>>>>>>> 92ab7cf (feat: enhance LLM context and robustness for improved query handling)
 
 Fecha sistema: 2026-03-27
 user_id: {user_id}
 
+<<<<<<< HEAD
 OBJETIVO:
 {goal}
 
@@ -102,6 +108,30 @@ ESQUEMA DISPONIBLE:
         if not self.is_safe(sql):
             raise ValueError("SQL No Seguro Detectado")
 
+=======
+        Reglas Estrictas de Seguridad y Filtrado:
+        1. SEGURIDAD DE USUARIO: DEBES FILTRAR SIEMPRE por user_id = {user_id}.
+           - Las tablas 'cuentas' y 'conceptos' tienen la columna 'user_id' directamente.
+           - La tabla 'movimientos' NO tiene 'user_id'. Debes hacer JOIN con 'cuentas' (usando cuenta_origen_id o cuenta_destino_id) para filtrar por el user_id del dueño de la cuenta.
+           Ejemplo: SELECT m.* FROM movimientos m JOIN cuentas c ON m.cuenta_origen_id = c.id WHERE c.user_id = {user_id}
+        2. Temporalidad: Si la meta implica historial o 'todos los registros', NO APLIQUES filtros de fecha. Si es una consulta genérica, asume el mes actual relativo a {current_date}.
+        3. Límites: NO utilices LIMIT a menos que se pida explícitamente 'top', 'últimos N', etc.
+        4. Agrupación: Para gráficos (bar, line, pie), agrupa por fecha (truncada a día o mes) o por nombre de concepto/cuenta.
+        5. KPIs: Devuelve un solo valor numérico con el alias 'metric'.
+        6. Formato: Devuelve SOLO el código SQL. Sin bloques markdown, sin explicaciones.
+
+        Esquema (incluyendo FKs para joins): {json.dumps(schema)}
+        """
+        
+        sql = await self.llm.generate_response(system_prompt, f"Prompt: {user_prompt}")
+        
+        # Limpiar posibles bloques markdown si el LLM ignoró la instrucción
+        sql = sql.replace("```sql", "").replace("```", "").strip()
+        
+        if not self.is_safe(sql):
+            raise ValueError(f"SQL No Seguro o Inválido Detectado")
+            
+>>>>>>> 92ab7cf (feat: enhance LLM context and robustness for improved query handling)
         return sql
 
 
