@@ -327,7 +327,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
       ) : conceptosFiltrados.length === 0 ? (
         <div className="text-center py-6 text-muted-foreground text-sm">
           No tienes conceptos de tipo {form.tipo}.{" "}
-          <span className="text-brand-1 font-medium">Crea uno desde la sección <Link href="/conceptos"> Conceptos </Link>.</span>
+          <span className="text-brand-1 font-medium">Crea uno desde la sección</span> <Link href="/conceptos">Conceptos.</Link>
         </div>
       ) : (
         <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
