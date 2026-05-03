@@ -475,7 +475,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
       </div>
 
       {/* Fecha */}
-      <div className="flex flex-col gap-1.5">
+{/*       <div className="flex flex-col gap-1.5">
         <Label htmlFor="mov-fecha">Fecha</Label>
         <Input
           id="mov-fecha"
@@ -484,7 +484,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
           max={getTodayStr()}
           onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))}
         />
-      </div>
+      </div> */}
 
       {/* Nota */}
       <div className="flex flex-col gap-1.5">
