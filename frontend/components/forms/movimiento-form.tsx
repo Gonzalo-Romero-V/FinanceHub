@@ -7,9 +7,10 @@ import {
   ArrowRightLeft,
   ChevronLeft,
   Check,
-  Loader2,
-  Link,
-} from "lucide-react"
+  Loader2
+} 
+from "lucide-react"
+import Link from "next/link"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
