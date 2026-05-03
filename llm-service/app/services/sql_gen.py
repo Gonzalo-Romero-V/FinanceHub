@@ -65,30 +65,42 @@ REGLAS DE SALIDA:
 
 REGLAS ESTRICTAS:
 
-1. SEGURIDAD DE USUARIO:
-   - SIEMPRE filtrar por user_id = {user_id}
-   - 'cuentas' y 'conceptos' tienen user_id directo
-   - 'movimientos' requiere JOIN con 'cuentas'
-   Ejemplo:
-   SELECT m.* FROM movimientos m
-   JOIN cuentas c ON m.cuenta_origen_id = c.id
-   WHERE c.user_id = {user_id}
+    - SIEMPRE filtrar por user_id = {user_id}.
+    - La forma más directa y segura de filtrar 'movimientos' por usuario es uniendo con 'conceptos' (co.user_id = {user_id}).
+    - 'cuentas' también tiene user_id.
 
-2. SEGURIDAD SQL:
-   - SOLO SELECT
-   - PROHIBIDO: INSERT, UPDATE, DELETE, DROP, ALTER
+2. FILTRADO POR TIPO DE MOVIMIENTO Y CUENTAS:
+    - La tabla 'tipos_movimiento' tiene los nombres: 'Ingreso', 'Egreso', 'Transferencia'.
+    - **EGRESO (Gasto)**: El dinero SALE. Usar `m.cuenta_origen_id` para identificar la cuenta del usuario.
+    - **INGRESO**: El dinero ENTRA. Usar `m.cuenta_destino_id` para identificar la cuenta del usuario.
+    - Ejemplo para Egresos por concepto:
+      SELECT co.nombre as label, SUM(m.monto) as value 
+      FROM movimientos m
+      JOIN conceptos co ON m.concepto_id = co.id
+      JOIN tipos_movimiento tm ON co.tipo_movimiento_id = tm.id
+      WHERE co.user_id = {user_id} AND tm.nombre = 'Egreso'
+      GROUP BY co.nombre
 
-3. TEMPORALIDAD:
-   - Si no se especifica, asumir mes actual
-   - Si se pide historial, no filtrar por fecha
+3. SEGURIDAD SQL:
+    - SOLO SENTENCIAS SELECT.
+    - PROHIBIDO: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
 
-4. AGRUPACIÓN:
-   - Para gráficos: agrupar por fecha o categoría
+4. TEMPORALIDAD Y FECHAS (USAR FECHA DE REFERENCIA: {current_date}):
+    - La fecha de referencia es {current_date}.
+    - **Hoy**: `fecha::date = '{current_date}'::date`
+    - **Ayer**: `fecha::date = ('{current_date}'::date - INTERVAL '1 day')::date`
+    - **Mes actual**: `EXTRACT(MONTH FROM fecha) = EXTRACT(MONTH FROM '{current_date}'::date) AND EXTRACT(YEAR FROM fecha) = EXTRACT(YEAR FROM '{current_date}'::date)`
+    - **Mes anterior**: `fecha >= DATE_TRUNC('month', '{current_date}'::date - INTERVAL '1 month') AND fecha < DATE_TRUNC('month', '{current_date}'::date)`
+    - **Historial / Todos**: No aplicar filtros de fecha.
+    - **Si no se especifica fecha**: Asumir el mes actual.
 
-5. FORMATO:
-   - SOLO SQL
-   - Sin markdown
-   - Sin explicaciones
+5. AGRUPACIÓN PARA GRÁFICOS:
+    - Para 'pie': devolver 'label' y 'value'.
+    - Para 'line'/'bar': agrupar por fecha o categoría según el 'goal'.
+
+6. FORMATO DE SALIDA:
+    - Devuelve ÚNICAMENTE el código SQL ejecutable.
+    - Sin bloques markdown, sin explicaciones.
 
 ESQUEMA (con relaciones):
 {json.dumps(schema)}

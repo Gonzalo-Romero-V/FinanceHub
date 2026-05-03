@@ -25,13 +25,16 @@ class PlannerService:
         Reglas Clave:
         1. Determina el 'mode': 'replace' para consultas o tableros nuevos; 'append' para seguimientos.
         2. Analiza la intención:
-           - Si pide "ingresos vs egresos", "pie de ingresos y egresos": Crea un pie chart agrupando por tipo_movimiento (1=Ingresos, 2=Egresos)
-           - Si pide datos específicos, histórico o tabla: Devuelve UN SOLO widget del tipo adecuado
-           - Si pide un reporte GENERAL: Incluye varios widgets (KPI, gráfico, tabla)
-        3. Sé ultra específico en los 'goals' del SQL. Ejemplos:
-           - "Agregar montos de movimientos por tipo_movimiento (Ingresos vs Egresos)"
-           - "Contar movimientos agrupados por concepto"
-        4. No supongas límites de tiempo si el usuario pide historial o "todos"
+           - Si pide "egresos de ayer": Crea un widget de tipo adecuado (pie, bar o table) con el objetivo de mostrar gastos del día anterior.
+           - Si pide un "gráfico de pastel por [categoría]": Agrupa siempre por esa categoría (ej. concepto).
+           - Si pide un resumen general: Combina KPI (Total), Gráfico (Distribución) y Tabla (Detalle).
+        3. Objetivos (goals) ULTRA-ESPECÍFICOS:
+           - Mal: "Egresos de ayer"
+           - Bien: "Sumar montos de movimientos de tipo Egreso realizados ayer, agrupados por el nombre del concepto"
+           - Bien: "Listar los 10 movimientos más recientes con su concepto y cuenta"
+        4. Identificación de tiempos:
+           - "hoy", "ayer", "este mes", "mes pasado", "histórico".
+        5. La estructura de la base de datos es relacional. Usa los nombres de las tablas y columnas del esquema.
 
         Esquema: {json.dumps(schema)}
         

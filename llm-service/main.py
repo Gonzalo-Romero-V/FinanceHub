@@ -42,30 +42,28 @@ async def analyze(request: AnalyzeRequest):
                 sql = await sql_gen_service.generate_sql_for_widget(spec, request.prompt, request.user_id)
                 results = db_service.execute_query(sql)
                 
-                # Si es una tabla y no hay resultados, igual la mostramos vacía. 
-                # Si es otro tipo y no hay resultados, lo omitimos para no ensuciar el dashboard.
-                if results or spec["type"] == "table":
-                    safe_results = results[:500] if results else []
+                # Siempre mostramos el widget para dar feedback al usuario, incluso si está vacío.
+                safe_results = results[:500] if results else []
+                
+                widget = {
+                    "id": str(uuid.uuid4()),
+                    "type": spec["type"],
+                    "title": spec.get("goal", "Reporte"),
+                    "data": safe_results,
+                    "raw_total_records": len(results) if results else 0,
+                    "sql": sql if settings.DEBUG else None
+                }
+                
+                # Manejo de KPI
+                if spec["type"] == "kpi":
+                    if results:
+                        first_row = results[0]
+                        val = first_row.get("metric") or list(first_row.values())[0]
+                        widget["metric"] = val if val is not None else 0
+                    else:
+                        widget["metric"] = 0
                     
-                    widget = {
-                        "id": str(uuid.uuid4()),
-                        "type": spec["type"],
-                        "title": spec.get("goal", "Reporte"),
-                        "data": safe_results,
-                        "raw_total_records": len(results) if results else 0,
-                        "sql": sql if settings.DEBUG else None
-                    }
-                    
-                    # Manejo de KPI
-                    if spec["type"] == "kpi":
-                        if results:
-                            first_row = results[0]
-                            val = first_row.get("metric") or list(first_row.values())[0]
-                            widget["metric"] = val if val is not None else 0
-                        else:
-                            widget["metric"] = 0
-                        
-                    final_widgets.append(widget)
+                final_widgets.append(widget)
             except Exception as e:
                 print(f"Error procesando widget {spec.get('id_ref')}: {e}")
 
