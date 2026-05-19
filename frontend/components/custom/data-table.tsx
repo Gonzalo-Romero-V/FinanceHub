@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CalendarIcon, Pencil, Trash2, MoreVertical } from "lucide-react"
+import { CalendarIcon, Eye, Pencil, Trash2, MoreVertical } from "lucide-react"
 import { addDays, format, differenceInCalendarDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 
@@ -39,6 +39,7 @@ interface DataTableProps<T> {
   dateFilterColumn?: keyof T;
   hideHeaders?: boolean;
   footer?: React.ReactNode;
+  onView?: (item: T) => void;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   /** Devuelve false para deshabilitar la acción en esa fila (con tooltip opcional). */
@@ -61,6 +62,7 @@ export function DataTable<T extends { [key: string]: any }>({
   dateFilterColumn,
   hideHeaders = false,
   footer,
+  onView,
   onEdit,
   onDelete,
   canEdit,
@@ -122,7 +124,7 @@ export function DataTable<T extends { [key: string]: any }>({
     overflowY: 'auto',
   };
 
-  const hasActions = !!onEdit || !!onDelete;
+  const hasActions = !!onView || !!onEdit || !!onDelete;
 
   return (
     <div className="w-full bg-background">
@@ -230,9 +232,21 @@ export function DataTable<T extends { [key: string]: any }>({
                     const editAllowed = canEdit ? canEdit(item) : true;
                     const deleteAllowed = canDelete ? canDelete(item) : true;
                     return (
-                      <TableCell className="w-[70px] text-right">
+                      <TableCell className="w-[90px] text-right">
                         {/* Desktop Actions: Hover */}
                         <div className="hidden md:flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {onView && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10"
+                              onClick={() => onView(item)}
+                              aria-label="Ver detalles"
+                              title="Ver detalles"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
                           {onEdit && (
                             <Button
                               variant="ghost"
@@ -240,7 +254,7 @@ export function DataTable<T extends { [key: string]: any }>({
                               className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10 disabled:opacity-40 disabled:pointer-events-none"
                               onClick={() => onEdit(item)}
                               disabled={!editAllowed}
-                              title={!editAllowed ? disabledEditHint : undefined}
+                              title={!editAllowed ? disabledEditHint : "Editar"}
                               aria-label="Editar"
                             >
                               <Pencil className="h-4 w-4" />
@@ -253,7 +267,7 @@ export function DataTable<T extends { [key: string]: any }>({
                               className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 disabled:pointer-events-none"
                               onClick={() => onDelete(item)}
                               disabled={!deleteAllowed}
-                              title={!deleteAllowed ? disabledDeleteHint : undefined}
+                              title={!deleteAllowed ? disabledDeleteHint : "Eliminar"}
                               aria-label="Eliminar"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -271,6 +285,16 @@ export function DataTable<T extends { [key: string]: any }>({
                             </PopoverTrigger>
                             <PopoverContent className="w-56 p-1" align="end">
                               <div className="flex flex-col gap-1">
+                                {onView && (
+                                  <Button
+                                    variant="ghost"
+                                    className="justify-start gap-2 h-9 px-2 small"
+                                    onClick={() => onView(item)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                    Ver detalles
+                                  </Button>
+                                )}
                                 {onEdit && (
                                   <Button
                                     variant="ghost"

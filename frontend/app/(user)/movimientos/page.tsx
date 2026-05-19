@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/custom/page-header";
 import { PageLoading, PageError } from "@/components/custom/page-state";
 import { MovimientoForm } from "@/components/forms/movimiento-form";
 import { MovimientoEditForm } from "@/components/forms/movimiento-edit-form";
+import { MovimientoDetailModal } from "@/components/forms/movimiento-detail-modal";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
 
 import { useAuth } from "@/lib/auth/context";
@@ -59,6 +60,7 @@ export default function MovimientosPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [showCreate, setShowCreate] = useState(false);
+  const [viewItem, setViewItem] = useState<MovimientoRaw | null>(null);
   const [editItem, setEditItem] = useState<MovimientoRaw | null>(null);
   const [deleteItem, setDeleteItem] = useState<MovimientoRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -103,6 +105,11 @@ export default function MovimientosPage() {
   const handleEdit = (item: MovimientoRow) => {
     const raw = rawMovimientos.find((r) => r.id === item.id);
     if (raw) setEditItem(raw);
+  };
+
+  const handleView = (item: MovimientoRow) => {
+    const raw = rawMovimientos.find((r) => r.id === item.id);
+    if (raw) setViewItem(raw);
   };
 
   const columns: (keyof MovimientoRow)[] = ["fecha", "concepto", "monto", "cuenta", "tipo_movimiento"];
@@ -182,6 +189,7 @@ export default function MovimientosPage() {
             ),
           },
         }}
+        onView={handleView}
         onEdit={handleEdit}
         onDelete={(item) => setDeleteItem(item)}
         canEdit={(item) => isSameLocalDay(item.fecha)}
@@ -217,6 +225,12 @@ export default function MovimientosPage() {
               }
             : null
         }
+      />
+
+      <MovimientoDetailModal
+        open={!!viewItem}
+        onClose={() => setViewItem(null)}
+        item={viewItem}
       />
 
       <ConfirmDeleteModal
