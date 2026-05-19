@@ -57,11 +57,12 @@ frontend/
       page-state.tsx            # PageLoading + PageError
       data-table.tsx            # ← rename de CustomTable
       balance-general.tsx
-    forms/                      # modales de crear/editar
+    forms/                      # modales de crear / editar / ver
       cuenta-form.tsx
       concepto-form.tsx
-      movimiento-form.tsx       # wizard 5 pasos
-      movimiento-edit-form.tsx  # form plano
+      movimiento-form.tsx           # wizard 5 pasos (crear)
+      movimiento-edit-form.tsx      # form con cascada tipo → concepto → cuentas
+      movimiento-detail-modal.tsx   # solo lectura, todos los campos
       confirm-delete-modal.tsx
     auth/
       auth-gate.tsx
@@ -87,7 +88,9 @@ frontend/
       storage.ts                # persistAuthToken, getAuthToken, clearAuthToken
       types.ts                  # AuthUser, LoginCredentials, RegisterCredentials, AuthSession
     utils/
-      format.ts                 # formatCurrency, formatDate, formatNumber, todayIsoDate, parseApiDate
+      format.ts                 # formatCurrency, formatDate, formatDateTime,
+                                #   formatNumber, parseApiDate, isSameLocalDay,
+                                #   getBrowserTimezone, todayIsoDate
     utils.ts                    # cn() (clsx + tailwind-merge)
 
   .env.example                  # plantilla — copiar a .env.local en dev
@@ -113,7 +116,7 @@ backend/
       AuthController.php          # login/register/google/me/logout
       CuentaController.php
       ConceptoController.php
-      MovimientoController.php
+      MovimientoController.php    # store/update/destroy con regla "día actual"
       TipoCuentaController.php
       TipoMovimientoController.php
       BalanceController.php
@@ -125,6 +128,8 @@ backend/
       MovimientoModel.php
       TipoCuentaModel.php
       TipoMovimientoModel.php
+      Concerns/
+        SerializesDatesAsIso.php  # trait: JSON con Y-m-d\TH:i:s.u\Z (UTC)
   database/migrations/            # ver Docs/entidades.md
   routes/
     api.php                       # registra los grupos

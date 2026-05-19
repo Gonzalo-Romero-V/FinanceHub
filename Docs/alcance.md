@@ -13,8 +13,22 @@
 - **Cuentas**: crear, listar (separado por tipo Activo/Pasivo), editar, borrar.
   Saldo inicial sólo se setea al crear; después se modifica vía movimientos.
 - **Conceptos**: crear/editar/borrar; agrupados por tipo de movimiento.
-- **Movimientos**: registro multi-step (tipo → concepto → cuenta(s) → detalles
-  → resumen). Editor en form plano para PATCH.
+- **Movimientos**:
+  - **Registrar**: wizard de 5 pasos (`tipo → concepto filtrado por tipo →
+    cuenta(s) según tipo → monto/descripción → resumen`).
+  - **Editar**: form plano con la misma cascada Tipo → Concepto → Cuentas; el
+    selector de Tipo es un combobox editable y al cambiarlo limpia concepto y
+    cuentas para forzar re-elección coherente. Validación: la cuenta del lado
+    correspondiente es requerida; en Transferencia origen y destino deben ser
+    distintas.
+  - **Ver detalles**: modal de solo lectura (`MovimientoDetailModal`) con
+    monto destacado, concepto, cuenta(s), fecha y hora en TZ local, descripción
+    e ID.
+  - **Tabla**: columnas visibles `ID · Descripción · Concepto · Monto · Tipo ·
+    Cuenta`. La columna `Fecha` ya no es visible pero sigue presente en cada
+    row para el filtro de rango y las reglas día-actual.
+  - **Acciones por fila**: 👁️ ver (siempre) · ✏️ editar (deshabilitada con
+    tooltip si la fila no es de hoy) · 🗑️ eliminar (idem).
 - **Balance**: `BalanceGeneral` muestra activos – pasivos.
 - **Perfil** (`/perfil`): el usuario edita su `name`, `email` y, opcionalmente,
   setea/cambia `password` (mín. 6 caracteres). Acceso desde el cluster GR del
@@ -65,6 +79,3 @@
 - Variables de entorno de producción / dominio fijo / Cloudflare.
 - Despliegue real (todo el flujo de producción se pospuso, ver `Docs/objetivo.md`
   y README raíz sección "Despliegue (TBD)").
-
-### Tipos
-- Header user tiene atajo `/help` cableado pero no hay flujo de "perfil" todavía.
