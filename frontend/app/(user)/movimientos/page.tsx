@@ -19,13 +19,14 @@ import {
   deleteMovimiento,
   type MovimientoRaw,
 } from "@/lib/api/movimientos";
-import { formatDate, formatNumber, isSameLocalDay } from "@/lib/utils/format";
+import { formatNumber, isSameLocalDay } from "@/lib/utils/format";
 
 type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
 
 interface MovimientoRow {
   id: number;
   fecha: string;
+  nota: string;
   concepto: string;
   monto: number;
   cuenta: string;
@@ -45,6 +46,7 @@ function toRow(item: MovimientoRaw): MovimientoRow {
   return {
     id: item.id,
     fecha: item.fecha,
+    nota: item.nota?.trim() ?? "",
     concepto: item.concepto?.nombre ?? "N/A",
     monto: Number(item.monto) || 0,
     cuenta,
@@ -112,10 +114,11 @@ export default function MovimientosPage() {
     if (raw) setViewItem(raw);
   };
 
-  const columns: (keyof MovimientoRow)[] = ["fecha", "concepto", "monto", "cuenta", "tipo_movimiento"];
+  const columns: (keyof MovimientoRow)[] = ["id", "nota", "concepto", "monto", "cuenta", "tipo_movimiento"];
   const columnHeaders: Record<keyof MovimientoRow, string> = {
     id: "ID",
     fecha: "Fecha",
+    nota: "Descripción",
     concepto: "Concepto",
     monto: "Monto",
     cuenta: "Cuenta",
@@ -147,8 +150,23 @@ export default function MovimientosPage() {
         columns={columns}
         columnHeaders={columnHeaders}
         columnConfig={{
-          fecha: {
-            render: (val) => formatDate(String(val)),
+          id: {
+            render: (val) => (
+              <span className="font-mono xs text-muted-foreground">#{val}</span>
+            ),
+          },
+          nota: {
+            render: (val) => {
+              const text = String(val ?? "").trim();
+              if (!text) {
+                return <span className="xs text-muted-foreground italic">Sin descripción</span>;
+              }
+              return (
+                <span className="block max-w-[220px] truncate" title={text}>
+                  {text}
+                </span>
+              );
+            },
           },
           tipo_movimiento: {
             render: (val) => {
