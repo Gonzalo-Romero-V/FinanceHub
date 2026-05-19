@@ -64,7 +64,7 @@ Valores semilla típicos: `Ingreso`, `Egreso`, `Transferencia`.
 | cuenta_destino_id | bigint FK nullable | requerida para Ingreso/Transferencia. |
 | concepto_id | bigint FK → conceptos.id | de aquí se infiere el `tipo_movimiento`. |
 | nota | string nullable | |
-| fecha | timestamp default now | |
+| fecha | timestamp | UTC. Se setea en backend con `now()` al crear. **Inmutable**: no se modifica en updates. Ver `Docs/contratos.md` para la regla "solo editar movimientos del día actual". |
 
 ⚠️ La tabla `movimientos` NO tiene `user_id` directo. La pertenencia al usuario
 se deduce vía `concepto.user_id` (o `cuenta_*.user_id`). Está en `PENDIENTES.md`
@@ -88,3 +88,6 @@ cuentas 1───* movimientos (cuenta_destino_id)
 - Transferencia → ambas obligatorias y distintas.
 - `monto > 0` siempre.
 - El `tipo_movimiento` se infiere del `concepto`, no se envía suelto.
+- `movimientos.fecha` la dicta el servidor; el cliente no puede setearla.
+- Sólo se pueden editar / eliminar movimientos cuya `fecha` esté en el día
+  actual del cliente (TZ del header `X-Client-Timezone`).

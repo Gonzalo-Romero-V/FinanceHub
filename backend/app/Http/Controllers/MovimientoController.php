@@ -7,6 +7,7 @@ use App\Models\MovimientoModel;
 use App\Models\CuentaModel;
 use App\Models\ConceptoModel;
 use Illuminate\Support\Facades\DB;
+use Carbon\CarbonImmutable;
 use Exception;
 
 class MovimientoController
@@ -43,6 +44,32 @@ class MovimientoController
         }
     }
 
+    /**
+     * TZ del cliente (header X-Client-Timezone, IANA). Default UTC.
+     */
+    private function clientTimezone(Request $request): string
+    {
+        $tz = (string) $request->header('X-Client-Timezone', 'UTC');
+        try {
+            new \DateTimeZone($tz);
+            return $tz;
+        } catch (Exception $e) {
+            return 'UTC';
+        }
+    }
+
+    /**
+     * Verdadero si el timestamp dado cae en el "hoy" del cliente.
+     * Compara YYYY-MM-DD en la TZ del cliente.
+     */
+    private function esDelDiaActual($fecha, string $tz): bool
+    {
+        if ($fecha === null) return false;
+        $f = CarbonImmutable::parse($fecha, 'UTC')->setTimezone($tz);
+        $hoy = CarbonImmutable::now($tz);
+        return $f->isSameDay($hoy);
+    }
+
     // ─── CRUD ────────────────────────────────────────────────────────────────────
 
     // LISTAR movimientos del usuario
@@ -71,7 +98,6 @@ class MovimientoController
             'cuenta_destino_id'=> 'nullable|integer',
             'concepto_id'      => 'required|integer',
             'nota'             => 'nullable|string|max:255',
-            'fecha'            => 'nullable|date',
         ]);
 
         $userId = auth()->id();
@@ -92,9 +118,14 @@ class MovimientoController
 
         try {
             DB::transaction(function () use ($request, $tipo, $monto, &$nuevoMovimiento) {
-                $nuevoMovimiento = MovimientoModel::create($request->only(
-                    'monto', 'cuenta_origen_id', 'cuenta_destino_id', 'concepto_id', 'nota', 'fecha'
-                ));
+                $payload = $request->only(
+                    'monto', 'cuenta_origen_id', 'cuenta_destino_id', 'concepto_id', 'nota'
+                );
+                // La fecha del movimiento la dicta el servidor (UTC). Ignoramos
+                // cualquier `fecha` que venga del cliente.
+                $payload['fecha'] = CarbonImmutable::now('UTC');
+
+                $nuevoMovimiento = MovimientoModel::create($payload);
 
                 $this->aplicarEfectoSaldo(
                     $tipo,
@@ -145,7 +176,6 @@ class MovimientoController
             'cuenta_destino_id'=> 'sometimes|nullable|integer',
             'concepto_id'      => 'sometimes|required|integer',
             'nota'             => 'sometimes|nullable|string|max:255',
-            'fecha'            => 'sometimes|nullable|date',
         ]);
 
         $userId = auth()->id();
@@ -158,14 +188,22 @@ class MovimientoController
             })
             ->firstOrFail();
 
-        $datos = $request->only('monto', 'cuenta_origen_id', 'cuenta_destino_id', 'concepto_id', 'nota', 'fecha');
+        // Regla de negocio: sólo se pueden editar movimientos del día actual del cliente.
+        if (!$this->esDelDiaActual($movimiento->fecha, $this->clientTimezone($request))) {
+            return response()->json([
+                'mensaje' => 'Solo se pueden editar movimientos registrados hoy.'
+            ], 403);
+        }
+
+        // La fecha es inmutable: ignoramos cualquier `fecha` que venga en el body.
+        $datos = $request->only('monto', 'cuenta_origen_id', 'cuenta_destino_id', 'concepto_id', 'nota');
 
         if (empty($datos)) {
             return response()->json(['mensaje' => 'No se enviaron campos para actualizar'], 400);
         }
 
         try {
-            DB::transaction(function () use ($movimiento, $datos, $userId) {
+            DB::transaction(function () use ($movimiento, $datos) {
                 // 1. Revertir el efecto del movimiento anterior
                 $tipoAnterior = $movimiento->concepto?->tipoMovimiento?->nombre ?? 'Egreso';
                 $this->aplicarEfectoSaldo(
@@ -173,10 +211,10 @@ class MovimientoController
                     (float) $movimiento->monto,
                     $movimiento->cuenta_origen_id,
                     $movimiento->cuenta_destino_id,
-                    -1  // revertir
+                    -1
                 );
 
-                // 2. Aplicar los nuevos datos
+                // 2. Aplicar los nuevos datos (fecha no cambia)
                 $movimiento->update($datos);
                 $movimiento->refresh()->load('concepto.tipoMovimiento');
 
@@ -187,7 +225,7 @@ class MovimientoController
                     (float) $movimiento->monto,
                     $movimiento->cuenta_origen_id,
                     $movimiento->cuenta_destino_id,
-                    +1  // aplicar
+                    +1
                 );
             });
 
@@ -204,7 +242,7 @@ class MovimientoController
     }
 
     // ELIMINAR un movimiento
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $userId = auth()->id();
 
@@ -216,16 +254,22 @@ class MovimientoController
             })
             ->firstOrFail();
 
+        // Regla de negocio: sólo se pueden eliminar movimientos del día actual del cliente.
+        if (!$this->esDelDiaActual($movimiento->fecha, $this->clientTimezone($request))) {
+            return response()->json([
+                'mensaje' => 'Solo se pueden eliminar movimientos registrados hoy.'
+            ], 403);
+        }
+
         try {
             DB::transaction(function () use ($movimiento) {
-                // Revertir el efecto del movimiento antes de eliminarlo
                 $tipo = $movimiento->concepto?->tipoMovimiento?->nombre ?? 'Egreso';
                 $this->aplicarEfectoSaldo(
                     $tipo,
                     (float) $movimiento->monto,
                     $movimiento->cuenta_origen_id,
                     $movimiento->cuenta_destino_id,
-                    -1  // revertir
+                    -1
                 );
 
                 $movimiento->delete();

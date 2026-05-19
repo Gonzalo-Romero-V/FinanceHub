@@ -21,7 +21,7 @@ import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
 import { createMovimiento } from "@/lib/api/movimientos";
-import { formatCurrency, todayIsoDate } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 
 type TipoMovimiento = "Ingreso" | "Egreso" | "Transferencia";
 
@@ -35,7 +35,6 @@ interface MovimientoFormState {
   cuenta_destino_nombre: string;
   monto: string;
   nota: string;
-  fecha: string;
 }
 
 const EMPTY_STATE: MovimientoFormState = {
@@ -48,7 +47,6 @@ const EMPTY_STATE: MovimientoFormState = {
   cuenta_destino_nombre: "",
   monto: "",
   nota: "",
-  fecha: todayIsoDate(),
 };
 
 interface MovimientoFormProps {
@@ -215,7 +213,6 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
         cuenta_origen_id: form.cuenta_origen_id,
         cuenta_destino_id: form.cuenta_destino_id,
         nota: form.nota.trim() || null,
-        fecha: form.fecha || todayIsoDate(),
       });
 
       onSuccess();
@@ -499,7 +496,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
           value={formatCurrency(Number(form.monto))}
           valueClass="h3 text-foreground"
         />
-        <SummaryRow label="Fecha" value={form.fecha} />
+        <SummaryRow label="Fecha" value="Ahora" />
         {form.nota && <SummaryRow label="Nota" value={form.nota} />}
       </div>
 

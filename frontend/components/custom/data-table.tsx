@@ -41,6 +41,12 @@ interface DataTableProps<T> {
   footer?: React.ReactNode;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  /** Devuelve false para deshabilitar la acción en esa fila (con tooltip opcional). */
+  canEdit?: (item: T) => boolean;
+  canDelete?: (item: T) => boolean;
+  /** Texto del tooltip cuando la acción está deshabilitada. */
+  disabledEditHint?: string;
+  disabledDeleteHint?: string;
 }
 
 export function DataTable<T extends { [key: string]: any }>({
@@ -57,6 +63,10 @@ export function DataTable<T extends { [key: string]: any }>({
   footer,
   onEdit,
   onDelete,
+  canEdit,
+  canDelete,
+  disabledEditHint,
+  disabledDeleteHint,
 }: DataTableProps<T>) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
@@ -216,68 +226,87 @@ export function DataTable<T extends { [key: string]: any }>({
                     );
                   })}
 
-                  {hasActions && (
-                    <TableCell className="w-[70px] text-right">
-                      {/* Desktop Actions: Hover */}
-                      <div className="hidden md:flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {onEdit && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10"
-                            onClick={() => onEdit(item)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {onDelete && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => onDelete(item)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* Mobile Actions: Popover (Three dots vertical) */}
-                      <div className="flex md:hidden items-center justify-end">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
+                  {hasActions && (() => {
+                    const editAllowed = canEdit ? canEdit(item) : true;
+                    const deleteAllowed = canDelete ? canDelete(item) : true;
+                    return (
+                      <TableCell className="w-[70px] text-right">
+                        {/* Desktop Actions: Hover */}
+                        <div className="hidden md:flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {onEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10 disabled:opacity-40 disabled:pointer-events-none"
+                              onClick={() => onEdit(item)}
+                              disabled={!editAllowed}
+                              title={!editAllowed ? disabledEditHint : undefined}
+                              aria-label="Editar"
+                            >
+                              <Pencil className="h-4 w-4" />
                             </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-40 p-1" align="end">
-                            <div className="flex flex-col gap-1">
-                              {onEdit && (
-                                <Button
-                                  variant="ghost"
-                                  className="justify-start gap-2 h-9 px-2 text-sm"
-                                  onClick={() => onEdit(item)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  Editar
-                                </Button>
-                              )}
-                              {onDelete && (
-                                <Button
-                                  variant="ghost"
-                                  className="justify-start gap-2 h-9 px-2 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => onDelete(item)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Eliminar
-                                </Button>
-                              )}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </TableCell>
-                  )}
+                          )}
+                          {onDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 disabled:pointer-events-none"
+                              onClick={() => onDelete(item)}
+                              disabled={!deleteAllowed}
+                              title={!deleteAllowed ? disabledDeleteHint : undefined}
+                              aria-label="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Mobile Actions: Popover (Three dots vertical) */}
+                        <div className="flex md:hidden items-center justify-end">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-1" align="end">
+                              <div className="flex flex-col gap-1">
+                                {onEdit && (
+                                  <Button
+                                    variant="ghost"
+                                    className="justify-start gap-2 h-9 px-2 small disabled:opacity-50"
+                                    onClick={() => onEdit(item)}
+                                    disabled={!editAllowed}
+                                    title={!editAllowed ? disabledEditHint : undefined}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    Editar
+                                  </Button>
+                                )}
+                                {onDelete && (
+                                  <Button
+                                    variant="ghost"
+                                    className="justify-start gap-2 h-9 px-2 small text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                                    onClick={() => onDelete(item)}
+                                    disabled={!deleteAllowed}
+                                    title={!deleteAllowed ? disabledDeleteHint : undefined}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Eliminar
+                                  </Button>
+                                )}
+                                {(!editAllowed || !deleteAllowed) && (disabledEditHint || disabledDeleteHint) && (
+                                  <p className="xs text-muted-foreground px-2 pt-1">
+                                    {disabledEditHint || disabledDeleteHint}
+                                  </p>
+                                )}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </TableCell>
+                    );
+                  })()}
                 </TableRow>
               ))
             ) : (

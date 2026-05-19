@@ -19,7 +19,6 @@ import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
 import { updateMovimiento } from "@/lib/api/movimientos";
-import { todayIsoDate } from "@/lib/utils/format";
 
 interface MovimientoEditItem {
   id: number;
@@ -59,7 +58,6 @@ export function MovimientoEditForm({
   const [cuentaDestinoId, setCuentaDestinoId] = useState("");
   const [monto, setMonto] = useState("");
   const [nota, setNota] = useState("");
-  const [, setFecha] = useState("");
 
   useEffect(() => {
     if (!open || !token) return;
@@ -80,7 +78,6 @@ export function MovimientoEditForm({
     setCuentaDestinoId(editItem.cuenta_destino_id ? String(editItem.cuenta_destino_id) : "");
     setMonto(String(editItem.monto));
     setNota(editItem.nota || "");
-    setFecha(editItem.fecha ? editItem.fecha.split("T")[0].split(" ")[0] : todayIsoDate());
     setError(null);
   }, [open, editItem]);
 

@@ -18,7 +18,7 @@ import {
   deleteMovimiento,
   type MovimientoRaw,
 } from "@/lib/api/movimientos";
-import { formatDate, formatNumber } from "@/lib/utils/format";
+import { formatDate, formatNumber, isSameLocalDay } from "@/lib/utils/format";
 
 type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
 
@@ -184,6 +184,10 @@ export default function MovimientosPage() {
         }}
         onEdit={handleEdit}
         onDelete={(item) => setDeleteItem(item)}
+        canEdit={(item) => isSameLocalDay(item.fecha)}
+        canDelete={(item) => isSameLocalDay(item.fecha)}
+        disabledEditHint="Solo se pueden editar movimientos registrados hoy."
+        disabledDeleteHint="Solo se pueden eliminar movimientos registrados hoy."
         rowsOnDisplay={8}
         dateFilter={true}
         dateFilterColumn="fecha"

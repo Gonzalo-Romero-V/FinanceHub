@@ -1,3 +1,5 @@
+import { getBrowserTimezone } from "@/lib/utils/format";
+
 const DEFAULT_API_URL = "http://localhost:8000/api";
 
 export function getApiBaseUrl() {
@@ -30,6 +32,7 @@ export async function apiFetch<T = unknown>(
 
   const finalHeaders: Record<string, string> = {
     Accept: "application/json",
+    "X-Client-Timezone": getBrowserTimezone(),
     ...headers,
   };
 

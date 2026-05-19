@@ -20,7 +20,6 @@ export interface MovimientoPayload {
   cuenta_origen_id?: number | null;
   cuenta_destino_id?: number | null;
   nota?: string | null;
-  fecha?: string;
 }
 
 export function listMovimientos(token: string) {

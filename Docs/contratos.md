@@ -2,6 +2,14 @@
 
 ## Backend (Laravel) — base `http://localhost:8000/api`
 
+### Headers automáticos
+Todas las requests del frontend incluyen:
+- `Authorization: Bearer <token>` cuando hay sesión.
+- `Accept: application/json`.
+- `X-Client-Timezone: <IANA>` (ej. `America/Guayaquil`). Lo usa el backend
+  para aplicar reglas día-local (p.ej. "solo editar movimientos de hoy").
+  Default `UTC` si el header no llega o es inválido.
+
 Convención de respuesta:
 ```jsonc
 // Recurso simple
@@ -59,13 +67,19 @@ El cliente del frontend (`lib/api/client.ts`) acepta ambas variantes
 
 ### Movimientos (Bearer)
 
-| Método | Path | Body | 200 |
+| Método | Path | Body | 200 / Errores |
 |---|---|---|---|
-| GET | `/movimientos` | — | `{data:Movimiento[]}` (con `concepto`, `cuenta_origen`, `cuenta_destino` anidados) |
+| GET | `/movimientos` | — | `{data:Movimiento[]}` (con `concepto`, `cuenta_origen`, `cuenta_destino` anidados, ordenado por `fecha desc`) |
 | GET | `/movimientos/{id}` | — | `{data:Movimiento}` |
-| POST | `/movimientos` | `{monto, concepto_id, cuenta_origen_id?, cuenta_destino_id?, nota?, fecha?}` | `{data:Movimiento}` |
-| PATCH | `/movimientos/{id}` | `{...partial}` | `{data:Movimiento}` |
-| DELETE | `/movimientos/{id}` | — | 204 |
+| POST | `/movimientos` | `{monto, concepto_id, cuenta_origen_id?, cuenta_destino_id?, nota?}` | `{data:Movimiento}` con `fecha = now()` UTC. **El campo `fecha` enviado por el cliente se ignora.** |
+| PATCH | `/movimientos/{id}` | `{monto?, concepto_id?, cuenta_origen_id?, cuenta_destino_id?, nota?}` | 200 ok; **403 si la `fecha` del movimiento NO cae en el día actual del cliente** (TZ del header). El campo `fecha` no es editable. |
+| DELETE | `/movimientos/{id}` | — | 200; **403 si la `fecha` no es de hoy en TZ del cliente.** |
+
+Notas:
+- `fecha` es inmutable después de crear. Eloquent no la auto-actualiza
+  (`$timestamps = false` en `MovimientoModel`).
+- El controller usa `CarbonImmutable::parse($mov->fecha, 'UTC')->setTimezone($tz)`
+  para comparar el día calendario.
 
 ### Balance (Bearer)
 

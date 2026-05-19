@@ -47,6 +47,15 @@
   (validación de dominio).
 - Backups periódicos de DB.
 
+### Reglas de negocio: fecha/hora de movimientos (implementadas)
+- La `fecha` de un movimiento la dicta el **servidor** al crear (`now()` en UTC).
+  El cliente no puede setear ni modificar `fecha`.
+- Una vez creada, `fecha` es **inmutable** (no se reescribe en updates).
+- Sólo se pueden **editar/eliminar movimientos del día actual** del cliente.
+  La regla se aplica en backend (403) y en frontend (botones deshabilitados con
+  tooltip). El día del cliente se determina vía header `X-Client-Timezone` (IANA)
+  que envía automáticamente `apiFetch`.
+
 ### Multiusuario LLM
 - El LLM service todavía no filtra estrictamente por `user_id` en todas las
   queries generadas. Hay que reforzar el guardrail para que ningún SQL emitido
