@@ -30,15 +30,21 @@ export function HeaderUser() {
       mobileAside={<AsideUser />}
       rightCluster={
         <>
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
-            <div className="grid h-7 w-7 place-items-center rounded-full bg-brand-1 text-xs font-bold text-white">
+          <Link
+            href="/perfil"
+            aria-label="Ir a mi perfil"
+            className="group flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2 transition-colors hover:border-brand-1/50 hover:bg-brand-1/5"
+          >
+            <div className="grid h-7 w-7 place-items-center rounded-full bg-brand-1 xs font-bold text-white">
               {userInitials}
             </div>
             <div className="leading-tight">
-              <p className="small font-semibold text-foreground">{user?.name ?? "Usuario"}</p>
+              <p className="small font-semibold text-foreground group-hover:text-brand-1">
+                {user?.name ?? "Usuario"}
+              </p>
               <p className="xs text-muted-foreground">Sesión activa</p>
             </div>
-          </div>
+          </Link>
 
           <Button variant="outline" className="rounded-xl" onClick={logout}>
             Cerrar sesión

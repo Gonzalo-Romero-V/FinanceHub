@@ -35,6 +35,7 @@ frontend/
       movimientos/page.tsx
       cuentas/page.tsx
       conceptos/page.tsx
+      perfil/page.tsx           # edición de name/email/password
       help/page.tsx
 
     auth/callback/page.tsx      # callback OAuth Google
@@ -79,6 +80,7 @@ frontend/
       cuentas.ts
       conceptos.ts
       movimientos.ts
+      users.ts                  # updateUser, getUser
     auth/
       api.ts                    # loginRequest, registerRequest, fetchCurrentUser, logoutRequest
       context.tsx               # AuthProvider + useAuth

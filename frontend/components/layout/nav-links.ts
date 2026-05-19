@@ -3,6 +3,7 @@ import {
   CircleHelp,
   LayoutDashboard,
   ReceiptText,
+  User,
   WalletMinimal,
   type LucideIcon,
 } from "lucide-react";
@@ -26,5 +27,6 @@ export const userNavLinks: NavLink[] = [
 ];
 
 export const userSecondaryLinks: NavLink[] = [
+  { href: "/perfil", label: "Mi perfil", icon: User },
   { href: "/help", label: "Tutorial", icon: CircleHelp },
 ];

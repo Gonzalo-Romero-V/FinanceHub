@@ -73,14 +73,21 @@ El cliente del frontend (`lib/api/client.ts`) acepta ambas variantes
 |---|---|---|
 | GET | `/balance` | `{data:{...}}` |
 
-### Users (Bearer, admin)
+### Users (Bearer)
 
-| Método | Path | Notas |
-|---|---|---|
-| GET | `/users` | listar |
-| GET | `/users/{id}` | id numérico |
-| PATCH | `/users/{id}` | actualizar |
-| DELETE | `/users/{id}` | borrar |
+| Método | Path | Autorización | Body | 200 |
+|---|---|---|---|---|
+| GET | `/users` | solo admin | — | `{mensaje, data:User[]}` |
+| GET | `/users/{id}` | self o admin | — | `{mensaje, data:User}` |
+| PATCH | `/users/{id}` | self o admin | `{name?, email?, password?}` | `{mensaje, data:User}` |
+| DELETE | `/users/{id}` | solo admin | — | `{mensaje}` |
+
+Notas:
+- `PATCH /users/{id}` valida `name|string|max:100`, `email|email`,
+  `password|string|min:6` (todos `sometimes`).
+- El campo `password` se bcrypta automáticamente en el modelo
+  (`setPasswordAttribute`).
+- Si `auth()->id() !== id` y el usuario no es admin → 403.
 
 ---
 
