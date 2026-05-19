@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/app/context/AuthContext"
+import { useAuth } from "@/lib/auth/context"
 import { loginRequest, registerRequest } from "@/lib/auth/api"
+import { getApiBaseUrl } from "@/lib/api/client"
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -17,7 +18,6 @@ export default function AuthPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://192.168.33.69:8000/api"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,8 +47,7 @@ export default function AuthPage() {
   }
 
   const handleGoogleLogin = () => {
-    // Redirigir al endpoint del backend que inicia el flujo de OAuth de Google
-    window.location.href = `${apiUrl}/auth/google`
+    window.location.href = `${getApiBaseUrl()}/auth/google`
   }
 
   return (
@@ -56,7 +55,7 @@ export default function AuthPage() {
       <div className="w-full max-w-sm md:max-w-md">
         <Card>
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">
+            <CardTitle className="h2">
               {isLogin ? "Iniciar sesión" : "Crear cuenta"}
             </CardTitle>
             <CardDescription>
@@ -68,7 +67,7 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               {error && (
-                <div className="p-3 text-sm rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                <div className="small p-3 rounded bg-destructive/10 text-destructive">
                   {error}
                 </div>
               )}
@@ -101,9 +100,9 @@ export default function AuthPage() {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Contraseña</Label>
                     {isLogin && (
-                      <Link 
-                        href="#" 
-                        className="text-xs font-medium text-primary hover:text-brand-1 hover:underline text-muted-foreground"
+                      <Link
+                        href="#"
+                        className="xs font-medium text-muted-foreground hover:text-brand-1 hover:underline"
                       >
                         ¿Olvidaste tu contraseña?
                       </Link>
@@ -127,7 +126,7 @@ export default function AuthPage() {
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
+                <div className="relative flex justify-center xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
                     O continuar con
                   </span>
@@ -143,11 +142,11 @@ export default function AuthPage() {
 
             </CardContent>
             <CardFooter className="justify-center">
-               <div className="text-sm text-muted-foreground">
+               <div className="small text-muted-foreground">
                 {isLogin ? "¿No tienes una cuenta? " : "¿Ya tienes una cuenta? "}
-                <button 
+                <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)} 
+                  onClick={() => setIsLogin(!isLogin)}
                   className="text-primary hover:text-brand-1 hover:underline font-medium focus:outline-none"
                 >
                   {isLogin ? "Regístrate" : "Inicia sesión"}

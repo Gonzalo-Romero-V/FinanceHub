@@ -1,8 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CuentasTableTest } from "@/components/ui/cuentas";
-import {Logo} from "@/components/layout/logo";
+import { Logo } from "@/components/layout/logo";
 
 export default function Home() {
   return (

@@ -1,141 +1,125 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Loader2 } from "lucide-react"
-import { Modal } from "@/components/ui/modal"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useAuth } from "@/app/context/AuthContext"
+} from "@/components/ui/select";
 
-interface TipoCuenta {
-  id: number
-  nombre: string
-}
+import { useAuth } from "@/lib/auth/context";
+import {
+  createCuenta,
+  listTiposCuenta,
+  updateCuenta,
+  type TipoCuenta,
+} from "@/lib/api/cuentas";
 
 interface CuentaFormData {
-  nombre: string
-  tipo_cuenta_id: string
-  saldo: string
-  activa: boolean
+  nombre: string;
+  tipo_cuenta_id: string;
+  saldo: string;
+  activa: boolean;
 }
 
 interface CuentaFormProps {
-  open: boolean
-  onClose: () => void
-  onSuccess: () => void
-  /** Si se pasa, el formulario estará en modo edición */
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
   editItem?: {
-    id: number
-    nombre: string
-    tipo_cuenta: string
-    saldo: number
-    activa: string
-  } | null
+    id: number;
+    nombre: string;
+    tipo_cuenta: string;
+    saldo: number;
+    activa: string;
+  } | null;
 }
 
 export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormProps) {
-  const { token } = useAuth()
-  const isEdit = !!editItem
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL
+  const { token } = useAuth();
+  const isEdit = !!editItem;
 
-  const [tiposCuenta, setTiposCuenta] = useState<TipoCuenta[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isFetchingTypes, setIsFetchingTypes] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [tiposCuenta, setTiposCuenta] = useState<TipoCuenta[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingTypes, setIsFetchingTypes] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<CuentaFormData>({
     nombre: "",
     tipo_cuenta_id: "",
     saldo: "0",
     activa: true,
-  })
+  });
 
-  // Cargar tipos de cuenta al abrir
   useEffect(() => {
-    if (!open || !token) return
-    setIsFetchingTypes(true)
-    fetch(`${baseUrl}/tipos-cuenta`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
+    if (!open || !token) return;
+    setIsFetchingTypes(true);
+    listTiposCuenta(token)
       .then((d) => setTiposCuenta(Array.isArray(d.data) ? d.data : []))
       .catch(() => setError("No se pudieron cargar los tipos de cuenta."))
-      .finally(() => setIsFetchingTypes(false))
-  }, [open, token])
+      .finally(() => setIsFetchingTypes(false));
+  }, [open, token]);
 
-  // Inicializar formulario al abrir (modo edición o limpio)
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     if (editItem) {
-      // Buscamos el id del tipo por nombre
-      const tipoId = tiposCuenta.find((t) => t.nombre === editItem.tipo_cuenta)?.id
+      const tipoId = tiposCuenta.find((t) => t.nombre === editItem.tipo_cuenta)?.id;
       setForm({
         nombre: editItem.nombre,
         tipo_cuenta_id: tipoId ? String(tipoId) : "",
         saldo: String(editItem.saldo),
         activa: editItem.activa === "Activa",
-      })
+      });
     } else {
-      setForm({ nombre: "", tipo_cuenta_id: "", saldo: "0", activa: true })
+      setForm({ nombre: "", tipo_cuenta_id: "", saldo: "0", activa: true });
     }
-    setError(null)
-  }, [open, editItem, tiposCuenta])
+    setError(null);
+  }, [open, editItem, tiposCuenta]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
-    if (!form.nombre.trim()) return setError("El nombre es obligatorio.")
-    if (!form.tipo_cuenta_id) return setError("Selecciona un tipo de cuenta.")
+    if (!form.nombre.trim()) return setError("El nombre es obligatorio.");
+    if (!form.tipo_cuenta_id) return setError("Selecciona un tipo de cuenta.");
     if (!isEdit && (isNaN(Number(form.saldo)) || Number(form.saldo) < 0))
-      return setError("El saldo inicial debe ser un número mayor o igual a 0.")
+      return setError("El saldo inicial debe ser un número mayor o igual a 0.");
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const url = isEdit
-        ? `${baseUrl}/cuentas/${editItem!.id}`
-        : `${baseUrl}/cuentas`
-      const method = isEdit ? "PATCH" : "POST"
+      if (!token) throw new Error("Usuario no autenticado.");
 
-      const body: Record<string, any> = {
-        nombre: form.nombre.trim(),
-        tipo_cuenta_id: Number(form.tipo_cuenta_id),
-        activa: form.activa,
-      }
-      if (!isEdit) {
-        body.saldo = Number(form.saldo)
-      }
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      })
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}))
-        throw new Error(errJson.message || `Error ${res.status}`)
+      if (isEdit && editItem) {
+        await updateCuenta(token, editItem.id, {
+          nombre: form.nombre.trim(),
+          tipo_cuenta_id: Number(form.tipo_cuenta_id),
+          activa: form.activa,
+        });
+      } else {
+        await createCuenta(token, {
+          nombre: form.nombre.trim(),
+          tipo_cuenta_id: Number(form.tipo_cuenta_id),
+          activa: form.activa,
+          saldo: Number(form.saldo),
+        });
       }
 
-      onSuccess()
-      onClose()
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado.")
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Modal
@@ -146,7 +130,6 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
       persistent={isLoading}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Nombre */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="cuenta-nombre">Nombre</Label>
           <Input
@@ -158,11 +141,10 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
           />
         </div>
 
-        {/* Tipo */}
         <div className="flex flex-col gap-1.5">
           <Label>Tipo de cuenta</Label>
           {isFetchingTypes ? (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground small">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando tipos...
             </div>
           ) : (
@@ -185,7 +167,6 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
           )}
         </div>
 
-        {/* Saldo inicial — solo en creación */}
         {!isEdit && (
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cuenta-saldo">Saldo inicial</Label>
@@ -199,13 +180,12 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
               onChange={(e) => setForm((f) => ({ ...f, saldo: e.target.value }))}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="xs text-muted-foreground">
               El saldo no podrá modificarse manualmente después; solo cambiará mediante movimientos.
             </p>
           </div>
         )}
 
-        {/* Estado activa */}
         <div className="flex items-center gap-3">
           <input
             id="cuenta-activa"
@@ -220,14 +200,12 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
           </Label>
         </div>
 
-        {/* Error */}
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
 
-        {/* Acciones */}
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" type="button" onClick={onClose} disabled={isLoading}>
             Cancelar
@@ -242,5 +220,5 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
         </div>
       </form>
     </Modal>
-  )
+  );
 }

@@ -1,57 +1,32 @@
 # FinanceHub
 
-FinanceHub es un ecosistema moderno centrado en la creación de un sistema de dashboard financiero inteligente gestionado mediante Inteligencia Artificial y Lenguaje Natural (NL2SQL). 
+FinanceHub es un sistema de dashboard financiero personal con un asistente
+basado en Lenguaje Natural (NL2SQL). El stack tiene tres servicios independientes:
 
-Integra de manera fluida tres capas robustas de ingeniería de software:
-1. **Frontend**: Next.js (App Router) actuando también como proxy para servicios internos.
-2. **Backend**: Laravel (API) para persistencia transaccional.
-3. **LLM Service**: FastAPI encargado de la lógica de procesamiento de lenguaje natural.
-
----
-
-## Arquitectura de Despliegue
-El sistema utiliza un modelo de proxy inverso donde el Frontend (Next.js) centraliza las peticiones, ocultando el Backend (Laravel) de la exposición pública directa, especialmente para flujos de OAuth.
-
-- **Dominio principal**: `https://financehub.cc`
-- **Proxy OAuth**: Todas las peticiones de autenticación deben dirigirse a `https://financehub.cc/api/login/google/...` para ser gestionadas internamente.
+1. **Frontend**: Next.js (App Router) — sirve la UI y proxea OAuth.
+2. **Backend**: Laravel — API REST y persistencia.
+3. **LLM Service**: FastAPI — interpretación de prompts y generación de widgets.
 
 ---
 
-## Configuración de Entorno (Backend)
-Asegúrate de que tu `.env` en `backend/` contenga:
+## Quick Start (desarrollo local)
 
-```env
-APP_URL=https://financehub.cc
-FRONTEND_URL=https://financehub.cc
-GOOGLE_REDIRECT=https://financehub.cc/api/login/google/callback
-SESSION_DOMAIN=financehub.cc
-SANCTUM_STATEFUL_DOMAINS=financehub.cc
-APP_DEBUG=false
-```
+Cada servicio se ejecuta en su propia terminal. Toda la configuración por defecto
+apunta a `localhost`; no necesitas tocar dominios ni DNS.
 
----
+### 1. Backend (Laravel) — `http://localhost:8000`
 
-## Comandos de Iniciación (Quick Start)
-
-Cada servicio debe ejecutarse en su propia terminal.
-
-### 1. Backend (Laravel)
 ```powershell
 cd backend
 composer install
+cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-### 2. Frontend (Next.js)
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+### 2. LLM Service (FastAPI) — `http://localhost:8001`
 
-### 3. Servicio de IA (FastAPI)
 ```powershell
 cd llm-service
 python -m venv venv
@@ -59,3 +34,91 @@ python -m venv venv
 pip install -r requirements.txt
 python main.py
 ```
+
+### 3. Frontend (Next.js) — `http://localhost:3000`
+
+```powershell
+cd frontend
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Las variables que lee el frontend están en `frontend/.env.example`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_LLM_API_BASE_URL=http://localhost:8001
+```
+
+Si no defines `.env.local`, el frontend usa esos valores por defecto.
+
+---
+
+## Estructura del Frontend
+
+```
+frontend/
+  app/
+    layout.tsx                       # root layout (AuthProvider)
+    page.tsx                         # redirige a /home
+    (public)/                        # rutas públicas
+      layout.tsx                     # usa <HeaderPublic /> + <Footer />
+      home/, tutorial/, login/
+    (user)/                          # rutas autenticadas (rol "user")
+      layout.tsx                     # usa <HeaderUser /> + <AuthGate />
+      dashboard/, movimientos/, cuentas/, conceptos/, help/
+    auth/callback/                   # callback de OAuth
+
+  components/
+    layout/
+      header-shell.tsx               # base reusable (logo + nav + cluster)
+      aside-shell.tsx                # base mobile (overlay + slide-in)
+      header-public.tsx, aside-public.tsx
+      header-user.tsx,   aside-user.tsx
+      nav-links.ts                   # publicNavLinks, userNavLinks
+      footer.tsx, logo.tsx
+    custom/
+      page-shell.tsx                 # max-w + padding consistente
+      page-header.tsx                # título + descripción + acción
+      page-state.tsx                 # <PageLoading />, <PageError />
+      data-table.tsx                 # tabla genérica con filtros y acciones
+      balance-general.tsx
+    forms/                           # modales de creación/edición
+    auth/auth-gate.tsx               # gating de rutas privadas
+    charts/                          # widgets del dashboard AI
+    ui/                              # primitivos shadcn
+
+  lib/
+    api/
+      client.ts                      # apiFetch + getApiBaseUrl
+      cuentas.ts, conceptos.ts, movimientos.ts
+    auth/
+      api.ts, context.tsx, storage.ts, types.ts
+    utils/
+      format.ts                      # formatCurrency, formatDate, ...
+    utils.ts                         # cn()
+```
+
+### Convenciones
+
+- **Componentes por rol**: `header-{rol}.tsx`, `aside-{rol}.tsx`. Para agregar
+  un rol nuevo, exporta un `xxxNavLinks` en `nav-links.ts` y compón con
+  `HeaderShell` + `AsideShell`. No hay `if (role === ...)` repartidos en
+  componentes grandes.
+- **Tipografía**: las utilities `.h1`, `.h2`, `.h3`, `.body`, `.small`, `.xs`
+  están definidas en `app/globals.css` con sus tokens en `@theme`. Los
+  componentes consumen estas clases en vez de declarar `text-Xxl font-Y` a mano.
+- **Colores**: tokens semánticos (`brand-1`, `chart-1..8`, `destructive`, etc.)
+  declarados como vars CSS, también en `globals.css`.
+- **Fetch**: las páginas no llaman `fetch()` directo. Usan los módulos
+  `lib/api/*` que consumen `apiFetch` (incluye token, base URL y manejo de
+  errores con `ApiError`).
+
+---
+
+## Despliegue (TBD)
+
+La configuración de producción (dominio definitivo, OAuth callbacks reales,
+proxy inverso) no está cableada en este repo todavía. Cuando ese trabajo
+arranque, se documenta acá.

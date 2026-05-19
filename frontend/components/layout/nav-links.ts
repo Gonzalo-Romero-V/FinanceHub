@@ -1,0 +1,30 @@
+import {
+  BookOpen,
+  CircleHelp,
+  LayoutDashboard,
+  ReceiptText,
+  WalletMinimal,
+  type LucideIcon,
+} from "lucide-react";
+
+export interface NavLink {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+export const publicNavLinks: NavLink[] = [
+  { href: "/home", label: "Home", icon: LayoutDashboard },
+  { href: "/tutorial", label: "Tutorial", icon: BookOpen },
+];
+
+export const userNavLinks: NavLink[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/movimientos", label: "Movimientos", icon: ReceiptText },
+  { href: "/cuentas", label: "Cuentas", icon: WalletMinimal },
+  { href: "/conceptos", label: "Conceptos", icon: BookOpen },
+];
+
+export const userSecondaryLinks: NavLink[] = [
+  { href: "/help", label: "Tutorial", icon: CircleHelp },
+];

@@ -1,112 +1,102 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Loader2 } from "lucide-react"
-import { Modal } from "@/components/ui/modal"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useAuth } from "@/app/context/AuthContext"
+} from "@/components/ui/select";
 
-interface TipoMovimiento {
-  id: number
-  nombre: string
-}
+import { useAuth } from "@/lib/auth/context";
+import {
+  createConcepto,
+  listTiposMovimiento,
+  updateConcepto,
+  type TipoMovimiento,
+} from "@/lib/api/conceptos";
 
 interface ConceptoFormProps {
-  open: boolean
-  onClose: () => void
-  onSuccess: () => void
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
   editItem?: {
-    id: number
-    nombre: string
-    tipo_movimiento: string
-  } | null
+    id: number;
+    nombre: string;
+    tipo_movimiento: string;
+  } | null;
 }
 
 export function ConceptoForm({ open, onClose, onSuccess, editItem }: ConceptoFormProps) {
-  const { token } = useAuth()
-  const isEdit = !!editItem
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL
+  const { token } = useAuth();
+  const isEdit = !!editItem;
 
-  const [tipos, setTipos] = useState<TipoMovimiento[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isFetchingTypes, setIsFetchingTypes] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [nombre, setNombre] = useState("")
-  const [tipoId, setTipoId] = useState("")
+  const [tipos, setTipos] = useState<TipoMovimiento[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingTypes, setIsFetchingTypes] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [nombre, setNombre] = useState("");
+  const [tipoId, setTipoId] = useState("");
 
   useEffect(() => {
-    if (!open || !token) return
-    setIsFetchingTypes(true)
-    fetch(`${baseUrl}/tipos-movimiento`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
+    if (!open || !token) return;
+    setIsFetchingTypes(true);
+    listTiposMovimiento(token)
       .then((d) => setTipos(Array.isArray(d.data) ? d.data : []))
       .catch(() => setError("No se pudieron cargar los tipos de movimiento."))
-      .finally(() => setIsFetchingTypes(false))
-  }, [open, token])
+      .finally(() => setIsFetchingTypes(false));
+  }, [open, token]);
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     if (editItem) {
-      setNombre(editItem.nombre)
-      const t = tipos.find((x) => x.nombre === editItem.tipo_movimiento)
-      setTipoId(t ? String(t.id) : "")
+      setNombre(editItem.nombre);
+      const t = tipos.find((x) => x.nombre === editItem.tipo_movimiento);
+      setTipoId(t ? String(t.id) : "");
     } else {
-      setNombre("")
-      setTipoId("")
+      setNombre("");
+      setTipoId("");
     }
-    setError(null)
-  }, [open, editItem, tipos])
+    setError(null);
+  }, [open, editItem, tipos]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
-    if (!nombre.trim()) return setError("El nombre es obligatorio.")
-    if (!tipoId) return setError("Selecciona un tipo de movimiento.")
+    if (!nombre.trim()) return setError("El nombre es obligatorio.");
+    if (!tipoId) return setError("Selecciona un tipo de movimiento.");
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const url = isEdit
-        ? `${baseUrl}/conceptos/${editItem!.id}`
-        : `${baseUrl}/conceptos`
-      const method = isEdit ? "PATCH" : "POST"
+      if (!token) throw new Error("Usuario no autenticado.");
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre: nombre.trim(),
-          tipo_movimiento_id: Number(tipoId),
-        }),
-      })
+      const body = {
+        nombre: nombre.trim(),
+        tipo_movimiento_id: Number(tipoId),
+      };
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}))
-        throw new Error(errJson.message || `Error ${res.status}`)
+      if (isEdit && editItem) {
+        await updateConcepto(token, editItem.id, body);
+      } else {
+        await createConcepto(token, body);
       }
 
-      onSuccess()
-      onClose()
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado.")
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Modal
@@ -117,7 +107,6 @@ export function ConceptoForm({ open, onClose, onSuccess, editItem }: ConceptoFor
       persistent={isLoading}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Nombre */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="concepto-nombre">Nombre</Label>
           <Input
@@ -129,19 +118,14 @@ export function ConceptoForm({ open, onClose, onSuccess, editItem }: ConceptoFor
           />
         </div>
 
-        {/* Tipo de movimiento */}
         <div className="flex flex-col gap-1.5">
           <Label>Tipo de movimiento</Label>
           {isFetchingTypes ? (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground small">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando tipos...
             </div>
           ) : (
-            <Select
-              value={tipoId}
-              onValueChange={setTipoId}
-              disabled={isLoading}
-            >
+            <Select value={tipoId} onValueChange={setTipoId} disabled={isLoading}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecciona un tipo" />
               </SelectTrigger>
@@ -157,7 +141,7 @@ export function ConceptoForm({ open, onClose, onSuccess, editItem }: ConceptoFor
         </div>
 
         {error && (
-          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
@@ -182,5 +166,5 @@ export function ConceptoForm({ open, onClose, onSuccess, editItem }: ConceptoFor
         </div>
       </form>
     </Modal>
-  )
+  );
 }

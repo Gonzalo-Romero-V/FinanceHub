@@ -27,7 +27,7 @@ interface ColumnConfig<T> {
   render?: (value: any, item: T) => React.ReactNode;
 }
 
-interface CustomTableProps<T> {
+interface DataTableProps<T> {
   title: string;
   titleIcon?: React.ReactNode;
   data: T[];
@@ -43,7 +43,7 @@ interface CustomTableProps<T> {
   onDelete?: (item: T) => void;
 }
 
-export function CustomTable<T extends { [key: string]: any }>({
+export function DataTable<T extends { [key: string]: any }>({
   title,
   titleIcon,
   data: initialData,
@@ -57,7 +57,7 @@ export function CustomTable<T extends { [key: string]: any }>({
   footer,
   onEdit,
   onDelete,
-}: CustomTableProps<T>) {
+}: DataTableProps<T>) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),

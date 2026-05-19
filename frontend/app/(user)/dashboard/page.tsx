@@ -2,12 +2,25 @@
 
 import React, { useState } from "react";
 import { Send, LayoutDashboard, Loader2, Activity } from "lucide-react";
+
 import { WidgetRenderer, AnalysisResponse } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/lib/auth/context";
+
+const DEFAULT_LLM_BASE_URL = "http://localhost:8001";
+
+function getLlmBaseUrl() {
+  return (process.env.NEXT_PUBLIC_LLM_API_BASE_URL || DEFAULT_LLM_BASE_URL).replace(/\/$/, "");
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -31,14 +44,10 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_LLM_API_BASE_URL;
-      const resp = await fetch(`${baseUrl}/api/analyze`, {
+      const resp = await fetch(`${getLlmBaseUrl()}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          prompt,
-          user_id: user?.id
-        }),
+        body: JSON.stringify({ prompt, user_id: user?.id }),
       });
 
       if (!resp.ok) {
@@ -46,7 +55,6 @@ export default function DashboardPage() {
       }
 
       const res: AnalysisResponse = await resp.json();
-
       const applyMode = modeConfig === "auto" ? res.mode : modeConfig;
 
       if (!analysis || applyMode === "replace") {
@@ -73,8 +81,8 @@ export default function DashboardPage() {
         });
       }
       setPrompt("");
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado al generar los widgets.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error inesperado al generar los widgets.");
     } finally {
       setIsLoading(false);
     }
@@ -82,11 +90,10 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] bg-background p-4 gap-6">
-
       <aside className="w-full lg:w-80 xl:w-96 flex flex-col gap-5 bg-card border border-border rounded-[2rem] p-6 shadow-sm h-fit lg:sticky lg:top-6 shrink-0">
         <div className="mb-2">
           <p className="small text-muted-foreground mb-1">Bienvenido de vuelta,</p>
-          <h2 className="h3 text-foreground font-bold">{user?.name || 'Cargando...'}</h2>
+          <h2 className="h3 text-foreground">{user?.name || "Cargando..."}</h2>
         </div>
         <hr className="border-border" />
         <h2 className="h3 text-foreground flex items-center gap-3">
@@ -97,11 +104,10 @@ export default function DashboardPage() {
         </h2>
 
         <div className="flex flex-col gap-2">
-          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest">Modo de Inserción</Label>
-          <Select
-            value={modeConfig}
-            onValueChange={(value) => setModeConfig(value as any)}
-          >
+          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest">
+            Modo de Inserción
+          </Label>
+          <Select value={modeConfig} onValueChange={(value) => setModeConfig(value as "auto" | "replace" | "append")}>
             <SelectTrigger className="small w-full bg-muted/50 dark:bg-zinc-900 border border-border text-foreground rounded-xl p-3 h-auto focus:ring-2 focus:ring-brand-1/50 transition-shadow">
               <SelectValue placeholder="Seleccionar modo" />
             </SelectTrigger>
@@ -114,7 +120,9 @@ export default function DashboardPage() {
         </div>
 
         <div className="relative group">
-          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Prompt</Label>
+          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+            Prompt
+          </Label>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -152,7 +160,9 @@ export default function DashboardPage() {
             {analysis.intent && (
               <div className="bg-card px-6 py-4 rounded-xl border border-border shadow-sm flex items-center justify-between gap-4">
                 <div>
-                  <p className="xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Intención Identificada</p>
+                  <p className="xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                    Intención Identificada
+                  </p>
                   <p className="text-foreground font-medium">{analysis.intent}</p>
                 </div>
                 <div className="xs px-3 py-1 rounded-full bg-brand-1/10 text-brand-1 font-bold uppercase tracking-wider">

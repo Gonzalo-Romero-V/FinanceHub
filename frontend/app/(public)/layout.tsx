@@ -1,5 +1,6 @@
-import { Header } from "@/components/layout/header";
+import { HeaderPublic } from "@/components/layout/header-public";
 import { Footer } from "@/components/layout/footer";
+
 export default function PublicLayout({
   children,
 }: Readonly<{
@@ -7,7 +8,7 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <HeaderPublic />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
     </div>

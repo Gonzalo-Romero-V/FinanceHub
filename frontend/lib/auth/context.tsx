@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearAuthToken, getAuthToken, persistAuthToken } from "@/lib/auth/storage";
-import { fetchCurrentUser, logoutRequest } from "@/lib/auth/api";
-import type { AuthUser } from "@/lib/auth/types";
+
+import { clearAuthToken, getAuthToken, persistAuthToken } from "./storage";
+import { fetchCurrentUser, logoutRequest } from "./api";
+import type { AuthUser } from "./types";
 
 interface AuthContextType {
   user: AuthUser | null;

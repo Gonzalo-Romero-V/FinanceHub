@@ -1,7 +1,7 @@
-import { PrivateHeader } from "../../components/layout/private-header";
-import { AuthGate } from "../../components/auth/auth-gate";
+import { HeaderUser } from "@/components/layout/header-user";
+import { AuthGate } from "@/components/auth/auth-gate";
 
-export default function PrivateLayout({
+export default function UserLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -9,7 +9,7 @@ export default function PrivateLayout({
   return (
     <AuthGate>
       <div className="min-h-screen bg-muted/20">
-        <PrivateHeader />
+        <HeaderUser />
         <main className="mx-auto w-full max-w-7xl px-4 py-4 md:px-6 md:py-6">{children}</main>
       </div>
     </AuthGate>

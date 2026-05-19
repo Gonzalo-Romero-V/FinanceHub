@@ -23,7 +23,7 @@ export function ConfirmDeleteModal({
     <Modal open={open} onClose={onClose} title="Confirmar eliminación" size="sm" persistent={isLoading}>
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-foreground">
+          <p className="small text-foreground">
             ¿Estás seguro de que deseas eliminar{" "}
             {itemName ? (
               <span className="font-semibold text-destructive">«{itemName}»</span>
@@ -32,7 +32,7 @@ export function ConfirmDeleteModal({
             )}
             ?
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="xs text-muted-foreground">
             Esta acción no se puede deshacer.
           </p>
         </div>

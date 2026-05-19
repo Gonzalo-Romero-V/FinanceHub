@@ -76,7 +76,7 @@ export function Modal({
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
-            <h2 id="modal-title" className="text-lg font-bold text-foreground">
+            <h2 id="modal-title" className="h3 text-foreground">
               {title}
             </h2>
             {!persistent && (

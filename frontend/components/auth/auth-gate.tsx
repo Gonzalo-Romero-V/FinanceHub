@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/lib/auth/context";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { loading, user } = useAuth();

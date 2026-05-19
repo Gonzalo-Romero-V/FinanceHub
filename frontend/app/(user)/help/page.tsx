@@ -6,12 +6,13 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
 } from "lucide-react";
-import { Logo } from "@/components/layout/logo";
-export default function Tutorial() {
-  return (
-    <section className="mx-auto max-w-4xl px-6 py-20 bg-background text-foreground">
 
-      {/* HEADER PRINCIPAL */}
+import { Logo } from "@/components/layout/logo";
+import { PageShell } from "@/components/custom/page-shell";
+
+export default function HelpPage() {
+  return (
+    <PageShell maxWidth="4xl" className="py-20">
       <div className="mb-16 space-y-6 text-center md:text-left">
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 small text-primary mb-4">
           <span className="relative flex h-2 w-2 mr-2">
@@ -30,8 +31,6 @@ export default function Tutorial() {
       </div>
 
       <div className="grid gap-12">
-
-        {/* VISIÓN GENERAL */}
         <section className="relative overflow-hidden rounded-3xl border bg-card p-8 md:p-12">
           <div className="relative z-10 space-y-4">
             <h2 className="h2 flex items-center gap-2">
@@ -51,10 +50,7 @@ export default function Tutorial() {
           <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-primary/5 rounded-full blur-3xl" />
         </section>
 
-        {/* GRID PRINCIPAL */}
         <div className="grid md:grid-cols-2 gap-6">
-
-          {/* CUENTAS */}
           <section className="group rounded-2xl border bg-card p-6 transition hover:border-primary/20 hover:shadow-md">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
               <Wallet size={24} />
@@ -85,7 +81,6 @@ export default function Tutorial() {
             </div>
           </section>
 
-          {/* FLUJOS */}
           <section className="group rounded-2xl border bg-card p-6 transition hover:border-primary/20 hover:shadow-md">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-primary">
               <ArrowRightLeft size={24} />
@@ -116,7 +111,6 @@ export default function Tutorial() {
           </section>
         </div>
 
-        {/* CONCEPTOS + DASHBOARD */}
         <div className="grid md:grid-cols-2 gap-12 py-8 border-y border-border/50">
           <section className="space-y-4">
             <h2 className="h3 flex items-center gap-2">
@@ -142,13 +136,12 @@ export default function Tutorial() {
         </div>
       </div>
 
-      {/* CTA */}
       <div className="mt-20 p-8 rounded-2xl bg-primary text-primary-foreground text-center dark:bg-brand-1">
         <h3 className="h3 mb-2 dark:text-foreground">¿Listo para empezar?</h3>
         <p className="small dark:text-foreground/80">
           Registra tu primer movimiento y deja que FinanceHub haga el trabajo pesado.
         </p>
       </div>
-    </section>
+    </PageShell>
   );
 }
