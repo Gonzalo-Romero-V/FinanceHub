@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SerializesDatesAsIso;
 use Illuminate\Database\Eloquent\Model;
 
 class MovimientoModel extends Model
 {
+    use SerializesDatesAsIso;
+
     protected $table = 'movimientos';
 
     protected $primaryKey = 'id';

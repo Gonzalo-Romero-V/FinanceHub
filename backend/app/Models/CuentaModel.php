@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SerializesDatesAsIso;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\TipoCuentaModel;
 
 class CuentaModel extends Model
 {
+    use SerializesDatesAsIso;
+
     protected $table = 'cuentas';
     protected $primaryKey = 'id';
 
@@ -14,7 +17,8 @@ class CuentaModel extends Model
 
     protected $casts = [
         'saldo' => 'float',
-        'activa' => 'bool'
+        'activa' => 'bool',
+        'fecha_creacion' => 'datetime',
     ];
 
     public $timestamps = true;

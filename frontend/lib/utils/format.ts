@@ -14,16 +14,26 @@ export function formatNumber(value: number, fractionDigits = 2): string {
 
 /**
  * Parsea un string ISO/SQL del backend a un Date.
- * Acepta `2026-05-18T03:15:00Z`, `2026-05-18 03:15:00`, etc.
- * Si viene `YYYY-MM-DD` (sin hora), lo interpreta como medianoche local
- * para evitar el off-by-one típico de `new Date("2026-05-18")` (que JS
- * parsea como UTC).
+ *
+ * Casos manejados:
+ * - `Date` → se devuelve tal cual.
+ * - `YYYY-MM-DD` (solo fecha) → medianoche LOCAL (evita off-by-one con `new Date(string)`
+ *   que JS parsea como UTC para ese formato).
+ * - `YYYY-MM-DD HH:MM:SS[.fraction]` (formato SQL sin TZ) → se interpreta como **UTC**.
+ *   El backend siempre persiste en UTC, y JS por default trataría este formato como
+ *   local time, produciendo un desfase del offset del cliente.
+ * - Cualquier otro string (ISO 8601 con `T` y `Z`/offset) → se delega a `new Date()`,
+ *   que interpreta correctamente la zona.
  */
 export function parseApiDate(value: string | Date): Date {
   if (value instanceof Date) return value;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const [y, m, d] = value.split("-").map(Number);
     return new Date(y, m - 1, d);
+  }
+  const sqlMatch = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2}(?:\.\d+)?)$/.exec(value);
+  if (sqlMatch) {
+    return new Date(`${sqlMatch[1]}T${sqlMatch[2]}Z`);
   }
   return new Date(value);
 }
