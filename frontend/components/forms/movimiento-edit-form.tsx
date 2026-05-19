@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ArrowDownLeft,
   ArrowRightLeft,
@@ -48,7 +49,12 @@ interface MovimientoEditFormProps {
   editItem: MovimientoEditItem | null;
 }
 
-const TIPO_META: Record<TipoMov, { icon: LucideIcon; color: string; bg: string; border: string }> = {
+const TIPOS: TipoMov[] = ["Ingreso", "Egreso", "Transferencia"];
+
+const TIPO_META: Record<
+  TipoMov,
+  { icon: LucideIcon; color: string; bg: string; border: string }
+> = {
   Ingreso: {
     icon: ArrowDownLeft,
     color: "text-chart-2",
@@ -69,6 +75,11 @@ const TIPO_META: Record<TipoMov, { icon: LucideIcon; color: string; bg: string; 
   },
 };
 
+const NEUTRAL_META = {
+  bg: "bg-muted/30",
+  border: "border-border",
+};
+
 export function MovimientoEditForm({
   open,
   onClose,
@@ -83,6 +94,7 @@ export function MovimientoEditForm({
   const [isFetchingData, setIsFetchingData] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [tipo, setTipo] = useState<TipoMov | "">("");
   const [conceptoId, setConceptoId] = useState("");
   const [cuentaOrigenId, setCuentaOrigenId] = useState("");
   const [cuentaDestinoId, setCuentaDestinoId] = useState("");
@@ -101,6 +113,7 @@ export function MovimientoEditForm({
       .finally(() => setIsFetchingData(false));
   }, [open, token]);
 
+  // Inicializa el estado al abrir un item para editar.
   useEffect(() => {
     if (!open || !editItem) return;
     setConceptoId(editItem.concepto_id ? String(editItem.concepto_id) : "");
@@ -108,31 +121,47 @@ export function MovimientoEditForm({
     setCuentaDestinoId(editItem.cuenta_destino_id ? String(editItem.cuenta_destino_id) : "");
     setMonto(String(editItem.monto));
     setNota(editItem.nota || "");
+    setTipo((editItem.tipo_movimiento as TipoMov | undefined) ?? "");
     setError(null);
   }, [open, editItem]);
 
-  const tipoActual = conceptos.find((c) => c.id === Number(conceptoId))?.tipo_movimiento
-    ?.nombre as TipoMov | undefined;
-
-  const requiereOrigen = tipoActual === "Egreso" || tipoActual === "Transferencia";
-  const requiereDestino = tipoActual === "Ingreso" || tipoActual === "Transferencia";
-
-  // Reacciona al cambio de tipo: limpia el/los campo(s) que ya no aplican.
+  // Fallback: si el item no trajo tipo_movimiento, lo derivamos del concepto
+  // una vez que la lista de conceptos esté cargada.
   useEffect(() => {
-    if (!tipoActual) return;
-    if (!requiereOrigen && cuentaOrigenId) setCuentaOrigenId("");
-    if (!requiereDestino && cuentaDestinoId) setCuentaDestinoId("");
-  }, [tipoActual, requiereOrigen, requiereDestino, cuentaOrigenId, cuentaDestinoId]);
+    if (tipo || !conceptoId || conceptos.length === 0) return;
+    const found = conceptos.find((c) => c.id === Number(conceptoId));
+    const t = found?.tipo_movimiento?.nombre as TipoMov | undefined;
+    if (t) setTipo(t);
+  }, [tipo, conceptoId, conceptos]);
+
+  const requiereOrigen = tipo === "Egreso" || tipo === "Transferencia";
+  const requiereDestino = tipo === "Ingreso" || tipo === "Transferencia";
+
+  const conceptosFiltrados = tipo
+    ? conceptos.filter((c) => c.tipo_movimiento?.nombre === tipo)
+    : [];
+
+  const handleTipoChange = (newTipo: TipoMov) => {
+    if (newTipo === tipo) return;
+    setTipo(newTipo);
+    // El concepto y cuentas pueden no aplicar al nuevo tipo: limpiamos para
+    // forzar al usuario a re-elegir explícitamente.
+    setConceptoId("");
+    setCuentaOrigenId("");
+    setCuentaDestinoId("");
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    if (!tipo) return setError("Selecciona el tipo de movimiento.");
     if (!conceptoId) return setError("Selecciona un concepto.");
     if (requiereOrigen && !cuentaOrigenId) return setError("Selecciona la cuenta de origen.");
     if (requiereDestino && !cuentaDestinoId) return setError("Selecciona la cuenta de destino.");
     if (
-      tipoActual === "Transferencia" &&
+      tipo === "Transferencia" &&
       cuentaOrigenId &&
       cuentaDestinoId &&
       cuentaOrigenId === cuentaDestinoId
@@ -179,30 +208,47 @@ export function MovimientoEditForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {tipoActual && <TipoBadge tipo={tipoActual} />}
+          <TipoSelect tipo={tipo} onChange={handleTipoChange} disabled={isLoading} />
 
           <div className="flex flex-col gap-1.5">
-            <Label>Concepto</Label>
-            <Select value={conceptoId} onValueChange={setConceptoId} disabled={isLoading}>
+            <Label>
+              Concepto <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={conceptoId}
+              onValueChange={setConceptoId}
+              disabled={isLoading || !tipo}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un concepto" />
+                <SelectValue
+                  placeholder={
+                    !tipo
+                      ? "Primero selecciona un tipo de movimiento"
+                      : conceptosFiltrados.length === 0
+                        ? `No tienes conceptos de tipo ${tipo}`
+                        : "Selecciona un concepto"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                {conceptos.map((c) => (
+                {conceptosFiltrados.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
                     {c.nombre}
-                    {c.tipo_movimiento && (
-                      <span className="text-muted-foreground ml-2 xs">
-                        ({c.tipo_movimiento.nombre})
-                      </span>
-                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="xs text-muted-foreground">
-              Al cambiar el concepto, el tipo de movimiento se actualiza y los campos de cuenta se ajustan.
-            </p>
+            {tipo && conceptosFiltrados.length === 0 && (
+              <p className="xs text-muted-foreground">
+                No tienes conceptos de tipo {tipo}.{" "}
+                <Link
+                  href="/conceptos"
+                  className="text-brand-1 font-semibold underline hover:opacity-80"
+                >
+                  Crea uno desde Conceptos.
+                </Link>
+              </p>
+            )}
           </div>
 
           {requiereOrigen && (
@@ -210,7 +256,11 @@ export function MovimientoEditForm({
               <Label>
                 Cuenta de origen <span className="text-destructive">*</span>
               </Label>
-              <Select value={cuentaOrigenId} onValueChange={setCuentaOrigenId} disabled={isLoading}>
+              <Select
+                value={cuentaOrigenId}
+                onValueChange={setCuentaOrigenId}
+                disabled={isLoading}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona una cuenta" />
                 </SelectTrigger>
@@ -230,7 +280,11 @@ export function MovimientoEditForm({
               <Label>
                 Cuenta de destino <span className="text-destructive">*</span>
               </Label>
-              <Select value={cuentaDestinoId} onValueChange={setCuentaDestinoId} disabled={isLoading}>
+              <Select
+                value={cuentaDestinoId}
+                onValueChange={setCuentaDestinoId}
+                disabled={isLoading}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona una cuenta" />
                 </SelectTrigger>
@@ -304,21 +358,70 @@ export function MovimientoEditForm({
   );
 }
 
-function TipoBadge({ tipo }: { tipo: TipoMov }) {
-  const meta = TIPO_META[tipo];
-  const Icon = meta.icon;
+function TipoSelect({
+  tipo,
+  onChange,
+  disabled,
+}: {
+  tipo: TipoMov | "";
+  onChange: (t: TipoMov) => void;
+  disabled?: boolean;
+}) {
+  const meta = tipo ? TIPO_META[tipo] : null;
+  const Icon = meta?.icon;
+
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border p-3",
-        meta.bg,
-        meta.border,
+        "flex items-center gap-3 rounded-xl border p-3 transition-colors",
+        meta ? meta.bg : NEUTRAL_META.bg,
+        meta ? meta.border : NEUTRAL_META.border,
       )}
     >
-      <Icon className={cn("h-5 w-5", meta.color)} />
-      <div className="leading-tight">
-        <p className="xs uppercase tracking-wider text-muted-foreground font-bold">Tipo</p>
-        <p className={cn("small font-bold", meta.color)}>{tipo}</p>
+      <div
+        className={cn(
+          "grid h-9 w-9 place-items-center rounded-lg",
+          meta ? meta.bg : "bg-muted/50",
+        )}
+      >
+        {Icon ? (
+          <Icon className={cn("h-5 w-5", meta!.color)} />
+        ) : (
+          <ArrowRightLeft className="h-5 w-5 text-muted-foreground" />
+        )}
+      </div>
+      <div className="flex-1 leading-tight">
+        <p className="xs uppercase tracking-wider text-muted-foreground font-bold mb-0.5">
+          Tipo de movimiento
+        </p>
+        <Select
+          value={tipo}
+          onValueChange={(v) => onChange(v as TipoMov)}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            className={cn(
+              "h-8 border-0 bg-transparent px-0 small font-bold focus:ring-0 focus:ring-offset-0 shadow-none",
+              meta?.color ?? "text-foreground",
+            )}
+          >
+            <SelectValue placeholder="Selecciona el tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            {TIPOS.map((t) => {
+              const m = TIPO_META[t];
+              const I = m.icon;
+              return (
+                <SelectItem key={t} value={t}>
+                  <span className="flex items-center gap-2">
+                    <I className={cn("h-4 w-4", m.color)} />
+                    {t}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
