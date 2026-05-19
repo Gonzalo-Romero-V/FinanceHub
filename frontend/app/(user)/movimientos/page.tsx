@@ -114,7 +114,7 @@ export default function MovimientosPage() {
     if (raw) setViewItem(raw);
   };
 
-  const columns: (keyof MovimientoRow)[] = ["id", "nota", "concepto", "monto", "cuenta", "tipo_movimiento"];
+  const columns: (keyof MovimientoRow)[] = ["id", "nota", "concepto", "monto", "tipo_movimiento", "cuenta"];
   const columnHeaders: Record<keyof MovimientoRow, string> = {
     id: "ID",
     fecha: "Fecha",

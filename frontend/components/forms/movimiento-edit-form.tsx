@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  ArrowDownLeft,
+  ArrowRightLeft,
+  ArrowUpRight,
+  Loader2,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -14,11 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
 import { updateMovimiento } from "@/lib/api/movimientos";
+
+type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
 
 interface MovimientoEditItem {
   id: number;
@@ -38,6 +47,27 @@ interface MovimientoEditFormProps {
   onSuccess: () => void;
   editItem: MovimientoEditItem | null;
 }
+
+const TIPO_META: Record<TipoMov, { icon: LucideIcon; color: string; bg: string; border: string }> = {
+  Ingreso: {
+    icon: ArrowDownLeft,
+    color: "text-chart-2",
+    bg: "bg-chart-2/10",
+    border: "border-chart-2/30",
+  },
+  Egreso: {
+    icon: ArrowUpRight,
+    color: "text-destructive",
+    bg: "bg-destructive/10",
+    border: "border-destructive/30",
+  },
+  Transferencia: {
+    icon: ArrowRightLeft,
+    color: "text-brand-1",
+    bg: "bg-brand-1/10",
+    border: "border-brand-1/30",
+  },
+};
 
 export function MovimientoEditForm({
   open,
@@ -81,13 +111,34 @@ export function MovimientoEditForm({
     setError(null);
   }, [open, editItem]);
 
-  const tipoActual = conceptos.find((c) => c.id === Number(conceptoId))?.tipo_movimiento?.nombre;
+  const tipoActual = conceptos.find((c) => c.id === Number(conceptoId))?.tipo_movimiento
+    ?.nombre as TipoMov | undefined;
+
+  const requiereOrigen = tipoActual === "Egreso" || tipoActual === "Transferencia";
+  const requiereDestino = tipoActual === "Ingreso" || tipoActual === "Transferencia";
+
+  // Reacciona al cambio de tipo: limpia el/los campo(s) que ya no aplican.
+  useEffect(() => {
+    if (!tipoActual) return;
+    if (!requiereOrigen && cuentaOrigenId) setCuentaOrigenId("");
+    if (!requiereDestino && cuentaDestinoId) setCuentaDestinoId("");
+  }, [tipoActual, requiereOrigen, requiereDestino, cuentaOrigenId, cuentaDestinoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!conceptoId) return setError("Selecciona un concepto.");
+    if (requiereOrigen && !cuentaOrigenId) return setError("Selecciona la cuenta de origen.");
+    if (requiereDestino && !cuentaDestinoId) return setError("Selecciona la cuenta de destino.");
+    if (
+      tipoActual === "Transferencia" &&
+      cuentaOrigenId &&
+      cuentaDestinoId &&
+      cuentaOrigenId === cuentaDestinoId
+    ) {
+      return setError("La cuenta de origen y la de destino deben ser diferentes.");
+    }
     if (!monto || isNaN(Number(monto)) || Number(monto) <= 0)
       return setError("El monto debe ser mayor a 0.");
 
@@ -99,8 +150,8 @@ export function MovimientoEditForm({
         concepto_id: Number(conceptoId),
         monto: Number(monto),
         nota: nota.trim() || null,
-        cuenta_origen_id: cuentaOrigenId ? Number(cuentaOrigenId) : undefined,
-        cuenta_destino_id: cuentaDestinoId ? Number(cuentaDestinoId) : undefined,
+        cuenta_origen_id: requiereOrigen ? Number(cuentaOrigenId) : null,
+        cuenta_destino_id: requiereDestino ? Number(cuentaDestinoId) : null,
       });
 
       onSuccess();
@@ -128,6 +179,8 @@ export function MovimientoEditForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {tipoActual && <TipoBadge tipo={tipoActual} />}
+
           <div className="flex flex-col gap-1.5">
             <Label>Concepto</Label>
             <Select value={conceptoId} onValueChange={setConceptoId} disabled={isLoading}>
@@ -139,61 +192,69 @@ export function MovimientoEditForm({
                   <SelectItem key={c.id} value={String(c.id)}>
                     {c.nombre}
                     {c.tipo_movimiento && (
-                      <span className="text-muted-foreground ml-2 xs">({c.tipo_movimiento.nombre})</span>
+                      <span className="text-muted-foreground ml-2 xs">
+                        ({c.tipo_movimiento.nombre})
+                      </span>
                     )}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {tipoActual && (
-              <p className="xs text-muted-foreground">
-                Tipo de movimiento: <span className="font-semibold">{tipoActual}</span>
-              </p>
-            )}
+            <p className="xs text-muted-foreground">
+              Al cambiar el concepto, el tipo de movimiento se actualiza y los campos de cuenta se ajustan.
+            </p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>Cuenta origen</Label>
-            <Select value={cuentaOrigenId} onValueChange={setCuentaOrigenId} disabled={isLoading}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sin cuenta origen" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Sin cuenta origen —</SelectItem>
-                {cuentas.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label>Cuenta destino</Label>
-            <Select value={cuentaDestinoId} onValueChange={setCuentaDestinoId} disabled={isLoading}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sin cuenta destino" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Sin cuenta destino —</SelectItem>
-                {cuentas
-                  .filter((c) => !cuentaOrigenId || c.id !== Number(cuentaOrigenId))
-                  .map((c) => (
+          {requiereOrigen && (
+            <div className="flex flex-col gap-1.5">
+              <Label>
+                Cuenta de origen <span className="text-destructive">*</span>
+              </Label>
+              <Select value={cuentaOrigenId} onValueChange={setCuentaOrigenId} disabled={isLoading}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona una cuenta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cuentas.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.nombre}
                     </SelectItem>
                   ))}
-              </SelectContent>
-            </Select>
-          </div>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {requiereDestino && (
+            <div className="flex flex-col gap-1.5">
+              <Label>
+                Cuenta de destino <span className="text-destructive">*</span>
+              </Label>
+              <Select value={cuentaDestinoId} onValueChange={setCuentaDestinoId} disabled={isLoading}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona una cuenta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cuentas
+                    .filter((c) => !cuentaOrigenId || c.id !== Number(cuentaOrigenId))
+                    .map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.nombre}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-monto">
               Monto <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold small">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold small">
+                $
+              </span>
               <Input
                 id="edit-monto"
                 type="number"
@@ -209,10 +270,10 @@ export function MovimientoEditForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-nota">Nota (opcional)</Label>
+            <Label htmlFor="edit-nota">Descripción (opcional)</Label>
             <Input
               id="edit-nota"
-              placeholder="Descripción adicional…"
+              placeholder="Detalle adicional…"
               value={nota}
               onChange={(e) => setNota(e.target.value)}
               disabled={isLoading}
@@ -240,5 +301,25 @@ export function MovimientoEditForm({
         </form>
       )}
     </Modal>
+  );
+}
+
+function TipoBadge({ tipo }: { tipo: TipoMov }) {
+  const meta = TIPO_META[tipo];
+  const Icon = meta.icon;
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-xl border p-3",
+        meta.bg,
+        meta.border,
+      )}
+    >
+      <Icon className={cn("h-5 w-5", meta.color)} />
+      <div className="leading-tight">
+        <p className="xs uppercase tracking-wider text-muted-foreground font-bold">Tipo</p>
+        <p className={cn("small font-bold", meta.color)}>{tipo}</p>
+      </div>
+    </div>
   );
 }
