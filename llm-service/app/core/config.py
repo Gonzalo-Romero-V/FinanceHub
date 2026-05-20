@@ -28,7 +28,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     PORT: int = 8001
     # CSV de orígenes permitidos para CORS. Usar "*" sólo en dev.
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    # Default cubre los hosts típicos de Next.js en dev: el browser puede
+    # llegar como localhost o 127.0.0.1 según cómo abra la app.
+    ALLOWED_ORIGINS: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,http://0.0.0.0:3000"
+    )
 
     class Config:
         env_file = ".env"
