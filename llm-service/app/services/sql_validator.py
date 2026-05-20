@@ -135,7 +135,18 @@ def _allowed_tables() -> set[str]:
 
 
 def _referenced_tables(tree: exp.Expression) -> set[str]:
-    return {t.name.lower() for t in tree.find_all(exp.Table)}
+    """
+    Devuelve los nombres físicos de tablas referenciadas en FROM/JOIN.
+
+    Descontamos los CTEs (`WITH alias AS (...)`) porque sqlglot los expone
+    como `exp.Table` cuando se usan downstream, pero no son tablas reales
+    contra las que debamos chequear la whitelist. La validación de
+    `user_id` sí recorre el cuerpo del CTE, así que el filtro sigue siendo
+    exigido aunque el filtro viva dentro de la CTE.
+    """
+    cte_names = {cte.alias_or_name.lower() for cte in tree.find_all(exp.CTE)}
+    table_names = {t.name.lower() for t in tree.find_all(exp.Table)}
+    return table_names - cte_names
 
 
 def _ensure_user_scope(tree: exp.Expression, tables: set[str]) -> None:

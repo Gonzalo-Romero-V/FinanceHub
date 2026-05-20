@@ -138,13 +138,17 @@ REGLAS OBLIGATORIAS (el SQL será validado automáticamente y rechazado si las v
    - `movimientos.fecha` y `cuentas.fecha_creacion` se almacenan en UTC.
    - Para comparar contra el día calendario del usuario, convierte a TZ local:
        ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date
+   - SINTAXIS DE PLACEHOLDERS CON CAST (importante):
+     NUNCA escribas `:today::date` ni `:uid::int`. SQLAlchemy no detecta el
+     bindparam cuando está pegado a `::`. SIEMPRE envuelvelo en paréntesis:
+     `(:today)::date`, `(:uid)::int`.
    - Patrones esperados:
-       Hoy:           ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date = :today::date
-       Ayer:          ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date = (:today::date - INTERVAL '1 day')
+       Hoy:           ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date = (:today)::date
+       Ayer:          ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date = ((:today)::date - INTERVAL '1 day')
        Mes actual:    date_trunc('month', ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date)
-                      = date_trunc('month', :today::date)
+                      = date_trunc('month', (:today)::date)
        Últimos 7 días: ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date
-                       >= (:today::date - INTERVAL '6 days')
+                       >= ((:today)::date - INTERVAL '6 days')
    - Si el usuario no especifica rango, asume "mes actual".
 
 8. AGREGACIONES PARA GRÁFICOS:
