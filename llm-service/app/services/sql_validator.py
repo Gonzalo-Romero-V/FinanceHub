@@ -93,7 +93,10 @@ def validate_sql(sql: str) -> ValidationResult:
             raise SqlValidationError(f"SQL contiene token prohibido ({pattern}).")
 
     # 4. Placeholders permitidos.
-    for placeholder in re.findall(r":([a-zA-Z_][a-zA-Z0-9_]*)", sql):
+    # Lookbehind negativo `(?<!:)` para excluir el operador de cast de
+    # PostgreSQL (`::date`, `::text`, `:foo::bar`). Sólo un `:` solitario
+    # introduce un placeholder bindeable.
+    for placeholder in re.findall(r"(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)", sql):
         if placeholder not in ALLOWED_PARAMETERS:
             raise SqlValidationError(
                 f"Placeholder `:{placeholder}` no permitido. "
