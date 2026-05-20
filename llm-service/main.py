@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Literal, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -87,19 +87,35 @@ class AnalysisResponse(BaseModel):
 
 
 def _resolve_timezone(header_value: Optional[str]) -> str:
-    """Valida el header X-Client-Timezone contra IANA. Cae a UTC."""
+    """
+    Valida el header X-Client-Timezone contra IANA. Cae a UTC si no se
+    encuentra el dato (ej. Windows sin tzdata) o si el valor es inválido.
+    """
     if not header_value:
         return "UTC"
     try:
         ZoneInfo(header_value)
         return header_value
-    except (ZoneInfoNotFoundError, ValueError):
-        log.warning("X-Client-Timezone inválida: %r → uso UTC.", header_value)
+    except (ZoneInfoNotFoundError, ValueError) as e:
+        log.warning("X-Client-Timezone %r no resoluble (%s) → uso UTC.", header_value, e)
         return "UTC"
 
 
 def _today_iso_in_tz(tz: str) -> str:
-    return datetime.now(ZoneInfo(tz)).strftime("%Y-%m-%d")
+    """
+    Devuelve YYYY-MM-DD del 'hoy' en la TZ pedida. Si la base IANA no está
+    disponible (Windows sin `tzdata`), cae a UTC usando `datetime.timezone.utc`
+    para no romper el endpoint.
+    """
+    try:
+        return datetime.now(ZoneInfo(tz)).strftime("%Y-%m-%d")
+    except ZoneInfoNotFoundError:
+        log.error(
+            "ZoneInfo(%r) no resoluble. Instalá `tzdata` (`pip install tzdata`) "
+            "para soporte IANA completo. Uso datetime.timezone.utc.",
+            tz,
+        )
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 # ─── Endpoint ────────────────────────────────────────────────────────────────
