@@ -1,7 +1,13 @@
-export function formatCurrency(value: number, currency = "USD"): string {
+export function formatCurrency(
+  value: number,
+  currency: string | null | undefined = "USD",
+): string {
+  // `currency` puede llegar como null explícito desde el backend (cuando el
+  // widget NO se declaró como currency); el default `= "USD"` sólo cubre
+  // `undefined`, así que normalizamos con `??`.
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency,
+    currency: currency ?? "USD",
   }).format(value);
 }
 
@@ -27,10 +33,10 @@ export type MetricFormat = "currency" | "percent" | "integer" | "number" | "auto
 
 export interface FormatMetricOptions {
   format?: MetricFormat;
-  /** ISO 4217 cuando format = "currency". */
-  currency?: string;
-  /** Sufijo opcional ("movimientos", "ventas", ...). */
-  unit?: string;
+  /** ISO 4217 cuando format = "currency". Acepta null/undefined → "USD". */
+  currency?: string | null;
+  /** Sufijo opcional ("movimientos", "ventas", ...). Acepta null. */
+  unit?: string | null;
   /** Cuando el valor venga como ratio 0-1 y quieras mostrarlo como %, pasá 100. */
   valueScale?: number;
   /** Render cuando el valor es nulo o no numérico. */
@@ -44,11 +50,12 @@ export interface FormatMetricOptions {
 export function formatMetric(value: unknown, opts: FormatMetricOptions = {}): string {
   const {
     format = "auto",
-    currency = "USD",
+    currency,
     unit,
     valueScale = 1,
     fallback = "—",
   } = opts;
+  const resolvedCurrency = currency ?? "USD";
 
   if (value === null || value === undefined) return fallback;
   const num = typeof value === "number" ? value : Number(value);
@@ -58,7 +65,7 @@ export function formatMetric(value: unknown, opts: FormatMetricOptions = {}): st
   let base: string;
   switch (format) {
     case "currency":
-      base = formatCurrency(scaled, currency);
+      base = formatCurrency(scaled, resolvedCurrency);
       break;
     case "percent":
       base = formatPercent(scaled);

@@ -31,10 +31,11 @@ export interface Widget {
   /** Cómo formatear los números del widget (aplica a KPI, ejes Y, tooltips,
    *  legend de pie, y celdas detectadas como numéricas en tabla). */
   value_format?: ValueFormat;
-  /** ISO 4217. Sólo se usa cuando `value_format === "currency"`. Default "USD". */
-  currency?: string;
+  /** ISO 4217. Sólo se usa cuando `value_format === "currency"`. Default "USD".
+   *  El backend manda `null` cuando no aplica; `formatMetric` lo normaliza. */
+  currency?: string | null;
   /** Sufijo opcional para añadir tras el valor (ej. "movimientos"). */
-  unit?: string;
+  unit?: string | null;
 }
 
 export interface AnalysisResponse {
