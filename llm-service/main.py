@@ -69,6 +69,7 @@ class Widget(BaseModel):
     id: str
     type: WidgetType
     title: str
+    description: Optional[str] = None
     data: list[dict]
     raw_total_records: int
     sql: Optional[str] = None
@@ -158,6 +159,7 @@ async def analyze(
                 {
                     "id_ref": "w1",
                     "type": "table",
+                    "title": "Movimientos Recientes",
                     "goal": "Listado de movimientos del mes actual",
                 }
             ],
@@ -199,7 +201,8 @@ async def analyze(
         widget_data: dict = {
             "id": str(uuid.uuid4()),
             "type": spec_type,
-            "title": spec.get("goal", "Reporte"),
+            "title": spec.get("title", "Reporte"),
+            "description": spec.get("goal"),
             "data": safe_results,
             "raw_total_records": len(results) if results else 0,
             "sql": sql if settings.DEBUG else None,

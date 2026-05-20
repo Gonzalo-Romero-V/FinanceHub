@@ -25,6 +25,7 @@ class PlannerService:
     ) -> dict:
         schema = db_service.get_schema_info(user_id)
 
+        # Usamos {{ y }} para escapar las llaves en el f-string
         system_prompt = f"""
 Eres un diseñador de dashboards de BI para finanzas personales. Tu trabajo es
 interpretar la solicitud del usuario y planificar los widgets necesarios.
@@ -65,16 +66,15 @@ ESQUEMA DE LA DB:
 
 FORMATO DE LOS NÚMEROS (`value_format`):
 Cada widget debe declarar cómo se interpretan sus valores numéricos:
-- "currency": montos en USD (sumas, saldos, balances, ingresos, egresos).
-- "percent":  porcentajes ya escalados (ej. 42 ⇒ "42 %").
+- "currency": montos en USD (SIEMPRE usar para sumas de dinero, saldos, balances, ingresos, egresos).
+- "percent":  proporciones o shares (usar SÓLO si el SQL ya calcula el porcentaje de 0 a 100).
 - "integer":  conteos sin decimales (cantidad de movimientos, transacciones).
-- "number":   numéricos genéricos con decimales (promedios sin unidad).
-- "auto":     solo si dudás; el frontend lo decide.
+- "number":   numéricos genéricos con decimales.
 
-Regla práctica:
-- Si la métrica representa dinero → "currency".
-- Si es "número de X" / "conteo de X" → "integer".
-- Si es proporción / share / % → "percent".
+Regla de oro para Gráficos de Pastel:
+- Si el usuario pide "distribución en USD", usar "currency". El componente calculará los % visuales automáticamente.
+- Si el usuario pide "proporción" o "porcentaje", el SQL debe calcular el share y el formato debe ser "percent".
+- NUNCA uses "percent" para montos de dinero directos.
 
 Responde SOLO con JSON con este formato exacto:
 {{
@@ -84,6 +84,7 @@ Responde SOLO con JSON con este formato exacto:
     {{
       "id_ref": "w1",
       "type": "kpi" | "line" | "bar" | "pie" | "table",
+      "title": "Breve título descriptivo (ej. 'Egresos por Categoría')",
       "goal": "...",
       "value_format": "currency" | "percent" | "integer" | "number" | "auto"
     }}
