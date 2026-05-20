@@ -59,6 +59,9 @@ class AnalyzeRequest(BaseModel):
     user_id: int = Field(gt=0)
 
 
+ValueFormat = Literal["currency", "percent", "integer", "number", "auto"]
+
+
 class Widget(BaseModel):
     id: str
     type: WidgetType
@@ -67,6 +70,9 @@ class Widget(BaseModel):
     raw_total_records: int
     sql: Optional[str] = None
     metric: Optional[float | int] = None
+    value_format: ValueFormat = "auto"
+    currency: Optional[str] = None
+    unit: Optional[str] = None
 
 
 class AnalysisResponse(BaseModel):
@@ -139,6 +145,7 @@ async def analyze(
         }
 
     final_widgets: list[Widget] = []
+    valid_formats = {"currency", "percent", "integer", "number", "auto"}
 
     # 2. EJECUCIÓN POR WIDGET
     for spec in plan.get("widgets", []):
@@ -146,6 +153,11 @@ async def analyze(
         if spec_type not in {"kpi", "line", "bar", "pie", "table"}:
             log.warning("Tipo de widget no soportado: %r → cae a 'table'.", spec_type)
             spec_type = "table"
+
+        value_format = spec.get("value_format", "auto")
+        if value_format not in valid_formats:
+            log.warning("value_format inválido %r → 'auto'.", value_format)
+            value_format = "auto"
 
         try:
             sql = await sql_gen_service.generate_sql_for_widget(
@@ -172,6 +184,8 @@ async def analyze(
             "data": safe_results,
             "raw_total_records": len(results) if results else 0,
             "sql": sql if settings.DEBUG else None,
+            "value_format": value_format,
+            "currency": "USD" if value_format == "currency" else None,
         }
 
         if spec_type == "kpi":

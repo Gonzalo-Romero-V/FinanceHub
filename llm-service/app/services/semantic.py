@@ -63,12 +63,30 @@ REGLAS DE PLANIFICACIÓN:
 ESQUEMA DE LA DB:
 {json.dumps(schema)}
 
+FORMATO DE LOS NÚMEROS (`value_format`):
+Cada widget debe declarar cómo se interpretan sus valores numéricos:
+- "currency": montos en USD (sumas, saldos, balances, ingresos, egresos).
+- "percent":  porcentajes ya escalados (ej. 42 ⇒ "42 %").
+- "integer":  conteos sin decimales (cantidad de movimientos, transacciones).
+- "number":   numéricos genéricos con decimales (promedios sin unidad).
+- "auto":     solo si dudás; el frontend lo decide.
+
+Regla práctica:
+- Si la métrica representa dinero → "currency".
+- Si es "número de X" / "conteo de X" → "integer".
+- Si es proporción / share / % → "percent".
+
 Responde SOLO con JSON con este formato exacto:
 {{
   "dashboard_title": "...",
   "mode": "replace" | "append",
   "widgets": [
-    {{ "id_ref": "w1", "type": "kpi" | "line" | "bar" | "pie" | "table", "goal": "..." }}
+    {{
+      "id_ref": "w1",
+      "type": "kpi" | "line" | "bar" | "pie" | "table",
+      "goal": "...",
+      "value_format": "currency" | "percent" | "integer" | "number" | "auto"
+    }}
   ]
 }}
 """.strip()

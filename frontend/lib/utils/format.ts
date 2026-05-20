@@ -12,6 +12,75 @@ export function formatNumber(value: number, fractionDigits = 2): string {
   }).format(value);
 }
 
+export function formatInteger(value: number): string {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+}
+
+export function formatPercent(value: number, fractionDigits = 1): string {
+  return `${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: fractionDigits,
+  }).format(value)} %`;
+}
+
+export type MetricFormat = "currency" | "percent" | "integer" | "number" | "auto";
+
+export interface FormatMetricOptions {
+  format?: MetricFormat;
+  /** ISO 4217 cuando format = "currency". */
+  currency?: string;
+  /** Sufijo opcional ("movimientos", "ventas", ...). */
+  unit?: string;
+  /** Cuando el valor venga como ratio 0-1 y quieras mostrarlo como %, pasá 100. */
+  valueScale?: number;
+  /** Render cuando el valor es nulo o no numérico. */
+  fallback?: string;
+}
+
+/**
+ * Formatea un valor numérico según el contrato del widget.
+ * Devuelve `fallback` (default "—") cuando el valor es nulo / no numérico.
+ */
+export function formatMetric(value: unknown, opts: FormatMetricOptions = {}): string {
+  const {
+    format = "auto",
+    currency = "USD",
+    unit,
+    valueScale = 1,
+    fallback = "—",
+  } = opts;
+
+  if (value === null || value === undefined) return fallback;
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  const scaled = num * valueScale;
+
+  let base: string;
+  switch (format) {
+    case "currency":
+      base = formatCurrency(scaled, currency);
+      break;
+    case "percent":
+      base = formatPercent(scaled);
+      break;
+    case "integer":
+      base = formatInteger(scaled);
+      break;
+    case "number":
+      base = formatNumber(scaled);
+      break;
+    case "auto":
+    default:
+      // Decide por magnitud: enteros pequeños → integer; el resto → number.
+      base = Number.isInteger(scaled) && Math.abs(scaled) < 10_000
+        ? formatInteger(scaled)
+        : formatNumber(scaled);
+      break;
+  }
+
+  return unit ? `${base} ${unit}` : base;
+}
+
 /**
  * Parsea un string ISO/SQL del backend a un Date.
  *
