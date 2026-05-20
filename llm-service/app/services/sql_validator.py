@@ -219,9 +219,26 @@ def _normalize_user_id_eq(
 
 
 def _is_uid_placeholder(node: exp.Expression) -> bool:
-    """Detecta `:uid` (sqlglot lo representa como Placeholder o Parameter)."""
-    if isinstance(node, exp.Placeholder):
-        return (node.name or "").lower() == "uid"
-    if isinstance(node, exp.Parameter):
-        return (node.name or "").lower() == "uid"
-    return False
+    """
+    Detecta `:uid` aceptando formas equivalentes que el LLM puede emitir:
+    - `co.user_id = :uid`                  (placeholder directo)
+    - `co.user_id = (:uid)`                (envuelto en paréntesis)
+    - `co.user_id = (:uid)::int`           (cast explícito sobre el paren)
+    - `co.user_id = CAST(:uid AS int)`     (cast ANSI)
+
+    Buscamos un Placeholder/Parameter en cualquier punto del subárbol y
+    validamos que su nombre sea `uid`.
+    """
+    placeholder = _find_placeholder(node)
+    if placeholder is None:
+        return False
+    return (placeholder.name or "").lower() == "uid"
+
+
+def _find_placeholder(node: exp.Expression) -> exp.Expression | None:
+    if isinstance(node, (exp.Placeholder, exp.Parameter)):
+        return node
+    inner = node.find(exp.Placeholder)
+    if inner is not None:
+        return inner
+    return node.find(exp.Parameter)
