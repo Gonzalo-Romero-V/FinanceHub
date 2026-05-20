@@ -1,54 +1,80 @@
+"""
+Planner: traduce el prompt del usuario en una lista de widget specs.
+"""
+
+import json
+import logging
+
 from app.services.database import db_service
 from app.services.llm.factory import LLMFactory
 from app.utils.json_helper import extract_json
-import json
+
+log = logging.getLogger(__name__)
+
 
 class PlannerService:
     def __init__(self):
         self.llm = LLMFactory.get_adapter()
 
-    async def design_dashboard(self, user_prompt: str, user_id: int) -> dict:
+    async def design_dashboard(
+        self,
+        user_prompt: str,
+        user_id: int,
+        client_timezone: str,
+        today_iso: str,
+    ) -> dict:
         schema = db_service.get_schema_info(user_id)
-        
+
         system_prompt = f"""
-        Eres un Diseñador de Dashboards de BI para Finanzas Personales.
-        Tu misión es interpretar la solicitud del usuario y planificar los widgets necesarios.
+Eres un diseñador de dashboards de BI para finanzas personales. Tu trabajo es
+interpretar la solicitud del usuario y planificar los widgets necesarios.
 
-        CONTEXTO FINANCIERO:
-        - Los movimientos están clasificados por tipo (tipos_movimiento): 
-          * tipo_id=1: INGRESOS (dinero entrante)
-          * tipo_id=2: EGRESOS (dinero saliente)
-          * tipo_id=3: TRANSFERENCIAS (movimientos internos)
-        - Cada movimiento tiene una cuenta origen y destino
-        - Los conceptos categorizan movimientos (Salario, Alimentación, etc.)
+CONTEXTO TEMPORAL:
+- Hoy (en TZ del usuario): {today_iso}
+- Zona horaria del usuario: {client_timezone}
+- La fecha "hoy", "ayer", "este mes", etc. siempre se interpreta en la TZ del
+  usuario, no en UTC.
 
-        Reglas Clave:
-        1. Determina el 'mode': 'replace' para consultas o tableros nuevos; 'append' para seguimientos.
-        2. Analiza la intención:
-           - Si pide "egresos de ayer": Crea un widget de tipo adecuado (pie, bar o table) con el objetivo de mostrar gastos del día anterior.
-           - Si pide un "gráfico de pastel por [categoría]": Agrupa siempre por esa categoría (ej. concepto).
-           - Si pide un resumen general: Combina KPI (Total), Gráfico (Distribución) y Tabla (Detalle).
-        3. Objetivos (goals) ULTRA-ESPECÍFICOS:
-           - Mal: "Egresos de ayer"
-           - Bien: "Sumar montos de movimientos de tipo Egreso realizados ayer, agrupados por el nombre del concepto"
-           - Bien: "Listar los 10 movimientos más recientes con su concepto y cuenta"
-        4. Identificación de tiempos:
-           - "hoy", "ayer", "este mes", "mes pasado", "histórico".
-        5. La estructura de la base de datos es relacional. Usa los nombres de las tablas y columnas del esquema.
+CONTEXTO FINANCIERO:
+- `tipos_movimiento.nombre`: 'Ingreso' (dinero entra) | 'Egreso' (dinero sale) |
+  'Transferencia' (movimiento interno entre cuentas del propio usuario).
+- Cada `movimiento` tiene `cuenta_origen_id` y/o `cuenta_destino_id`. La cuenta
+  relevante depende del tipo:
+    Ingreso       → cuenta_destino
+    Egreso        → cuenta_origen
+    Transferencia → ambas
+- Los `conceptos` clasifican los movimientos (Salario, Alimentación, etc.).
 
-        Esquema: {json.dumps(schema)}
-        
-        Responde SOLO JSON con este formato:
-        {{
-          "dashboard_title": "...",
-          "mode": "replace | append",
-          "widgets": [
-            {{ "id_ref": "w1", "type": "kpi | line | bar | pie | table", "goal": "..." }}
-          ]
-        }}
-        """
-        
+REGLAS DE PLANIFICACIÓN:
+1. Determina el `mode`:
+   - 'replace' para consultas o tableros nuevos.
+   - 'append' para seguimientos o agregar info.
+2. Objetivos (`goal`) ULTRA-ESPECÍFICOS, no genéricos:
+   - Mal: "Egresos de ayer".
+   - Bien: "Sumar montos de movimientos cuyo concepto sea de tipo 'Egreso',
+           filtrados a fecha ayer en la TZ del usuario, agrupados por nombre
+           del concepto".
+3. Si el usuario pide un resumen general, combina KPI (total), gráfico
+   (distribución) y tabla (detalle).
+4. Identificación temporal admitida: 'hoy', 'ayer', 'este mes', 'mes pasado',
+   'últimos N días', 'histórico'. Si no se especifica, asumir 'mes actual'.
+5. La base es relacional: usa los nombres de las tablas y columnas del esquema.
+
+ESQUEMA DE LA DB:
+{json.dumps(schema)}
+
+Responde SOLO con JSON con este formato exacto:
+{{
+  "dashboard_title": "...",
+  "mode": "replace" | "append",
+  "widgets": [
+    {{ "id_ref": "w1", "type": "kpi" | "line" | "bar" | "pie" | "table", "goal": "..." }}
+  ]
+}}
+""".strip()
+
         response_raw = await self.llm.generate_response(system_prompt, user_prompt)
         return extract_json(response_raw)
+
 
 semantic_service = PlannerService()

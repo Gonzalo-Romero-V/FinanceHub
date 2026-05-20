@@ -14,9 +14,12 @@
 
 # DESARROLLO
 
-- [ ] **Enfoque multiusuario en LLM Service.**
-  Hay que reforzar el guardrail para que ningún SQL generado pueda leer datos
-  de otro `user_id`.
+- [~] **Enfoque multiusuario en LLM Service.**
+  Fase 1 implementada: `SqlValidator` con `sqlglot` rechaza SQL sin filtro
+  `user_id = :uid` en tablas sensibles; ejecución con bindings, READ ONLY y
+  statement_timeout; whitelist de tablas y placeholders; bloqueo de
+  DML/DDL/funciones de sesión. Fase 2 pendiente: usuario PG separado +
+  Row-Level Security para defensa a nivel base de datos.
 
 - [x] **Modal móvil y desktop contenedor de forms.**
   `components/ui/modal.tsx` es responsive (Escape, backdrop, bloqueo de scroll,

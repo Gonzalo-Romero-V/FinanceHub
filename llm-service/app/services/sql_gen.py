@@ -1,120 +1,161 @@
-import re
+"""
+Generación de SQL por widget.
+
+Recibe un widget spec + TZ del cliente + 'hoy' en esa TZ y produce un SQL
+con placeholders bindeables (`:uid`, `:today`, `:tz`). El SQL es validado
+por `sql_validator.validate_sql` antes de devolverlo.
+"""
+
 import json
-from datetime import datetime
-from app.services.llm.factory import LLMFactory
+import logging
+import re
+
 from app.services.database import db_service
+from app.services.llm.factory import LLMFactory
+from app.services.sql_validator import SqlValidationError, validate_sql
+
+log = logging.getLogger(__name__)
 
 
 class SQLGenerationService:
     def __init__(self):
         self.llm = LLMFactory.get_adapter()
-        self.forbidden_keywords = [
-            "DROP", "DELETE", "UPDATE", "INSERT",
-            "TRUNCATE", "ALTER", "GRANT", "REVOKE"
-        ]
 
-    def is_safe(self, sql: str) -> bool:
-        # Eliminar comentarios antes de validar
-        clean_sql = re.sub(r'--.*', '', sql)
-        clean_sql = re.sub(r'/\*.*?\*/', '', clean_sql, flags=re.DOTALL)
-
-        sql_upper = clean_sql.upper().strip()
-
-        if not sql_upper.startswith("SELECT"):
-            return False
-
-        for keyword in self.forbidden_keywords:
-            if re.search(rf"\b{keyword}\b", sql_upper):
-                return False
-
-        return True
-
-    async def generate_sql_for_widget(self, widget_spec: dict, user_prompt: str, user_id: int) -> str:
+    async def generate_sql_for_widget(
+        self,
+        widget_spec: dict,
+        user_prompt: str,
+        user_id: int,
+        client_timezone: str,
+        today_iso: str,
+    ) -> str:
+        """
+        Devuelve un SQL validado listo para ejecutar con bindings
+        `{uid: int, today: 'YYYY-MM-DD', tz: 'America/Guayaquil'}`.
+        """
         schema = db_service.get_schema_info(user_id)
 
         widget_type = widget_spec.get("type", "table")
         goal = widget_spec.get("goal", "")
-        current_date = datetime.now().strftime("%Y-%m-%d")
 
-        # Contrato por widget
-        output_contract = ""
+        output_contract = _output_contract_for(widget_type)
+        system_prompt = _build_prompt(
+            schema=schema,
+            widget_type=widget_type,
+            goal=goal,
+            output_contract=output_contract,
+            today_iso=today_iso,
+            client_timezone=client_timezone,
+        )
 
-        if widget_type == "kpi":
-            output_contract = "Debe devolver un único valor numérico con alias 'metric'."
+        raw = await self.llm.generate_response(system_prompt, f"Prompt: {user_prompt}")
+        sql = _strip_markdown(raw)
 
-        elif widget_type == "pie":
-            output_contract = "Debe devolver dos columnas: label y value."
+        try:
+            result = validate_sql(sql)
+        except SqlValidationError as e:
+            log.warning(
+                "SQL rechazado por el validador. widget=%s goal=%s error=%s sql=%s",
+                widget_type,
+                goal,
+                e,
+                sql,
+            )
+            raise
 
-        elif widget_type == "table":
-            output_contract = "Debe devolver columnas tabulares con alias claros."
-
-        system_prompt = f"""
-Eres un experto generador de SQL para PostgreSQL enfocado en finanzas personales.
-
-Fecha actual del sistema: {current_date}
-user_id: {user_id}
-
-OBJETIVO:
-{goal}
-
-TIPO DE WIDGET:
-{widget_type}
-
-REGLAS DE SALIDA:
-{output_contract}
-
-REGLAS ESTRICTAS:
-
-    - SIEMPRE filtrar por user_id = {user_id}.
-    - La forma más directa y segura de filtrar 'movimientos' por usuario es uniendo con 'conceptos' (co.user_id = {user_id}).
-    - 'cuentas' también tiene user_id.
-
-2. FILTRADO POR TIPO DE MOVIMIENTO Y CUENTAS:
-    - La tabla 'tipos_movimiento' tiene los nombres: 'Ingreso', 'Egreso', 'Transferencia'.
-    - **EGRESO (Gasto)**: El dinero SALE. Usar `m.cuenta_origen_id` para identificar la cuenta del usuario.
-    - **INGRESO**: El dinero ENTRA. Usar `m.cuenta_destino_id` para identificar la cuenta del usuario.
-    - Ejemplo para Egresos por concepto:
-      SELECT co.nombre as label, SUM(m.monto) as value 
-      FROM movimientos m
-      JOIN conceptos co ON m.concepto_id = co.id
-      JOIN tipos_movimiento tm ON co.tipo_movimiento_id = tm.id
-      WHERE co.user_id = {user_id} AND tm.nombre = 'Egreso'
-      GROUP BY co.nombre
-
-3. SEGURIDAD SQL:
-    - SOLO SENTENCIAS SELECT.
-    - PROHIBIDO: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
-
-4. TEMPORALIDAD Y FECHAS (USAR FECHA DE REFERENCIA: {current_date}):
-    - La fecha de referencia es {current_date}.
-    - **Hoy**: `fecha::date = '{current_date}'::date`
-    - **Ayer**: `fecha::date = ('{current_date}'::date - INTERVAL '1 day')::date`
-    - **Mes actual**: `EXTRACT(MONTH FROM fecha) = EXTRACT(MONTH FROM '{current_date}'::date) AND EXTRACT(YEAR FROM fecha) = EXTRACT(YEAR FROM '{current_date}'::date)`
-    - **Mes anterior**: `fecha >= DATE_TRUNC('month', '{current_date}'::date - INTERVAL '1 month') AND fecha < DATE_TRUNC('month', '{current_date}'::date)`
-    - **Historial / Todos**: No aplicar filtros de fecha.
-    - **Si no se especifica fecha**: Asumir el mes actual.
-
-5. AGRUPACIÓN PARA GRÁFICOS:
-    - Para 'pie': devolver 'label' y 'value'.
-    - Para 'line'/'bar': agrupar por fecha o categoría según el 'goal'.
-
-6. FORMATO DE SALIDA:
-    - Devuelve ÚNICAMENTE el código SQL ejecutable.
-    - Sin bloques markdown, sin explicaciones.
-
-ESQUEMA (con relaciones):
-{json.dumps(schema)}
-"""
-
-        sql = await self.llm.generate_response(system_prompt, f"Prompt: {user_prompt}")
-
-        # Limpieza básica
-        sql = sql.replace("```sql", "").replace("```", "").strip()
-
-        if not self.is_safe(sql):
-            raise ValueError("SQL No Seguro o Inválido Detectado")
-
-        return sql
+        return result.sql
 
 
 sql_gen_service = SQLGenerationService()
+
+
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+
+def _strip_markdown(text: str) -> str:
+    return re.sub(r"```(?:sql)?", "", text).strip()
+
+
+def _output_contract_for(widget_type: str) -> str:
+    if widget_type == "kpi":
+        return "Devuelve UNA fila con UNA columna llamada `metric` (numérica)."
+    if widget_type == "pie":
+        return "Devuelve dos columnas: `label` (texto) y `value` (numérico)."
+    if widget_type in {"bar", "line"}:
+        return (
+            "Devuelve dos columnas: una categórica o temporal (alias `label` o "
+            "`x`) y una numérica (alias `value` o `y`)."
+        )
+    return "Devuelve columnas tabulares con alias legibles."
+
+
+def _build_prompt(
+    *,
+    schema: dict,
+    widget_type: str,
+    goal: str,
+    output_contract: str,
+    today_iso: str,
+    client_timezone: str,
+) -> str:
+    return f"""
+Eres un generador de SQL para PostgreSQL especializado en finanzas personales.
+
+CONTEXTO DEL REQUEST:
+- Hoy (en TZ del usuario): {today_iso}
+- Zona horaria del usuario (IANA): {client_timezone}
+- Esta TZ está disponible como placeholder :tz en el SQL.
+- La fecha de hoy está disponible como placeholder :today (formato 'YYYY-MM-DD').
+- El user_id está disponible como placeholder :uid (entero).
+
+OBJETIVO DEL WIDGET ({widget_type}):
+{goal}
+
+CONTRATO DE SALIDA:
+{output_contract}
+
+REGLAS OBLIGATORIAS (el SQL será validado automáticamente y rechazado si las viola):
+
+1. Usa SOLO un único statement SELECT (puede tener WITH ... SELECT).
+2. NO uses INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, GRANT, REVOKE, COPY, INTO.
+3. NO uses funciones de sesión: current_user, session_user, current_setting, pg_*.
+4. Los únicos placeholders permitidos son :uid, :today, :tz. NUNCA inyectes
+   valores como texto plano para user_id o fechas; SIEMPRE usa los placeholders.
+
+5. FILTRO DE USUARIO (obligatorio):
+   - Si referencias `conceptos`: agrega `co.user_id = :uid`.
+   - Si referencias `cuentas`: agrega `cu.user_id = :uid` (o el alias que uses).
+   - Si referencias `movimientos`: DEBES unirla con `conceptos` o `cuentas`
+     filtrados por `:uid`. `movimientos` no tiene `user_id` directo.
+
+6. SEMÁNTICA DE MOVIMIENTOS:
+   - `tipos_movimiento.nombre` es uno de: 'Ingreso', 'Egreso', 'Transferencia'.
+   - Para EGRESO: el dinero sale por `m.cuenta_origen_id`.
+   - Para INGRESO: el dinero entra por `m.cuenta_destino_id`.
+   - Para TRANSFERENCIA: ambas cuentas son del mismo usuario.
+
+7. FECHAS Y ZONAS HORARIAS:
+   - `movimientos.fecha` y `cuentas.fecha_creacion` se almacenan en UTC.
+   - Para comparar contra el día calendario del usuario, convierte a TZ local:
+       ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date
+   - Patrones esperados:
+       Hoy:           ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date = :today::date
+       Ayer:          ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date = (:today::date - INTERVAL '1 day')
+       Mes actual:    date_trunc('month', ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date)
+                      = date_trunc('month', :today::date)
+       Últimos 7 días: ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date
+                       >= (:today::date - INTERVAL '6 days')
+   - Si el usuario no especifica rango, asume "mes actual".
+
+8. AGREGACIONES PARA GRÁFICOS:
+   - pie: `SELECT <categoría> AS label, SUM(...) AS value`.
+   - bar/line: una columna categórica/temporal y una numérica, con alias claros.
+   - kpi: una sola fila, una sola columna `metric`.
+
+9. FORMATO DE RESPUESTA:
+   - Devuelve ÚNICAMENTE el SQL ejecutable.
+   - Sin markdown, sin explicaciones, sin texto adicional.
+
+ESQUEMA DE LA DB:
+{json.dumps(schema)}
+""".strip()

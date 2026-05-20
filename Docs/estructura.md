@@ -82,6 +82,8 @@ frontend/
       conceptos.ts
       movimientos.ts
       users.ts                  # updateUser, getUser
+      llm.ts                    # analyzeRequest() para el LLM service
+                                #   (manda X-Client-Timezone)
     auth/
       api.ts                    # loginRequest, registerRequest, fetchCurrentUser, logoutRequest
       context.tsx               # AuthProvider + useAuth
@@ -151,19 +153,26 @@ Nota: los modelos usan sufijo `...Model.php` y NO el default Eloquent
 
 ```
 llm-service/
-  main.py                         # FastAPI app + POST /api/analyze
+  main.py                         # FastAPI app + POST /api/analyze;
+                                  #   Pydantic AnalyzeRequest/AnalysisResponse,
+                                  #   header X-Client-Timezone
   app/
-    core/config.py                # Settings (Pydantic) — env_file=.env
+    core/config.py                # Settings (Pydantic) — env_file=.env;
+                                  #   valida OPENAI_API_KEY, ALLOWED_ORIGINS,
+                                  #   STATEMENT_TIMEOUT_MS, MAX_ROWS_PER_QUERY
     services/
       semantic.py                 # planner (prompt → spec de widgets)
-      sql_gen.py                  # spec → SQL
-      database.py                 # ejecución SQL r/o
+      sql_gen.py                  # spec → SQL con :uid/:today/:tz
+      sql_validator.py            # post-validación con sqlglot
+      database.py                 # execute_query con bindings, READ ONLY,
+                                  #   statement_timeout, schema cacheado
       analyst.py                  # resumen ejecutivo
-      visualizer.py               # helpers de presentación
+      llm/                        # adapters (openai / ollama) + factory
     utils/json_helper.py
   check_db.py                     # script utilitario
-  requirements.txt
-  .env                            # OPENAI_API_KEY, OLLAMA_*, DB_*, PORT
+  requirements.txt                # incluye sqlglot
+  .env                            # OPENAI_API_KEY, OLLAMA_*, DB_*, PORT,
+                                  #   ALLOWED_ORIGINS, STATEMENT_TIMEOUT_MS
 ```
 
 ## Archivos que NO deben estar en el repo

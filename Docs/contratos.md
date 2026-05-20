@@ -109,7 +109,13 @@ Notas:
 
 ### POST `/api/analyze`
 
-Request:
+Headers:
+- `Content-Type: application/json`
+- `X-Client-Timezone: <IANA>` (ej. `America/Guayaquil`). Igual que el backend
+  Laravel. Default `UTC` si falta o es inválida. Validada contra
+  `zoneinfo.ZoneInfo` (lanza warning y cae a UTC si no existe).
+
+Request (Pydantic):
 ```json
 {
   "prompt": "Muéstrame el gasto mensual en supermercado",
@@ -117,7 +123,7 @@ Request:
 }
 ```
 
-Response 200:
+Response 200 (Pydantic `AnalysisResponse`):
 ```json
 {
   "intent": "Muéstrame el gasto mensual en supermercado",
@@ -138,10 +144,35 @@ Response 200:
 }
 ```
 
-Notas:
-- Sin autenticación. El `user_id` viaja en el payload — confiar/validar
-  todavía es un gap (ver `alcance.md`).
-- CORS abierto (`*`). En prod hay que restringir.
+### Guardrails
+
+**Multi-usuario** (defensa en profundidad):
+1. El prompt al LLM exige usar el placeholder `:uid` para todo filtro por
+   usuario; nunca interpolar literales.
+2. `SqlValidator` (post-generación, basado en `sqlglot`):
+   - Acepta sólo un `SELECT` (o `WITH ... SELECT`) por respuesta.
+   - Rechaza `INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE/GRANT/REVOKE/COPY/INTO`,
+     `pg_*`, `current_user`, `current_setting`.
+   - Acepta sólo placeholders `:uid`, `:today`, `:tz`.
+   - Acepta sólo tablas en la whitelist (`movimientos`, `cuentas`, `conceptos`,
+     `tipos_movimiento`, `tipos_cuenta`).
+   - Para cada tabla user-scoped en el FROM/JOIN exige un filtro
+     `<alias>.user_id = :uid`. `movimientos` se permite sólo si una tabla
+     puente (`cuentas` o `conceptos`) filtrada ya está unida.
+
+**Ejecución**:
+- Transacción `READ ONLY`.
+- `SET LOCAL statement_timeout = STATEMENT_TIMEOUT_MS` (default 5 s).
+- Parámetros bindeados (`:uid`, `:today`, `:tz`), nunca interpolación.
+- Resultados truncados a `MAX_ROWS_PER_QUERY` (default 500).
+
+**Consistencia temporal**:
+- `today_iso` y `tz` se calculan a partir del header `X-Client-Timezone`.
+- El SQL convierte `fecha` UTC al día del cliente vía
+  `((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date`.
+- "Hoy", "ayer", "este mes" se interpretan en la TZ del usuario, no en UTC.
+
+**CORS**: leído de `ALLOWED_ORIGINS` (CSV; default `http://localhost:3000`).
 
 ---
 

@@ -15,12 +15,7 @@ import {
 } from "@/components/ui/select";
 
 import { useAuth } from "@/lib/auth/context";
-
-const DEFAULT_LLM_BASE_URL = "http://localhost:8001";
-
-function getLlmBaseUrl() {
-  return (process.env.NEXT_PUBLIC_LLM_API_BASE_URL || DEFAULT_LLM_BASE_URL).replace(/\/$/, "");
-}
+import { analyzeRequest } from "@/lib/api/llm";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -44,17 +39,10 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      const resp = await fetch(`${getLlmBaseUrl()}/api/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, user_id: user?.id }),
-      });
-
-      if (!resp.ok) {
-        throw new Error("No se pudo conectar con el servicio de análisis de IA.");
-      }
-
-      const res: AnalysisResponse = await resp.json();
+      const res = (await analyzeRequest({
+        prompt,
+        user_id: user.id,
+      })) as AnalysisResponse;
       const applyMode = modeConfig === "auto" ? res.mode : modeConfig;
 
       if (!analysis || applyMode === "replace") {

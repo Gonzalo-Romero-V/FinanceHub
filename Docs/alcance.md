@@ -70,10 +70,15 @@
   tooltip). El día del cliente se determina vía header `X-Client-Timezone` (IANA)
   que envía automáticamente `apiFetch`.
 
-### Multiusuario LLM
-- El LLM service todavía no filtra estrictamente por `user_id` en todas las
-  queries generadas. Hay que reforzar el guardrail para que ningún SQL emitido
-  pueda leer datos de otro usuario.
+### Multiusuario LLM (Fase 1 implementada)
+- Defensa en aplicación: `SqlValidator` con `sqlglot` parsea el SQL
+  generado por el LLM y rechaza si no contiene `user_id = :uid` en cada
+  tabla user-scoped (`movimientos`, `cuentas`, `conceptos`).
+- Ejecución blindada: `READ ONLY`, `statement_timeout`, bindings con
+  parámetros (`:uid`, `:today`, `:tz`), nunca interpolación.
+- Whitelist de tablas y placeholders; bloqueo de DML/DDL/funciones de sesión.
+- Pendiente Fase 2: usuario PG separado + RLS en Postgres para defensa a
+  nivel base de datos (inviolable).
 
 ### Operacional
 - Variables de entorno de producción / dominio fijo / Cloudflare.

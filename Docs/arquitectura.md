@@ -45,16 +45,29 @@
 - Maneja el flujo OAuth completo (redirect + callback).
 
 ### LLM Service (FastAPI)
-- Recibe `{prompt, user_id}`, devuelve `{widgets[], summary, mode, ...}`.
+- Recibe `{prompt, user_id}` + header `X-Client-Timezone`, devuelve
+  `{widgets[], summary, mode, ...}` tipado vía Pydantic.
 - Pipeline interno:
-  1. **Semantic** (`semantic_service.design_dashboard`): planifica qué widgets
-     responder al prompt.
-  2. **SQL Gen** (`sql_gen_service.generate_sql_for_widget`): genera SQL por
-     widget basándose en el schema y el `user_id`.
-  3. **DB** (`db_service.execute_query`): ejecuta SQL (read-only).
-  4. **Analyst** (`analyst_service.generate_executive_summary`): genera el
-     resumen ejecutivo a partir de los resultados.
-- CORS abierto (`allow_origins=["*"]`) — solo aceptable en dev.
+  1. **Resolución temporal**: valida el header con `zoneinfo.ZoneInfo`,
+     calcula `today_iso` en esa TZ. Estos valores se inyectan como bindings
+     `:today` y `:tz` en cada query.
+  2. **Semantic** (`semantic.design_dashboard`): planifica qué widgets
+     responder. Recibe `today_iso`, `tz` y el schema introspectado
+     (cacheado).
+  3. **SQL Gen** (`sql_gen.generate_sql_for_widget`): pide al LLM SQL con
+     placeholders `:uid`, `:today`, `:tz` y reglas de TZ
+     (`AT TIME ZONE` para comparar días locales).
+  4. **SqlValidator** (`sql_validator.validate_sql`): parser real (sqlglot)
+     que rechaza statements no-SELECT, tokens prohibidos, tablas fuera de
+     la whitelist y, crucialmente, exige el filtro `user_id = :uid` en
+     toda tabla user-scoped. Si el LLM falla, el widget se descarta.
+  5. **DB** (`db_service.execute_query`): ejecuta el SQL con bindings, en
+     transacción `READ ONLY` con `statement_timeout` (5 s default) y
+     truncado a `MAX_ROWS_PER_QUERY` (500 default).
+  6. **Analyst** (`analyst.generate_executive_summary`): genera el
+     resumen ejecutivo a partir de los resultados (sólo muestra top-3
+     más metadatos).
+- CORS leído de `ALLOWED_ORIGINS` (env). Default `http://localhost:3000`.
 
 ## Flujos clave
 
@@ -74,6 +87,11 @@
    `loginWithToken` → `fetchCurrentUser` → guarda sesión → redirige a `/dashboard`.
 
 ### Análisis con IA
-1. Frontend (Dashboard) `POST {LLM}/api/analyze` con `{prompt, user_id}`.
-2. LLM service ejecuta pipeline y devuelve `AnalysisResponse`.
-3. Frontend aplica `mode` (auto/replace/append/update) sobre los widgets actuales.
+1. Frontend (Dashboard) llama `analyzeRequest({prompt, user_id})` desde
+   `lib/api/llm.ts`, que hace `POST {LLM}/api/analyze` con el header
+   `X-Client-Timezone` ya incluido.
+2. LLM service resuelve la TZ y calcula `today_iso`, ejecuta el pipeline
+   (planner → sql_gen → validator → db → analyst) y devuelve la
+   `AnalysisResponse` validada por Pydantic.
+3. Frontend aplica `mode` (auto/replace/append/update) sobre los widgets
+   actuales.
