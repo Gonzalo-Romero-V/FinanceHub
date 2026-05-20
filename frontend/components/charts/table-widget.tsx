@@ -1,7 +1,7 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
 import { Widget } from "./types";
+import { WidgetCard } from "./widget-card";
 import { formatMetric, type MetricFormat } from "@/lib/utils/format";
 
 interface TableWidgetProps {
@@ -13,12 +13,6 @@ const CURRENCY_HINTS = ["monto", "saldo", "balance", "total", "amount", "value",
 const COUNT_HINTS = ["count", "cantidad", "n_movimientos", "movimientos", "total_movimientos"];
 const PERCENT_HINTS = ["porcentaje", "pct", "ratio", "share", "%"];
 
-/**
- * Decide cómo formatear cada columna de la tabla.
- * - Si el widget declara `value_format`, se aplica a TODAS las columnas
- *   numéricas detectadas (el LLM eligió un formato global).
- * - Si no, heurística por nombre de columna sobre el header.
- */
 function pickColumnFormat(column: string, widgetFormat: MetricFormat | undefined): MetricFormat | null {
   if (widgetFormat && widgetFormat !== "auto") return widgetFormat;
   const c = column.toLowerCase();
@@ -39,7 +33,6 @@ function isNumericLike(value: unknown): boolean {
 export function TableWidget({ widget, onRemove }: TableWidgetProps) {
   const columns = widget.data.length > 0 ? Object.keys(widget.data[0]) : [];
 
-  // Pre-calculo el formato por columna (un único pass).
   const columnFormats: Record<string, MetricFormat | null> = {};
   for (const col of columns) {
     const sample = widget.data.find((row) => row[col] !== null && row[col] !== undefined)?.[col];
@@ -47,25 +40,24 @@ export function TableWidget({ widget, onRemove }: TableWidgetProps) {
   }
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-sm relative group sm:col-span-2 xl:col-span-3">
-      <button
-        onClick={() => onRemove(widget.id)}
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-opacity z-10"
-        aria-label="Quitar tabla"
-      >
-        <Trash2 size={16} />
-      </button>
-      <h3 className="small font-medium text-foreground mb-4">{widget.title}</h3>
-      <div className="overflow-x-auto">
+    <WidgetCard
+      title={widget.title}
+      description={widget.description}
+      onRemove={() => onRemove(widget.id)}
+      className="sm:col-span-2 xl:col-span-3"
+    >
+      <div className="overflow-auto max-h-80 rounded-lg border border-border/60">
         <table className="w-full small text-left">
-          <thead className="xs text-muted-foreground uppercase border-b border-border bg-muted/30">
+          <thead className="sticky top-0 z-10 bg-muted/50 backdrop-blur-sm">
             <tr>
               {columns.map((col) => {
                 const isNumeric = columnFormats[col] !== null;
                 return (
                   <th
                     key={col}
-                    className={`px-4 py-3 font-semibold ${isNumeric ? "text-right tabular-nums" : ""}`}
+                    className={`px-3 py-2 xs uppercase tracking-wider font-bold text-muted-foreground/80 ${
+                      isNumeric ? "text-right tabular-nums" : "text-left"
+                    }`}
                   >
                     {col}
                   </th>
@@ -73,7 +65,7 @@ export function TableWidget({ widget, onRemove }: TableWidgetProps) {
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/50">
+          <tbody className="divide-y divide-border/40">
             {widget.data.map((row, i) => (
               <tr key={i} className="hover:bg-muted/30 transition-colors">
                 {columns.map((col) => {
@@ -89,9 +81,11 @@ export function TableWidget({ widget, onRemove }: TableWidgetProps) {
                   return (
                     <td
                       key={`${i}-${col}`}
-                      className={`px-4 py-3 text-foreground/90 ${isNumeric ? "text-right tabular-nums" : ""}`}
+                      className={`px-3 py-2.5 text-foreground/90 ${
+                        isNumeric ? "text-right tabular-nums font-medium" : ""
+                      }`}
                     >
-                      {cell ?? "—"}
+                      {cell ?? <span className="text-muted-foreground">—</span>}
                     </td>
                   );
                 })}
@@ -100,6 +94,6 @@ export function TableWidget({ widget, onRemove }: TableWidgetProps) {
           </tbody>
         </table>
       </div>
-    </div>
+    </WidgetCard>
   );
 }

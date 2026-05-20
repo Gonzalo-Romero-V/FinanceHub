@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
+import { AlertCircle, Database, X } from "lucide-react";
+
 import { Widget } from "./types";
 import { BarChartWidget } from "./bar-chart-widget";
 import { LineChartWidget } from "./line-chart-widget";
 import { PieChartWidget } from "./pie-chart-widget";
 import { TableWidget } from "./table-widget";
 import { KPIWidget } from "./kpi-widget";
-import { Trash2, AlertCircle, Database } from "lucide-react";
 
 interface WidgetRendererProps {
   widget: Widget;
@@ -16,59 +17,106 @@ interface WidgetRendererProps {
 
 export function normalizeWidget(w: Widget): Widget {
   const normalized = { ...w };
-
-  if (w.type === "kpi") {
-    return normalized;
-  }
-
-  if (!w.data || w.data.length === 0) {
-    return normalized;
-  }
+  if (w.type === "kpi") return normalized;
+  if (!w.data || w.data.length === 0) return normalized;
 
   const firstItem = w.data[0];
-  if (!firstItem || typeof firstItem !== "object") {
-    return normalized;
-  }
+  if (!firstItem || typeof firstItem !== "object") return normalized;
 
   const keys = Object.keys(firstItem);
-  
-  if (keys.length > 0) {
-    if (!normalized.xKey) normalized.xKey = keys[0];
-    if (!normalized.yKey && keys.length > 1) {
-      const numericKey = keys.find(k => typeof firstItem[k] === 'number');
-      normalized.yKey = numericKey || keys[1];
-    }
-    
-    if (!normalized.categoryKey) normalized.categoryKey = keys[0];
-    if (!normalized.valueKey && keys.length > 1) {
-      const numericKey = keys.find(k => typeof firstItem[k] === 'number');
-      normalized.valueKey = numericKey || keys[1];
+  if (keys.length === 0) return normalized;
+
+  const hasLabel = keys.includes("label");
+  const hasValue = keys.includes("value");
+  const hasX = keys.includes("x");
+  const hasY = keys.includes("y");
+
+  // 1. Identificar Claves
+  if (!normalized.xKey) {
+    if (hasLabel) normalized.xKey = "label";
+    else if (hasX) normalized.xKey = "x";
+    else normalized.xKey = keys[0];
+  }
+
+  if (!normalized.yKey) {
+    if (hasValue) normalized.yKey = "value";
+    else if (hasY) normalized.yKey = "y";
+    else {
+      const numericKey = keys.find((k) => {
+        const val = firstItem[k];
+        return typeof val === "number" || (!isNaN(Number(val)) && val !== "");
+      });
+      normalized.yKey = numericKey || (keys.length > 1 ? keys[1] : keys[0]);
     }
   }
+
+  if (!normalized.categoryKey) normalized.categoryKey = normalized.xKey || "label";
+  if (!normalized.valueKey) normalized.valueKey = normalized.yKey || "value";
+
+  // 2. Limpieza de Datos: Convertir valores a números para Recharts
+  const vKey = normalized.valueKey;
+  const yK = normalized.yKey;
+  
+  normalized.data = w.data.map(item => {
+    const newItem = { ...item };
+    if (vKey && newItem[vKey] !== undefined) newItem[vKey] = Number(newItem[vKey]);
+    if (yK && yK !== vKey && newItem[yK] !== undefined) newItem[yK] = Number(newItem[yK]);
+    return newItem;
+  });
 
   return normalized;
 }
 
 function getSemanticColor(title: string, index: number = 0): string {
   const t = title.toLowerCase();
-  
-  // Métricas Positivas (Green)
-  if (t.includes("ingreso") || t.includes("growth") || t.includes("crecimiento") || t.includes("roi") || t.includes("ganancia") || t.includes("profit") || t.includes("retorno")) {
-    return "var(--chart-3)";
+  // Positivos / Ingresos / Ahorro
+  if (
+    t.includes("ingreso") ||
+    t.includes("growth") ||
+    t.includes("crecimiento") ||
+    t.includes("roi") ||
+    t.includes("ganancia") ||
+    t.includes("profit") ||
+    t.includes("retorno") ||
+    t.includes("ahorro") ||
+    t.includes("inversión") ||
+    t.includes("plusvalía")
+  ) {
+    return "var(--chart-3)"; // Verde esmeralda
   }
-  
-  // Métricas de Advertencia/Gasto (Red)
-  if (t.includes("gasto") || t.includes("expense") || t.includes("churn") || t.includes("abandono") || t.includes("deuda") || t.includes("pérdida") || t.includes("loss")) {
-    return "var(--chart-7)";
+  // Negativos / Gastos / Deudas
+  if (
+    t.includes("gasto") ||
+    t.includes("egreso") ||
+    t.includes("expense") ||
+    t.includes("deuda") ||
+    t.includes("pérdida") ||
+    t.includes("loss") ||
+    t.includes("pasivo") ||
+    t.includes("pago") ||
+    t.includes("comisión")
+  ) {
+    return "var(--chart-7)"; // Rojo / Naranja intenso
   }
-  
-  // Métricas Principales (Purple/Blue)
-  if (t.includes("usuario") || t.includes("user") || t.includes("balance") || t.includes("total")) {
+  // Neutrales / Balance / Usuarios
+  if (
+    t.includes("usuario") ||
+    t.includes("user") ||
+    t.includes("balance") ||
+    t.includes("total") ||
+    t.includes("promedio") ||
+    t.includes("histórico") ||
+    t.includes("cuenta")
+  ) {
     return index % 2 === 0 ? "var(--chart-1)" : "var(--chart-2)";
   }
-
-  // Por defecto, rotar entre colores secundarios
-  const defaults = ["var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)"];
+  const defaults = [
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-4)",
+    "var(--chart-5)",
+    "var(--chart-6)",
+  ];
   return defaults[index % defaults.length];
 }
 
@@ -77,14 +125,12 @@ export function WidgetRenderer({ widget, onRemove }: WidgetRendererProps) {
 
   if (widget.type !== "kpi" && (!widget.data || !Array.isArray(widget.data) || widget.data.length === 0)) {
     return (
-      <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col items-center justify-center h-80 text-center relative group sm:col-span-2 xl:col-span-1">
-        <button onClick={() => onRemove(widget.id)} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500 transition-opacity z-10">
-          <Trash2 size={16} />
-        </button>
-        <Database className="text-zinc-300 dark:text-zinc-700 mb-3" size={32} />
-        <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">{widget.title}</h3>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">Datos insuficientes o formato inválido.</p>
-      </div>
+      <PlaceholderCard
+        icon={<Database size={28} className="text-muted-foreground/40" />}
+        title={widget.title}
+        message="Sin datos para esta consulta."
+        onRemove={() => onRemove(widget.id)}
+      />
     );
   }
 
@@ -93,24 +139,71 @@ export function WidgetRenderer({ widget, onRemove }: WidgetRendererProps) {
 
   try {
     switch (normalized.type) {
-      case "bar": return <BarChartWidget widget={normalized} onRemove={onRemove} fillColor={semanticColor} />;
-      case "line": return <LineChartWidget widget={normalized} onRemove={onRemove} strokeColor={semanticColor} />;
-      case "pie": return <PieChartWidget widget={normalized} onRemove={onRemove} />;
-      case "table": return <TableWidget widget={normalized} onRemove={onRemove} />;
-      case "kpi": return <KPIWidget widget={normalized} onRemove={onRemove} color={semanticColor} />;
-      default: return null;
+      case "bar":
+        return <BarChartWidget widget={normalized} onRemove={onRemove} fillColor={semanticColor} />;
+      case "line":
+        return <LineChartWidget widget={normalized} onRemove={onRemove} strokeColor={semanticColor} />;
+      case "pie":
+        return <PieChartWidget widget={normalized} onRemove={onRemove} />;
+      case "table":
+        return <TableWidget widget={normalized} onRemove={onRemove} />;
+      case "kpi":
+        return <KPIWidget widget={normalized} onRemove={onRemove} color={semanticColor} />;
+      default:
+        return null;
     }
   } catch (error) {
     console.error(`Error rendering widget ${widget.id}:`, error);
     return (
-      <div className="bg-red-50 dark:bg-red-950/20 rounded-xl p-6 border border-red-200 dark:border-red-900 shadow-sm flex flex-col items-center justify-center h-80 text-center relative group sm:col-span-2 xl:col-span-1">
-        <button onClick={() => onRemove(widget.id)} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg text-red-600 transition-opacity z-10">
-          <Trash2 size={16} />
-        </button>
-        <AlertCircle className="text-red-400 mb-3" size={32} />
-        <h3 className="text-sm font-medium text-red-800 dark:text-red-300 mb-1">Error de Renderizado</h3>
-        <p className="text-xs text-red-600 dark:text-red-400 px-4">No se pudo generar el visualizador para "{widget.title}".</p>
-      </div>
+      <PlaceholderCard
+        icon={<AlertCircle size={28} className="text-destructive" />}
+        title="Error de renderizado"
+        message={`No se pudo generar el visualizador para "${widget.title}".`}
+        onRemove={() => onRemove(widget.id)}
+        tone="error"
+      />
     );
   }
+}
+
+function PlaceholderCard({
+  icon,
+  title,
+  message,
+  onRemove,
+  tone = "default",
+}: {
+  icon: React.ReactNode;
+  title: string;
+  message: string;
+  onRemove: () => void;
+  tone?: "default" | "error";
+}) {
+  const isError = tone === "error";
+  return (
+    <div
+      className={`group relative flex flex-col items-center justify-center gap-3 text-center
+        rounded-2xl border p-6 shadow-sm h-64
+        ${isError ? "bg-destructive/5 border-destructive/30" : "bg-card border-border"}`}
+    >
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Quitar widget"
+        className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground
+                   hover:text-destructive hover:bg-destructive/10
+                   opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X className="h-4 w-4" />
+      </button>
+      {icon}
+      <h3
+        className={`small font-semibold ${isError ? "text-destructive" : "text-foreground"}`}
+        title={title}
+      >
+        {title}
+      </h3>
+      <p className="xs text-muted-foreground max-w-xs">{message}</p>
+    </div>
+  );
 }

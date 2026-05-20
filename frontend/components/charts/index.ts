@@ -1,4 +1,5 @@
 export * from "./types";
+export * from "./widget-card";
 export * from "./bar-chart-widget";
 export * from "./line-chart-widget";
 export * from "./pie-chart-widget";

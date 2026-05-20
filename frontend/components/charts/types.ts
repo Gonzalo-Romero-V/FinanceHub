@@ -15,6 +15,7 @@ export interface Widget {
   id: string;
   type: WidgetType;
   title: string;
+  description?: string;
   data: Array<Record<string, unknown>>;
   /** Ejes / claves para bar y line. */
   xKey?: string;

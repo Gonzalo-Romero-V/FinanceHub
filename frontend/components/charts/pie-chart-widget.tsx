@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import {
   Cell,
   Legend,
@@ -8,9 +9,10 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { Trash2 } from "lucide-react";
 import { Widget } from "./types";
+import { WidgetCard } from "./widget-card";
 import { formatMetric } from "@/lib/utils/format";
+import { chartTooltipStyle } from "./chart-theme";
 
 const DEFAULT_COLORS = [
   "var(--chart-1)",
@@ -28,6 +30,9 @@ interface PieChartWidgetProps {
 }
 
 export function PieChartWidget({ widget, onRemove, colors = DEFAULT_COLORS }: PieChartWidgetProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const formatOpts = {
     format: widget.value_format ?? "currency",
     currency: widget.currency,
@@ -35,63 +40,76 @@ export function PieChartWidget({ widget, onRemove, colors = DEFAULT_COLORS }: Pi
   } as const;
 
   const fmt = (v: unknown) => formatMetric(v, formatOpts);
-  const valueKey = widget.valueKey!;
+
+  const valueKey = widget.valueKey || "value";
+  const categoryKey = widget.categoryKey || "label";
+
+  // Calcular el total para obtener porcentajes reales
+  const total = widget.data.reduce((acc, curr) => acc + (Number(curr[valueKey]) || 0), 0);
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-sm relative group flex flex-col h-80">
-      <button
-        onClick={() => onRemove(widget.id)}
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-opacity z-10"
-        aria-label="Quitar gráfico"
-      >
-        <Trash2 size={16} />
-      </button>
-      <h3 className="small font-medium text-foreground mb-4">{widget.title}</h3>
-      <div className="flex-1 w-full min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={widget.data}
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={70}
-              paddingAngle={2}
-              dataKey={valueKey}
-              nameKey={widget.categoryKey!}
-            >
-              {widget.data.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={colors[index % colors.length]}
-                  stroke="rgba(0,0,0,0.1)"
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                borderRadius: "12px",
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--popover)",
-                color: "var(--popover-foreground)",
-                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-              }}
-              itemStyle={{ color: "var(--popover-foreground)" }}
-              formatter={(value: unknown, _name, entry) => {
-                const label = (entry?.payload?.[widget.categoryKey!] as string) ?? "";
-                return [fmt(value), label];
-              }}
-            />
-            <Legend
-              wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }}
-              formatter={(label: string, entry) => {
-                const value = (entry?.payload as Record<string, unknown> | undefined)?.[valueKey];
-                return value !== undefined ? `${label} — ${fmt(value)}` : label;
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <WidgetCard
+      title={widget.title}
+      description={widget.description}
+      accentColor={colors[0]}
+      onRemove={() => onRemove(widget.id)}
+      bodyClassName="h-72 w-full"
+    >
+      {mounted && (
+        <div className="h-full w-full min-h-[288px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={widget.data}
+                cx="50%"
+                cy="45%"
+                innerRadius={60}
+                outerRadius={85}
+                paddingAngle={5}
+                dataKey={valueKey}
+                nameKey={categoryKey}
+                strokeWidth={2}
+                stroke="var(--card)"
+                isAnimationActive={false}
+              >
+                {widget.data.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                itemStyle={{ color: "var(--popover-foreground)" }}
+                formatter={(value: unknown, name: unknown) => {
+                  const valNum = Number(value) || 0;
+                  const percent = total > 0 ? ((valNum / total) * 100).toFixed(1) : "0";
+                  return [`${fmt(value)} (${percent}%)`, String(name)];
+                }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }}
+                formatter={(label: string, entry: any) => {
+                  const value = entry?.payload?.[valueKey];
+                  const valNum = Number(value) || 0;
+                  const percent = total > 0 ? ((valNum / total) * 100).toFixed(1) : "0";
+                  return (
+                    <span className="text-muted-foreground">
+                      {label}
+                      {value !== undefined && (
+                        <span className="ml-1 text-foreground font-medium">
+                          {fmt(value)} <span className="text-[10px] opacity-60">({percent}%)</span>
+                        </span>
+                      )}
+                    </span>
+                  );
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </WidgetCard>
   );
 }

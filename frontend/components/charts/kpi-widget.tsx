@@ -1,7 +1,7 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
 import { Widget } from "./types";
+import { WidgetCard } from "./widget-card";
 import { formatMetric } from "@/lib/utils/format";
 
 interface KPIWidgetProps {
@@ -10,7 +10,7 @@ interface KPIWidgetProps {
   color?: string;
 }
 
-export function KPIWidget({ widget, onRemove, color = "var(--foreground)" }: KPIWidgetProps) {
+export function KPIWidget({ widget, onRemove, color = "var(--brand-1)" }: KPIWidgetProps) {
   const value = formatMetric(widget.metric, {
     format: widget.value_format ?? "currency",
     currency: widget.currency,
@@ -18,26 +18,24 @@ export function KPIWidget({ widget, onRemove, color = "var(--foreground)" }: KPI
   });
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl p-6 border border-border shadow-sm relative group flex flex-col justify-center min-h-[160px]">
-      <button
-        onClick={() => onRemove(widget.id)}
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-opacity"
-        aria-label="Quitar KPI"
-      >
-        <Trash2 size={16} />
-      </button>
-      <h3 className="xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-        {widget.title}
-      </h3>
-      <div
-        className="h1 tracking-tight mb-2 transition-colors duration-300"
-        style={{ color: color !== "var(--foreground)" ? color : undefined }}
-      >
-        {value}
+    <WidgetCard
+      title={widget.title}
+      description={widget.description}
+      accentColor={color}
+      onRemove={() => onRemove(widget.id)}
+      bodyClassName="flex flex-col justify-center"
+    >
+      <div className="flex flex-col">
+        <span
+          className="h1 tracking-tight tabular-nums leading-none"
+          style={{ color }}
+        >
+          {value}
+        </span>
+        {widget.subtext && (
+          <p className="xs text-muted-foreground mt-3">{widget.subtext}</p>
+        )}
       </div>
-      {widget.subtext && (
-        <p className="xs text-muted-foreground font-medium">{widget.subtext}</p>
-      )}
-    </div>
+    </WidgetCard>
   );
 }

@@ -15,6 +15,7 @@ export interface AnalyzeWidget {
   id: string;
   type: "kpi" | "line" | "bar" | "pie" | "table";
   title: string;
+  description?: string;
   data: Array<Record<string, unknown>>;
   raw_total_records: number;
   sql?: string | null;
