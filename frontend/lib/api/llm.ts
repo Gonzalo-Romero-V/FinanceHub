@@ -19,6 +19,9 @@ export interface AnalyzeWidget {
   raw_total_records: number;
   sql?: string | null;
   metric?: number | null;
+  value_format?: "currency" | "percent" | "integer" | "number" | "auto";
+  currency?: string | null;
+  unit?: string | null;
 }
 
 export interface AnalyzeResponse {
