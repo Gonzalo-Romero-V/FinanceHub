@@ -4,6 +4,7 @@ export interface Cuenta {
   id: number;
   nombre: string;
   saldo: number;
+  saldo_inicial: number;
   fecha_creacion: string;
   activa: boolean;
   tipo_cuenta_id?: number;

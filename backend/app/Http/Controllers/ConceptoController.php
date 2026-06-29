@@ -77,6 +77,11 @@ class ConceptoController
 
         try {
             $data = ConceptoModel::where('user_id', auth()->id())->findOrFail($id);
+
+            if ($data->es_sistema) {
+                return response()->json(['mensaje' => 'Los conceptos de sistema no se pueden modificar'], 403);
+            }
+
             $data->update($request->only(['nombre', 'tipo_movimiento_id']));
 
             return response()->json([
@@ -97,6 +102,11 @@ class ConceptoController
     {
         try {
             $data = ConceptoModel::where('user_id', auth()->id())->findOrFail($id);
+
+            if ($data->es_sistema) {
+                return response()->json(['mensaje' => 'Los conceptos de sistema no se pueden eliminar'], 403);
+            }
+
             $data->delete();
 
             return response()->json([

@@ -47,6 +47,20 @@
 - Aside mobile con portal + slide-in.
 - Tema claro/oscuro vía tokens CSS (`oklch`). Toggle todavía NO implementado.
 
+### Reconciliación de saldos
+- **Mecanismo de ajuste**: los conceptos `es_sistema=true` ("Ajuste de conciliación") se
+  auto-crean por usuario; protegidos contra edición/eliminación en el backend.
+- **Flujo**: `POST /cuentas/{id}/reconciliar` compara el saldo real con el sistema,
+  registra la diferencia y crea opcionalmente un movimiento de ajuste que corrige el saldo.
+- **Historial**: `GET /cuentas/{id}/reconciliaciones` devuelve todos los puntos de
+  conciliación; la UI los muestra como marcas ✓ en la curva histórica.
+- **Curva histórica**: componente `HistorialBalance` en la página de cuentas — línea de
+  evolución de saldo con filtro "Balance General / por cuenta". Computada client-side desde
+  `movimientos + saldo_inicial`; los ajustes aparecen como puntos diferenciados.
+- **Badge de alerta**: banner en la página de cuentas cuando `reconciliacion_proxima ≤ hoy`.
+- **Recordatorio**: en `/perfil` el usuario configura la frecuencia en días;
+  `user_settings.reconciliacion_proxima` se actualiza tras cada reconciliación exitosa.
+
 ## NO implementado / pendiente ❌
 
 (Mantengo esto sincronizado con `PENDIENTES.md` que tiene la lista canónica.)

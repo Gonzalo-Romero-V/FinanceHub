@@ -91,3 +91,41 @@ cuentas 1───* movimientos (cuenta_destino_id)
 - `movimientos.fecha` la dicta el servidor; el cliente no puede setearla.
 - Sólo se pueden editar / eliminar movimientos cuya `fecha` esté en el día
   actual del cliente (TZ del header `X-Client-Timezone`).
+
+---
+
+## conceptos (adición)
+| Columna | Tipo | Notas |
+|---|---|---|
+| es_sistema | bool default false | Si true, el backend bloquea edición y eliminación. Lo usan los conceptos de ajuste de conciliación. |
+
+---
+
+## reconciliaciones
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| cuenta_id | bigint FK → cuentas.id ON DELETE CASCADE | |
+| user_id | bigint FK → users.id ON DELETE CASCADE | |
+| saldo_real | decimal(14,2) | Lo que el usuario reporta como saldo real. |
+| saldo_sistema | decimal(14,2) | Valor de `cuentas.saldo` en el momento de la reconciliación. |
+| diferencia | decimal(14,2) | `saldo_real − saldo_sistema`. Positivo = faltaban ingresos; negativo = faltaban egresos. |
+| movimiento_ajuste_id | bigint FK nullable → movimientos.id ON DELETE SET NULL | Movimiento de ajuste creado automáticamente, si el usuario eligió crear uno. |
+| nota | string nullable | |
+| fecha | timestamp (server-assigned) | |
+
+Invariantes:
+- `diferencia = saldo_real − saldo_sistema` (calculado en backend al crear).
+- Los conceptos de ajuste usados son `es_sistema = true`, tipo Ingreso o Egreso según el signo.
+- La curva histórica de balance se construye desde `movimientos + cuentas.saldo_inicial`; los movimientos de ajuste aparecen como correcciones en esa curva.
+
+---
+
+## user_settings
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| user_id | bigint FK → users.id (unique) | Un registro por usuario. |
+| reconciliacion_frecuencia_dias | int nullable | Cada cuántos días recordar al usuario que reconcilie. Null = sin recordatorio. |
+| reconciliacion_proxima | date nullable | Calculada automáticamente al guardar una reconciliación. |
+| updated_at | timestamp nullable | |

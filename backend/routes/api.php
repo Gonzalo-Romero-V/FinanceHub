@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // =====================
     Route::prefix('cuentas')->group(function () {
         require __DIR__ . '/cuentas/CuentasRouter.php';
+        require __DIR__ . '/reconciliaciones/ReconciliacionesRouter.php';
     });
 
     // =====================
@@ -71,6 +72,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // =====================
     Route::prefix('users')->group(function () {
         require __DIR__ . '/users/UsersRouter.php';
+    });
+
+    // =====================
+    // USER SETTINGS
+    // =====================
+    Route::prefix('user-settings')->group(function () {
+        require __DIR__ . '/user_settings/UserSettingsRouter.php';
     });
 
 });

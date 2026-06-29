@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck, User } from "lucide-react";
+import { Bell, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { PageLoading } from "@/components/custom/page-state";
 
 import { useAuth } from "@/lib/auth/context";
 import { updateUser, type UpdateUserPayload } from "@/lib/api/users";
+import { getUserSettings, updateUserSettings, type UserSettings } from "@/lib/api/user-settings";
 
 interface ProfileFormState {
   name: string;
@@ -34,10 +35,42 @@ export default function PerfilPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [frecuencia, setFrecuencia] = useState<string>("");
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     setForm((f) => ({ ...f, name: user.name ?? "", email: user.email ?? "" }));
   }, [user]);
+
+  useEffect(() => {
+    if (!token) return;
+    getUserSettings(token)
+      .then((r) => {
+        setSettings(r.data);
+        setFrecuencia(r.data.reconciliacion_frecuencia_dias?.toString() ?? "");
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const handleSaveSettings = async () => {
+    if (!token) return;
+    setIsSavingSettings(true);
+    setSettingsSuccess(null);
+    try {
+      const dias = frecuencia ? parseInt(frecuencia, 10) : null;
+      const res = await updateUserSettings(token, { reconciliacion_frecuencia_dias: dias });
+      setSettings(res.data);
+      setSettingsSuccess("Configuración guardada.");
+      setTimeout(() => setSettingsSuccess(null), 3000);
+    } catch {
+      // silencioso — el error es raro aquí
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const isOAuth = Boolean(user?.provider);
 
@@ -230,6 +263,73 @@ export default function PerfilPage() {
           </Button>
         </div>
       </form>
+
+      {/* Configuración de reconciliación */}
+      <section className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-5 mt-6">
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-muted-foreground" />
+          <div>
+            <h3 className="h3 text-foreground">Recordatorio de reconciliación</h3>
+            <p className="small text-muted-foreground">
+              FinanceHub te alertará cuando sea momento de verificar tus saldos.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="frecuencia" className="text-sm font-medium text-foreground">
+              Frecuencia (días)
+            </label>
+            <input
+              id="frecuencia"
+              type="number"
+              min="1"
+              max="365"
+              placeholder="Ej: 30 (mensual) · 7 (semanal)"
+              value={frecuencia}
+              onChange={(e) => setFrecuencia(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <p className="xs text-muted-foreground">
+              Dejá en blanco para desactivar el recordatorio.
+            </p>
+          </div>
+
+          {settings?.reconciliacion_proxima && (
+            <div className="rounded-lg bg-muted/40 px-4 py-3 space-y-1 self-end">
+              <p className="xs text-muted-foreground">Próxima reconciliación</p>
+              <p className="font-semibold text-sm">
+                {new Date(settings.reconciliacion_proxima).toLocaleDateString("es", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {settingsSuccess && (
+          <p className="small text-chart-2 bg-chart-2/10 border border-chart-2/20 rounded-lg px-3 py-2">
+            {settingsSuccess}
+          </p>
+        )}
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSaveSettings}
+            disabled={isSavingSettings}
+            className="bg-brand-1 hover:bg-brand-1/90 text-white min-w-[160px]"
+          >
+            {isSavingSettings ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Guardar preferencia"
+            )}
+          </Button>
+        </div>
+      </section>
     </PageShell>
   );
 }

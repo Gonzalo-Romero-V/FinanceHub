@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CalendarIcon, Eye, Pencil, Trash2, MoreVertical } from "lucide-react"
+import { CalendarIcon, Eye, Pencil, Scale, Trash2, MoreVertical } from "lucide-react"
 import { addDays, format, differenceInCalendarDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 
@@ -42,6 +42,7 @@ interface DataTableProps<T> {
   onView?: (item: T) => void;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  onReconciliar?: (item: T) => void;
   /** Devuelve false para deshabilitar la acción en esa fila (con tooltip opcional). */
   canEdit?: (item: T) => boolean;
   canDelete?: (item: T) => boolean;
@@ -65,6 +66,7 @@ export function DataTable<T extends { [key: string]: any }>({
   onView,
   onEdit,
   onDelete,
+  onReconciliar,
   canEdit,
   canDelete,
   disabledEditHint,
@@ -124,7 +126,7 @@ export function DataTable<T extends { [key: string]: any }>({
     overflowY: 'auto',
   };
 
-  const hasActions = !!onView || !!onEdit || !!onDelete;
+  const hasActions = !!onView || !!onEdit || !!onDelete || !!onReconciliar;
 
   return (
     <div className="w-full bg-background">
@@ -260,6 +262,18 @@ export function DataTable<T extends { [key: string]: any }>({
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
+                          {onReconciliar && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-chart-4 hover:bg-chart-4/10"
+                              onClick={() => onReconciliar(item)}
+                              title="Reconciliar"
+                              aria-label="Reconciliar"
+                            >
+                              <Scale className="h-4 w-4" />
+                            </Button>
+                          )}
                           {onDelete && (
                             <Button
                               variant="ghost"
@@ -305,6 +319,16 @@ export function DataTable<T extends { [key: string]: any }>({
                                   >
                                     <Pencil className="h-4 w-4" />
                                     Editar
+                                  </Button>
+                                )}
+                                {onReconciliar && (
+                                  <Button
+                                    variant="ghost"
+                                    className="justify-start gap-2 h-9 px-2 small text-chart-4 hover:text-chart-4 hover:bg-chart-4/10"
+                                    onClick={() => onReconciliar(item)}
+                                  >
+                                    <Scale className="h-4 w-4" />
+                                    Reconciliar
                                   </Button>
                                 )}
                                 {onDelete && (

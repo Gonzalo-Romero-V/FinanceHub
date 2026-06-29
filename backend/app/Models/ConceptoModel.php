@@ -14,7 +14,12 @@ class ConceptoModel extends Model
     protected $fillable = [
         'nombre',
         'tipo_movimiento_id',
-        'user_id'
+        'user_id',
+        'es_sistema',
+    ];
+
+    protected $casts = [
+        'es_sistema' => 'bool',
     ];
 
     public $timestamps = false;

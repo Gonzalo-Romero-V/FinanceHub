@@ -1,6 +1,8 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
 import type { Concepto } from "./conceptos";
 
+export type Movimiento = MovimientoRaw;
+
 export interface MovimientoRaw {
   id: number;
   fecha: string;

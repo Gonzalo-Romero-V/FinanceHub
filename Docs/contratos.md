@@ -81,11 +81,30 @@ Notas:
 - El controller usa `CarbonImmutable::parse($mov->fecha, 'UTC')->setTimezone($tz)`
   para comparar el día calendario.
 
+### Reconciliaciones (Bearer)
+
+| Método | Path | Body | 200 |
+|---|---|---|---|
+| GET | `/cuentas/{id}/reconciliaciones` | — | `{data:Reconciliacion[]}` (ordenado fecha desc, incluye `movimiento_ajuste` anidado) |
+| POST | `/cuentas/{id}/reconciliar` | `{saldo_real, crear_ajuste?, nota?}` | `{mensaje, data:Reconciliacion}` — crea la reconciliación y, si `crear_ajuste=true` (default) y hay diferencia, crea un movimiento de ajuste automático |
+
+### User Settings (Bearer)
+
+| Método | Path | Body | 200 |
+|---|---|---|---|
+| GET | `/user-settings` | — | `{data:UserSettings}` (crea lazy si no existe) |
+| PATCH | `/user-settings` | `{reconciliacion_frecuencia_dias?}` | `{mensaje, data:UserSettings}` |
+
 ### Balance (Bearer)
 
 | Método | Path | 200 |
 |---|---|---|
-| GET | `/balance` | `{data:{...}}` |
+| GET | `/balance` | `{data:{...}, proxima_reconciliacion, alerta_reconciliacion}` |
+
+Campos adicionales en `GET /balance` (v2):
+- `proxima_reconciliacion: string|null` — fecha ISO de la próxima reconciliación configurada por el usuario.
+- `alerta_reconciliacion: bool` — true si la fecha ya pasó.
+- Por cada cuenta en `cuentas[]`: se agrega `saldo_inicial: number` y `ultima_reconciliacion: string|null`.
 
 ### Users (Bearer)
 

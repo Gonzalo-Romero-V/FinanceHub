@@ -1,20 +1,23 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { DataTable } from "@/components/custom/data-table";
 import { BalanceGeneral } from "@/components/custom/balance-general";
+import { HistorialBalance } from "@/components/custom/historial-balance";
 import { PageShell } from "@/components/custom/page-shell";
 import { PageHeader } from "@/components/custom/page-header";
 import { PageLoading, PageError } from "@/components/custom/page-state";
 import { CuentaForm } from "@/components/forms/cuenta-form";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
+import { ReconciliacionModal } from "@/components/forms/reconciliacion-modal";
 
 import { useAuth } from "@/lib/auth/context";
 import { listCuentas, deleteCuenta, type Cuenta as CuentaApi } from "@/lib/api/cuentas";
+import { getUserSettings, type UserSettings } from "@/lib/api/user-settings";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
 
 interface CuentaRow {
@@ -22,6 +25,7 @@ interface CuentaRow {
   nombre: string;
   tipo_cuenta: string;
   saldo: number;
+  saldo_inicial: number;
   activa: string;
   fecha_creacion: string;
 }
@@ -32,6 +36,7 @@ function toCuentaRow(item: CuentaApi): CuentaRow {
     nombre: item.nombre,
     tipo_cuenta: (item.tipoCuenta?.nombre || item.tipo_cuenta?.nombre) ?? "N/A",
     saldo: Number(item.saldo) || 0,
+    saldo_inicial: Number(item.saldo_inicial) || 0,
     activa: item.activa ? "Activa" : "Inactiva",
     fecha_creacion: formatDate(item.fecha_creacion),
   };
@@ -42,23 +47,25 @@ export default function CuentasPage() {
   const [cuentas, setCuentas] = useState<CuentaRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [historialRefresh, setHistorialRefresh] = useState(0);
 
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<CuentaRow | null>(null);
   const [deleteItem, setDeleteItem] = useState<CuentaRow | null>(null);
+  const [reconciliarItem, setReconciliarItem] = useState<{ id: number; nombre: string; saldo: number } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCuentas = useCallback(async () => {
-    if (!token) {
-      setIsLoading(false);
-      setError("Usuario no autenticado.");
-      return;
-    }
+    if (!token) { setIsLoading(false); setError("Usuario no autenticado."); return; }
     setIsLoading(true);
     try {
-      const response = await listCuentas(token);
-      const arrayData = Array.isArray(response.data) ? response.data : [];
-      setCuentas(arrayData.map(toCuentaRow));
+      const [cuentasRes, settingsRes] = await Promise.all([
+        listCuentas(token),
+        getUserSettings(token).catch(() => null),
+      ]);
+      setCuentas((Array.isArray(cuentasRes.data) ? cuentasRes.data : []).map(toCuentaRow));
+      setSettings(settingsRes?.data ?? null);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
@@ -67,9 +74,7 @@ export default function CuentasPage() {
     }
   }, [token]);
 
-  useEffect(() => {
-    fetchCuentas();
-  }, [fetchCuentas]);
+  useEffect(() => { fetchCuentas(); }, [fetchCuentas]);
 
   const handleDelete = async () => {
     if (!deleteItem || !token) return;
@@ -85,13 +90,17 @@ export default function CuentasPage() {
     }
   };
 
-  const totalActivos = cuentas
-    .filter((c) => c.tipo_cuenta === "Activo")
-    .reduce((acc, c) => acc + c.saldo, 0);
+  const handleReconciliacionSuccess = () => {
+    fetchCuentas();
+    setHistorialRefresh((n) => n + 1);
+  };
 
-  const totalPasivos = cuentas
-    .filter((c) => c.tipo_cuenta === "Pasivo")
-    .reduce((acc, c) => acc + c.saldo, 0);
+  const alertaVencida =
+    settings?.reconciliacion_proxima &&
+    new Date(settings.reconciliacion_proxima) <= new Date();
+
+  const totalActivos = cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((acc, c) => acc + c.saldo, 0);
+  const totalPasivos = cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((acc, c) => acc + c.saldo, 0);
 
   const columns: (keyof CuentaRow)[] = ["nombre", "tipo_cuenta", "saldo", "activa", "fecha_creacion"];
   const columnHeaders: Record<keyof CuentaRow, string> = {
@@ -99,12 +108,19 @@ export default function CuentasPage() {
     nombre: "Nombre",
     tipo_cuenta: "Tipo",
     saldo: "Saldo",
+    saldo_inicial: "Saldo inicial",
     activa: "Estado",
     fecha_creacion: "Fecha creación",
   };
 
   if (isLoading) return <PageLoading />;
   if (error) return <PageError message={error} />;
+
+  const cuentasParaHistorial = cuentas.map((c) => ({
+    id: c.id,
+    nombre: c.nombre,
+    saldo_inicial: c.saldo_inicial,
+  }));
 
   const renderSection = (title: string, tipo: string, icon: typeof TrendingUp, colorClass: string) => {
     const filtered = cuentas.filter((c) => c.tipo_cuenta === tipo);
@@ -131,6 +147,9 @@ export default function CuentasPage() {
         }}
         onEdit={(item) => setEditItem(item)}
         onDelete={(item) => setDeleteItem(item)}
+        onReconciliar={(item) =>
+          setReconciliarItem({ id: item.id, nombre: item.nombre, saldo: item.saldo })
+        }
         rowsOnDisplay={8}
         dateFilter={false}
         footer={
@@ -160,7 +179,22 @@ export default function CuentasPage() {
         }
       />
 
+      {alertaVencida && (
+        <div className="flex items-center gap-3 rounded-lg border border-chart-4/30 bg-chart-4/10 px-4 py-3 mb-4">
+          <AlertTriangle className="h-4 w-4 text-chart-4 shrink-0" />
+          <p className="text-sm text-chart-4">
+            Tenés una reconciliación pendiente desde el{" "}
+            <span className="font-semibold">
+              {new Date(settings!.reconciliacion_proxima!).toLocaleDateString("es")}
+            </span>
+            . Usá el ícono <span className="font-semibold">⚖</span> en cada cuenta para conciliar.
+          </p>
+        </div>
+      )}
+
       <BalanceGeneral totalActivos={totalActivos} totalPasivos={totalPasivos} />
+
+      <HistorialBalance cuentas={cuentasParaHistorial} onRefresh={historialRefresh} />
 
       <div className="space-y-10 mt-10">
         {renderSection("Cuentas de Activos", "Activo", TrendingUp, "text-chart-2")}
@@ -180,6 +214,12 @@ export default function CuentasPage() {
         onConfirm={handleDelete}
         itemName={deleteItem?.nombre}
         isLoading={isDeleting}
+      />
+      <ReconciliacionModal
+        open={!!reconciliarItem}
+        onClose={() => setReconciliarItem(null)}
+        onSuccess={handleReconciliacionSuccess}
+        cuenta={reconciliarItem}
       />
     </PageShell>
   );
