@@ -7,6 +7,21 @@ basado en Lenguaje Natural (NL2SQL). El stack tiene tres servicios independiente
 2. **Backend**: Laravel — API REST y persistencia.
 3. **LLM Service**: FastAPI — interpretación de prompts y generación de widgets.
 
+### Arquitectura de red
+
+**Solo el Frontend se expone al exterior** via Cloudflare Tunnel.
+Backend y LLM Service corren estrictamente en local y nunca reciben tráfico externo directamente.
+
+```
+Internet
+   │
+   ▼  (Cloudflare Tunnel)
+Frontend :3000  ──────── llama directamente desde el browser ──────►  Backend  :8000
+                                                                  └──►  LLM Svc :8001
+                                                                            │
+                                                                       PostgreSQL :5432
+```
+
 ---
 
 ## Quick Start (desarrollo local)
@@ -40,7 +55,7 @@ python main.py
 ```powershell
 cd frontend
 npm install
-cp .env.example .env.local
+cp .env.example .env        # o .env.local — ambos son válidos en Next.js
 npm run dev
 ```
 
@@ -51,7 +66,24 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 NEXT_PUBLIC_LLM_API_BASE_URL=http://localhost:8001
 ```
 
-Si no defines `.env.local`, el frontend usa esos valores por defecto.
+> **Importante**: estas variables no tienen fallback en el código.
+> Si `.env` no existe, las URLs quedan vacías y las llamadas fallan.
+
+### 4. Exposición pública con Cloudflare Tunnel
+
+El frontend corre en local y se expone al exterior con `cloudflared`:
+
+```powershell
+# Tunnel rápido (URL aleatoria, ideal para desarrollo/demo)
+cloudflared tunnel --url http://localhost:3000
+# Cloudflare imprime algo como: https://abc-xyz.trycloudflare.com
+
+# Tunnel con nombre fijo (producción)
+cloudflared tunnel run <nombre-del-tunnel>
+```
+
+Backend y LLM Service **no necesitan tunnel** — el browser los llama
+directamente usando las URLs de `.env` (que en local son `localhost`).
 
 ---
 
@@ -117,8 +149,18 @@ frontend/
 
 ---
 
-## Despliegue (TBD)
+## Cambio de entorno (local → producción)
 
-La configuración de producción (dominio definitivo, OAuth callbacks reales,
-proxy inverso) no está cableada en este repo todavía. Cuando ese trabajo
-arranque, se documenta acá.
+Todo está parametrizado via `.env`. Para apuntar a un dominio de producción:
+
+| Archivo                  | Variable                        | Valor en producción           |
+|--------------------------|---------------------------------|-------------------------------|
+| `frontend/.env`          | `NEXT_PUBLIC_API_URL`           | `https://api.tudominio.com/api` |
+| `frontend/.env`          | `NEXT_PUBLIC_LLM_API_BASE_URL`  | `https://llm.tudominio.com`   |
+| `backend/.env`           | `APP_URL`                       | `https://api.tudominio.com`   |
+| `backend/.env`           | `FRONTEND_URL`                  | `https://tudominio.com`       |
+| `backend/.env`           | `SANCTUM_STATEFUL_DOMAINS`      | `tudominio.com`               |
+| `backend/.env`           | `GOOGLE_REDIRECT`               | `https://api.tudominio.com/api/login/google/callback` |
+| `llm-service/.env`       | `ALLOWED_ORIGINS`               | `https://tudominio.com`       |
+
+No se requiere ningún cambio de código.

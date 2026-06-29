@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinanceHub — Frontend (Next.js)
 
-## Getting Started
+UI del dashboard financiero. Se comunica directamente con el Backend (Laravel) y el LLM Service (FastAPI) usando las URLs definidas en `.env`.
 
-First, run the development server:
+## Arranque
 
-```bash
+```powershell
+npm install
+cp .env.example .env
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Exposición pública
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El frontend es el único servicio que se expone al exterior, via Cloudflare Tunnel:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+# En una terminal separada (mientras `npm run dev` corre):
+cloudflared tunnel --url http://localhost:3000
+```
 
-## Learn More
+## Variables de entorno
 
-To learn more about Next.js, take a look at the following resources:
+| Variable                        | Descripción                  |
+|---------------------------------|------------------------------|
+| `NEXT_PUBLIC_API_URL`           | URL base del Backend Laravel |
+| `NEXT_PUBLIC_LLM_API_BASE_URL`  | URL base del LLM Service     |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Estas variables no tienen fallback en el código — si no existen, las llamadas fallan con error visible.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```powershell
+npm run dev    # servidor de desarrollo
+npm run build  # build de producción
+npm run start  # sirve el build de producción
+npm run lint   # ESLint
+```
