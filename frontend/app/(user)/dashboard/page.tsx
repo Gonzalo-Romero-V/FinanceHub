@@ -144,21 +144,19 @@ export default function DashboardPage() {
 
       <main className="flex-1 w-full overflow-hidden">
         {analysis?.widgets?.length ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5">
             {analysis.intent && (
-              <div className="bg-card px-6 py-4 rounded-xl border border-border shadow-sm flex items-center justify-between gap-4">
-                <div>
-                  <p className="xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                    Intención Identificada
-                  </p>
-                  <p className="text-foreground font-medium">{analysis.intent}</p>
-                </div>
-                <div className="xs px-3 py-1 rounded-full bg-brand-1/10 text-brand-1 font-bold uppercase tracking-wider">
+              <div className="flex items-center justify-between gap-3 px-1">
+                <p className="small text-muted-foreground truncate" title={analysis.intent}>
+                  <span className="text-foreground/60">›</span>{" "}
+                  <span className="text-foreground/80">{analysis.intent}</span>
+                </p>
+                <span className="xs px-2 py-0.5 rounded-full bg-brand-1/10 text-brand-1 font-semibold uppercase tracking-wider shrink-0">
                   {modeConfig === "auto" ? analysis.mode : modeConfig}
-                </div>
+                </span>
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-min">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 auto-rows-min">
               {analysis.widgets.map((widget) => (
                 <WidgetRenderer key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
               ))}
