@@ -1,16 +1,16 @@
 import type { NextConfig } from "next";
 
-const backendUrl =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
-const llmUrl =
-  process.env.NEXT_PUBLIC_LLM_API_BASE_URL ?? "http://localhost:8001";
+// Server-side only: internal URLs for reverse-proxy rewrites.
+// Never exposed to the browser. Do NOT use NEXT_PUBLIC_ prefix here.
+const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
+const llmUrl = process.env.LLM_URL ?? "http://localhost:8001";
 
 const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: `${backendUrl}/:path*`,
+        destination: `${backendUrl}/api/:path*`,
       },
       {
         source: "/llm-api/:path*",
