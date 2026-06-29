@@ -125,13 +125,6 @@ NEXT_PUBLIC_LLM_API_BASE_URL=/llm-api
 
 Estos valores **no cambian** entre local y producción — el backend siempre es `localhost` porque nunca se expone directamente.
 
-### 4. Exposición pública con Cloudflare Tunnel
-
-```powershell
-# Tunnel con nombre fijo (producción)
-cloudflared tunnel run <nombre-del-tunnel>
-```
-
 Solo se tuneliza el frontend (puerto 3000). Backend y LLM Service no necesitan tunnel.
 
 ---
@@ -185,7 +178,7 @@ frontend/
       home/, tutorial/, login/
     (user)/                            # rutas autenticadas (rol "user")
       layout.tsx                       # AuthGate
-      dashboard/, movimientos/, cuentas/, conceptos/, help/
+      dashboard/, movimientos/, cuentas/, conceptos/, perfil/, help/
     auth/callback/                     # receptor del token OAuth
 
   components/
@@ -200,8 +193,10 @@ frontend/
       page-shell.tsx                   # max-w + padding consistente
       page-header.tsx                  # título + descripción + acción
       page-state.tsx                   # <PageLoading />, <PageError />
-      data-table.tsx                   # tabla genérica con filtros y acciones
-    forms/                             # modales de creación/edición
+      data-table.tsx                   # tabla genérica con filtros y acciones (onView/onEdit/onDelete/onReconciliar)
+      balance-general.tsx              # card de patrimonio total (activos − pasivos)
+      historial-balance.tsx            # curva histórica de saldo con filtro por cuenta/general
+    forms/                             # modales: CuentaForm, ConceptoForm, MovimientoForm, ReconciliacionModal, etc.
     charts/                            # widgets del dashboard AI
     ui/                                # primitivos shadcn
 
@@ -210,6 +205,7 @@ frontend/
       client.ts                        # apiFetch + getApiBaseUrl (usa NEXT_PUBLIC_API_URL)
       llm.ts                           # analyzeRequest (usa NEXT_PUBLIC_LLM_API_BASE_URL)
       cuentas.ts, conceptos.ts, movimientos.ts, users.ts
+      reconciliaciones.ts, user-settings.ts
     auth/
       api.ts, context.tsx, storage.ts, types.ts
     utils/
