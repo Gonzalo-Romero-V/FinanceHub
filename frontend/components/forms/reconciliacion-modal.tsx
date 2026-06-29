@@ -28,7 +28,6 @@ export function ReconciliacionModal({
   const { token } = useAuth();
   const [saldoReal, setSaldoReal] = useState("");
   const [nota, setNota] = useState("");
-  const [crearAjuste, setCrearAjuste] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +38,6 @@ export function ReconciliacionModal({
   const handleClose = () => {
     setSaldoReal("");
     setNota("");
-    setCrearAjuste(true);
     setError(null);
     onClose();
   };
@@ -56,7 +54,7 @@ export function ReconciliacionModal({
     try {
       await createReconciliacion(token, cuenta.id, {
         saldo_real: saldoRealNum,
-        crear_ajuste: crearAjuste,
+        crear_ajuste: true,
         nota: nota.trim() || undefined,
       });
       handleClose();
@@ -132,23 +130,15 @@ export function ReconciliacionModal({
           </div>
         )}
 
-        {/* Opción de ajuste */}
+        {/* Info de ajuste automático */}
         {hayDiferencia && (
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={crearAjuste}
-              onChange={(e) => setCrearAjuste(e.target.checked)}
-              className="mt-0.5 accent-chart-2"
-            />
-            <span className="text-sm">
-              Crear movimiento de ajuste automático para cuadrar el saldo
-              <span className="block xs text-muted-foreground mt-0.5">
-                Se registrará como «Ajuste de conciliación». Si no lo marcás,
-                solo se documenta el desfase sin modificar el saldo.
-              </span>
-            </span>
-          </label>
+          <p className="xs text-muted-foreground bg-muted/40 rounded-lg px-4 py-3">
+            Se creará un movimiento de ajuste automático de{" "}
+            <span className="font-semibold text-foreground tabular-nums">
+              {formatCurrency(Math.abs(diferencia))}
+            </span>{" "}
+            para cuadrar el saldo.
+          </p>
         )}
 
         {/* Nota */}
