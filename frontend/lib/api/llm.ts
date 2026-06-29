@@ -1,9 +1,7 @@
 import { getBrowserTimezone } from "@/lib/utils/format";
 
-const DEFAULT_LLM_BASE_URL = "http://localhost:8001";
-
 export function getLlmBaseUrl() {
-  return (process.env.NEXT_PUBLIC_LLM_API_BASE_URL || DEFAULT_LLM_BASE_URL).replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_LLM_API_BASE_URL ?? "").replace(/\/$/, "");
 }
 
 export interface AnalyzeRequestBody {
