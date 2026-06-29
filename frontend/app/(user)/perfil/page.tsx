@@ -7,6 +7,13 @@ import type { ReconciliacionTipo } from "@/lib/api/user-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageShell } from "@/components/custom/page-shell";
 import { PageHeader } from "@/components/custom/page-header";
 import { PageLoading } from "@/components/custom/page-state";
@@ -489,29 +496,31 @@ const DIAS_MES = [
 
 function DayOfWeekSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {DIAS_SEMANA.map((d) => (
-        <option key={d.value} value={d.value}>{d.label}</option>
-      ))}
-    </select>
+    <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
+      <SelectTrigger className="h-8 w-36 text-sm">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {DIAS_SEMANA.map((d) => (
+          <SelectItem key={d.value} value={String(d.value)}>{d.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
 function DayOfMonthSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {DIAS_MES.map((d) => (
-        <option key={d.value} value={d.value}>{d.label}</option>
-      ))}
-    </select>
+    <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
+      <SelectTrigger className="h-8 w-44 text-sm">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {DIAS_MES.map((d) => (
+          <SelectItem key={d.value} value={String(d.value)}>{d.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 

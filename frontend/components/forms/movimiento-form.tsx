@@ -138,11 +138,13 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedParentId, setExpandedParentId] = useState<number | null>(null);
 
   const reset = useCallback(() => {
     setStep(1);
     setForm(EMPTY_STATE);
     setError(null);
+    setExpandedParentId(null);
   }, []);
 
   useEffect(() => {
@@ -182,6 +184,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
       cuenta_destino_id: null,
       cuenta_destino_nombre: "",
     }));
+    setExpandedParentId(null);
     setStep(2);
   };
 
@@ -268,85 +271,127 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="flex flex-col gap-3">
-      <p className="small text-muted-foreground mb-1">
-        Selecciona el concepto para este{" "}
-        <span className="font-semibold text-foreground">{form.tipo}</span>:
-      </p>
-      {isLoadingData ? (
+  const renderStep2 = () => {
+    if (isLoadingData) {
+      return (
         <div className="flex justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-brand-1" />
         </div>
-      ) : conceptosFiltrados.length === 0 ? (
+      );
+    }
+
+    if (conceptosFiltrados.length === 0) {
+      return (
         <div className="text-center py-6 text-muted-foreground small">
           No tienes conceptos de tipo {form.tipo}.{" "}
-          <span className="text-brand-1 font-medium">Crea uno desde la sección</span>{" "}
           <Link className="text-brand-1 font-semibold underline hover:opacity-80" href="/conceptos">
-            Conceptos.
+            Crea uno en Conceptos.
           </Link>
         </div>
-      ) : (
+      );
+    }
+
+    // ── Fase B: subcategorías del padre expandido ────────────────────────────
+    if (expandedParentId !== null) {
+      const padre = raicesFiltradas.find((r) => r.id === expandedParentId);
+      if (!padre) { setExpandedParentId(null); return null; }
+      const hijos = getHijos(expandedParentId);
+      const dotColor = padre.color ?? "#64748b";
+
+      return (
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => setExpandedParentId(null)}
+            className="flex items-center gap-1 xs text-muted-foreground hover:text-foreground transition-colors w-fit"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Todas las categorías
+          </button>
+
+          <p className="small text-muted-foreground">
+            Subcategorías de{" "}
+            <span className="font-semibold text-foreground">{padre.nombre}</span>:
+          </p>
+
+          <div className="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
+            {/* Opción de usar el padre directamente */}
+            <button
+              type="button"
+              onClick={() => handleSelectConcepto(padre)}
+              className="w-full text-left px-4 py-2.5 rounded-xl border border-dashed border-border hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-150 small flex items-center gap-2.5 text-muted-foreground"
+            >
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+              Usar «{padre.nombre}» directamente
+            </button>
+
+            {hijos.map((hijo) => (
+              <button
+                key={hijo.id}
+                type="button"
+                onClick={() => handleSelectConcepto(hijo)}
+                className={cn(
+                  "w-full text-left px-4 py-2.5 rounded-xl border transition-all duration-150 small font-medium flex items-center gap-2.5",
+                  form.concepto_id === hijo.id
+                    ? "border-brand-1 bg-brand-1/10 text-brand-1"
+                    : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
+                )}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: childConceptoColor(dotColor) }}
+                />
+                {hijo.nombre}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Fase A: solo categorías raíz ─────────────────────────────────────────
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="small text-muted-foreground mb-1">
+          Selecciona la categoría para este{" "}
+          <span className="font-semibold text-foreground">{form.tipo}</span>:
+        </p>
         <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
           {raicesFiltradas.map((raiz) => {
             const hijos = getHijos(raiz.id);
             const dotColor = raiz.color ?? "#64748b";
-            const selected = form.concepto_id === raiz.id;
-
             return (
-              <div key={raiz.id}>
-                {/* Botón raíz */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectConcepto(raiz)}
-                  className={cn(
-                    "w-full text-left px-4 py-2.5 rounded-xl border transition-all duration-150 small font-medium flex items-center gap-2.5",
-                    selected
-                      ? "border-brand-1 bg-brand-1/10 text-brand-1"
-                      : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
-                  )}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: dotColor }}
-                  />
-                  {raiz.nombre}
-                </button>
-
-                {/* Hijos indentados */}
-                {hijos.length > 0 && (
-                  <div className="ml-5 mt-1 flex flex-col gap-1">
-                    {hijos.map((hijo) => {
-                      const hijoSelected = form.concepto_id === hijo.id;
-                      return (
-                        <button
-                          key={hijo.id}
-                          type="button"
-                          onClick={() => handleSelectConcepto(hijo)}
-                          className={cn(
-                            "w-full text-left px-4 py-2 rounded-lg border transition-all duration-150 text-sm flex items-center gap-2.5",
-                            hijoSelected
-                              ? "border-brand-1 bg-brand-1/10 text-brand-1"
-                              : "border-border/60 hover:border-muted-foreground/40 hover:bg-muted/20 text-foreground/80",
-                          )}
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: childConceptoColor(dotColor) }}
-                          />
-                          {hijo.nombre}
-                        </button>
-                      );
-                    })}
-                  </div>
+              <button
+                key={raiz.id}
+                type="button"
+                onClick={() => {
+                  if (hijos.length > 0) {
+                    setExpandedParentId(raiz.id);
+                  } else {
+                    handleSelectConcepto(raiz);
+                  }
+                }}
+                className={cn(
+                  "w-full text-left px-4 py-2.5 rounded-xl border transition-all duration-150 small font-medium flex items-center gap-2.5",
+                  form.concepto_id === raiz.id
+                    ? "border-brand-1 bg-brand-1/10 text-brand-1"
+                    : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
                 )}
-              </div>
+              >
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+                <span className="flex-1">{raiz.nombre}</span>
+                {hijos.length > 0 && (
+                  <span className="xs text-muted-foreground font-normal">
+                    {hijos.length} subcategoría{hijos.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </button>
             );
           })}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const CuentaButton = ({
     cuenta,
@@ -603,6 +648,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
             type="button"
             onClick={() => {
               setError(null);
+              if (step === 2) setExpandedParentId(null);
               setStep((s) => s - 1);
             }}
             className="flex items-center gap-1 small text-muted-foreground hover:text-foreground mb-4 transition-colors w-fit"

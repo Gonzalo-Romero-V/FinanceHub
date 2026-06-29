@@ -24,6 +24,7 @@ import { chartTooltipStyle, chartAxisTick, chartGridStroke } from "@/components/
 interface CuentaConSaldo {
   id: number;
   nombre: string;
+  tipo_cuenta: string; // "Activo" | "Pasivo" — para patrimonio en balance general
   saldo_inicial: number;
   saldo: number; // saldo actual, para el punto sintético de hoy
 }
@@ -136,7 +137,12 @@ function buildSerie(
   let startingSaldo: number;
 
   if (selectedId === "general") {
-    startingSaldo = cuentas.reduce((s, c) => s + (c.saldo_inicial ?? 0), 0);
+    // Patrimonio neto: activos - pasivos (para coincidir con BalanceGeneral)
+    const activos = cuentas.filter((c) => c.tipo_cuenta === "Activo");
+    const pasivos = cuentas.filter((c) => c.tipo_cuenta === "Pasivo");
+    startingSaldo =
+      activos.reduce((s, c) => s + (c.saldo_inicial ?? 0), 0) -
+      pasivos.reduce((s, c) => s + (c.saldo_inicial ?? 0), 0);
     for (const m of sorted) {
       if (cutoff && new Date(m.fecha) >= cutoff) break;
       const tipo = getTipo(m);
@@ -183,9 +189,10 @@ function buildSerie(
   }
 
   // ── Punto sintético de hoy ────────────────────────────────────────────────
-  // Añadir saldo actual como punto final para que la línea llegue a hoy
+  // Coincide exactamente con el BalanceGeneral (activos - pasivos) o saldo de la cuenta
   const currentSaldo = selectedId === "general"
-    ? cuentas.reduce((s, c) => s + (c.saldo ?? 0), 0)
+    ? cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((s, c) => s + (c.saldo ?? 0), 0) -
+      cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((s, c) => s + (c.saldo ?? 0), 0)
     : (cuentas.find((c) => c.id === selectedId)?.saldo ?? running);
 
   const lastTs = rawPoints.length > 0 ? rawPoints[rawPoints.length - 1].ts : 0;
@@ -339,7 +346,7 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
               <Line
                 type="monotone"
                 dataKey="saldo"
-                stroke="var(--chart-2)"
+                stroke="var(--brand-1)"
                 strokeWidth={2.5}
                 dot={(props: any) => {
                   const { cx, cy, payload } = props;
@@ -358,7 +365,7 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                     <circle
                       key={`dot-${cx}-${cy}`}
                       cx={cx} cy={cy} r={2}
-                      fill="var(--chart-2)"
+                      fill="var(--brand-1)"
                       stroke="var(--background)"
                       strokeWidth={1.5}
                     />

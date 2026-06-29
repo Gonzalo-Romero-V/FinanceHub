@@ -119,6 +119,7 @@ export default function CuentasPage() {
   const cuentasParaHistorial = cuentas.map((c) => ({
     id: c.id,
     nombre: c.nombre,
+    tipo_cuenta: c.tipo_cuenta,
     saldo_inicial: c.saldo_inicial,
     saldo: c.saldo,
   }));
