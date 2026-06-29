@@ -10,6 +10,7 @@ interface ConfirmDeleteModalProps {
   onConfirm: () => void
   itemName?: string
   isLoading?: boolean
+  errorMessage?: string
 }
 
 export function ConfirmDeleteModal({
@@ -18,6 +19,7 @@ export function ConfirmDeleteModal({
   onConfirm,
   itemName,
   isLoading = false,
+  errorMessage,
 }: ConfirmDeleteModalProps) {
   return (
     <Modal open={open} onClose={onClose} title="Confirmar eliminación" size="sm" persistent={isLoading}>
@@ -36,6 +38,11 @@ export function ConfirmDeleteModal({
             Esta acción no se puede deshacer.
           </p>
         </div>
+        {errorMessage && (
+          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+            {errorMessage}
+          </p>
+        )}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button

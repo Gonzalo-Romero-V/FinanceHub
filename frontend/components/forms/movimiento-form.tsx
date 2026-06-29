@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 import { useAuth } from "@/lib/auth/context";
-import { listConceptos, type Concepto } from "@/lib/api/conceptos";
+import { listConceptos, conceptoColor, childConceptoColor, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
 import { createMovimiento } from "@/lib/api/movimientos";
 import { formatCurrency } from "@/lib/utils/format";
@@ -161,9 +161,15 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
       .finally(() => setIsLoadingData(false));
   }, [open, token]);
 
+  // Todos los conceptos del tipo seleccionado (raíces + hijos)
   const conceptosFiltrados = conceptos.filter(
     (c) => c.tipo_movimiento?.nombre === form.tipo,
   );
+
+  // Separar raíces (para la UI agrupada)
+  const raicesFiltradas = conceptosFiltrados.filter((c) => !c.parent_id);
+  const getHijos = (parentId: number) =>
+    conceptosFiltrados.filter((c) => c.parent_id === parentId);
 
   const handleSelectTipo = (tipo: TipoMovimiento) => {
     setForm((f) => ({
@@ -281,22 +287,62 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
-          {conceptosFiltrados.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => handleSelectConcepto(c)}
-              className={cn(
-                "text-left px-4 py-3 rounded-xl border transition-all duration-150 small font-medium",
-                form.concepto_id === c.id
-                  ? "border-brand-1 bg-brand-1/10 text-brand-1"
-                  : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
-              )}
-            >
-              {c.nombre}
-            </button>
-          ))}
+        <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
+          {raicesFiltradas.map((raiz) => {
+            const hijos = getHijos(raiz.id);
+            const dotColor = raiz.color ?? "#64748b";
+            const selected = form.concepto_id === raiz.id;
+
+            return (
+              <div key={raiz.id}>
+                {/* Botón raíz */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectConcepto(raiz)}
+                  className={cn(
+                    "w-full text-left px-4 py-2.5 rounded-xl border transition-all duration-150 small font-medium flex items-center gap-2.5",
+                    selected
+                      ? "border-brand-1 bg-brand-1/10 text-brand-1"
+                      : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
+                  )}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: dotColor }}
+                  />
+                  {raiz.nombre}
+                </button>
+
+                {/* Hijos indentados */}
+                {hijos.length > 0 && (
+                  <div className="ml-5 mt-1 flex flex-col gap-1">
+                    {hijos.map((hijo) => {
+                      const hijoSelected = form.concepto_id === hijo.id;
+                      return (
+                        <button
+                          key={hijo.id}
+                          type="button"
+                          onClick={() => handleSelectConcepto(hijo)}
+                          className={cn(
+                            "w-full text-left px-4 py-2 rounded-lg border transition-all duration-150 text-sm flex items-center gap-2.5",
+                            hijoSelected
+                              ? "border-brand-1 bg-brand-1/10 text-brand-1"
+                              : "border-border/60 hover:border-muted-foreground/40 hover:bg-muted/20 text-foreground/80",
+                          )}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: childConceptoColor(dotColor) }}
+                          />
+                          {hijo.nombre}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

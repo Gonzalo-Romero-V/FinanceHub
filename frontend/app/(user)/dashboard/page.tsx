@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Send, LayoutDashboard, Loader2, Activity } from "lucide-react";
 
 import { WidgetRenderer, AnalysisResponse } from "@/components/charts";
@@ -16,14 +16,32 @@ import {
 
 import { useAuth } from "@/lib/auth/context";
 import { analyzeRequest } from "@/lib/api/llm";
+import { listConceptos, conceptoColor, type Concepto } from "@/lib/api/conceptos";
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [modeConfig, setModeConfig] = useState<"auto" | "replace" | "append">("auto");
   const [error, setError] = useState<string | null>(null);
+  const [conceptos, setConceptos] = useState<Concepto[]>([]);
+
+  useEffect(() => {
+    if (!token) return;
+    listConceptos(token)
+      .then((res) => setConceptos(Array.isArray(res.data) ? res.data : []))
+      .catch(() => {});
+  }, [token]);
+
+  // Mapa nombre → color efectivo para los widgets del LLM
+  const conceptoColors = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const c of conceptos) {
+      map[c.nombre] = conceptoColor(c);
+    }
+    return map;
+  }, [conceptos]);
 
   const handleRemoveWidget = (id: string) => {
     if (!analysis) return;
@@ -158,7 +176,12 @@ export default function DashboardPage() {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 auto-rows-min">
               {analysis.widgets.map((widget) => (
-                <WidgetRenderer key={widget.id} widget={widget} onRemove={handleRemoveWidget} />
+                <WidgetRenderer
+                  key={widget.id}
+                  widget={widget}
+                  onRemove={handleRemoveWidget}
+                  conceptoColors={conceptoColors}
+                />
               ))}
             </div>
           </div>

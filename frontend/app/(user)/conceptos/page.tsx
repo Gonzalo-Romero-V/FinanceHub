@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowUpRight, ArrowDownLeft, ArrowRightLeft, Plus, type LucideIcon } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowDownLeft,
+  ArrowRightLeft,
+  Plus,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { DataTable } from "@/components/custom/data-table";
+import { ConceptoTree } from "@/components/custom/concepto-tree";
 import { PageShell } from "@/components/custom/page-shell";
 import { PageHeader } from "@/components/custom/page-header";
 import { PageLoading, PageError } from "@/components/custom/page-state";
@@ -13,37 +18,31 @@ import { ConceptoForm } from "@/components/forms/concepto-form";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
 
 import { useAuth } from "@/lib/auth/context";
-import { listConceptos, deleteConcepto, type Concepto as ConceptoApi } from "@/lib/api/conceptos";
-import { formatCurrency, formatNumber } from "@/lib/utils/format";
-
-interface ConceptoRow {
-  id: number;
-  nombre: string;
-  tipo_movimiento: string;
-  total_monto: number;
-}
+import {
+  listConceptos,
+  deleteConcepto,
+  type Concepto,
+} from "@/lib/api/conceptos";
 
 export default function ConceptosPage() {
   const { token } = useAuth();
-  const [conceptos, setConceptos] = useState<ConceptoApi[]>([]);
+  const [tree, setTree] = useState<Concepto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [showCreate, setShowCreate] = useState(false);
-  const [editItem, setEditItem] = useState<{ id: number; nombre: string; tipo_movimiento: string } | null>(null);
-  const [deleteItem, setDeleteItem] = useState<ConceptoRow | null>(null);
+  const [editItem, setEditItem] = useState<Concepto | null>(null);
+  const [deleteItem, setDeleteItem] = useState<Concepto | null>(null);
+  const [addChildParent, setAddChildParent] = useState<Concepto | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchConceptos = useCallback(async () => {
-    if (!token) {
-      setIsLoading(false);
-      setError("Usuario no autenticado.");
-      return;
-    }
+    if (!token) { setIsLoading(false); setError("Usuario no autenticado."); return; }
     setIsLoading(true);
     try {
-      const response = await listConceptos(token);
-      setConceptos(Array.isArray(response.data) ? response.data : []);
+      const res = await listConceptos(token);
+      setTree(Array.isArray(res.tree) ? res.tree : []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
@@ -52,77 +51,57 @@ export default function ConceptosPage() {
     }
   }, [token]);
 
-  useEffect(() => {
-    fetchConceptos();
-  }, [fetchConceptos]);
+  useEffect(() => { fetchConceptos(); }, [fetchConceptos]);
 
   const handleDelete = async () => {
     if (!deleteItem || !token) return;
     setIsDeleting(true);
+    setDeleteError(null);
     try {
       await deleteConcepto(token, deleteItem.id);
       setDeleteItem(null);
       fetchConceptos();
     } catch (err) {
-      console.error("Error al eliminar:", err);
+      setDeleteError(err instanceof Error ? err.message : "No se pudo eliminar.");
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const handleEdit = (c: Concepto) => setEditItem(c);
+  const handleAddChild = (parent: Concepto) => {
+    setAddChildParent(parent);
+    setShowCreate(true);
+  };
+
   if (isLoading) return <PageLoading />;
   if (error) return <PageError message={error} />;
 
-  const columns: (keyof ConceptoRow)[] = ["nombre", "total_monto"];
-  const columnHeaders: Record<keyof ConceptoRow, string> = {
-    id: "ID",
-    nombre: "Concepto",
-    tipo_movimiento: "Tipo",
-    total_monto: "Total Acumulado",
-  };
-
-  const renderSection = (title: string, tipo: string, icon: LucideIcon, colorClass: string) => {
-    const filtered: ConceptoRow[] = conceptos
-      .filter((c) => (c.tipo_movimiento?.nombre || "N/A") === tipo)
-      .map((c) => ({
-        id: c.id,
-        nombre: c.nombre,
-        tipo_movimiento: c.tipo_movimiento?.nombre || "N/A",
-        total_monto: Number(c.total_monto) || 0,
-      }));
-
-    const totalNumeric = filtered.reduce((acc, curr) => acc + curr.total_monto, 0);
-    const Icon = icon;
+  const renderSection = (
+    title: string,
+    tipo: string,
+    Icon: LucideIcon,
+    colorClass: string,
+  ) => {
+    const raices = tree.filter(
+      (c) => (c.tipo_movimiento?.nombre ?? "") === tipo,
+    );
 
     return (
-      <DataTable<ConceptoRow>
-        title={title}
-        titleIcon={<Icon className={`w-5 h-5 ${colorClass}`} />}
-        data={filtered}
-        columns={columns}
-        columnHeaders={columnHeaders}
-        columnConfig={{
-          total_monto: {
-            align: "right",
-            render: (val) => (
-              <div className="flex items-center justify-between w-full font-medium tabular-nums text-foreground/80">
-                <span className="text-muted-foreground/30 font-normal mr-4">$</span>
-                <span>{formatNumber(val)}</span>
-              </div>
-            ),
-          },
-        }}
-        onEdit={(item) =>
-          setEditItem({ id: item.id, nombre: item.nombre, tipo_movimiento: item.tipo_movimiento })
-        }
-        onDelete={(item) => setDeleteItem(item)}
-        footer={
-          <TableRow className="bg-muted/10 font-bold border-t-2">
-            <TableCell>TOTAL</TableCell>
-            <TableCell className={`text-right ${colorClass}`}>{formatCurrency(totalNumeric)}</TableCell>
-          </TableRow>
-        }
-      />
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+          <Icon className={`w-5 h-5 ${colorClass}`} />
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <span className="text-sm text-muted-foreground">({raices.length})</span>
+        </div>
+        <ConceptoTree
+          conceptos={raices}
+          colorClass={colorClass}
+          onEdit={handleEdit}
+          onDelete={(c) => { setDeleteError(null); setDeleteItem(c); }}
+          onAddChild={handleAddChild}
+        />
+      </section>
     );
   };
 
@@ -130,11 +109,11 @@ export default function ConceptosPage() {
     <PageShell>
       <PageHeader
         title="Conceptos"
-        description="Gestiona tus categorías y visualiza el total acumulado en cada una."
+        description="Gestiona categorías y subcategorías. Asigna colores para identificarlas en todo el sistema."
         action={
           <Button
             className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
-            onClick={() => setShowCreate(true)}
+            onClick={() => { setAddChildParent(null); setShowCreate(true); }}
           >
             <Plus className="h-4 w-4" />
             Nuevo Concepto
@@ -143,24 +122,45 @@ export default function ConceptosPage() {
       />
 
       <div className="space-y-10">
-        {renderSection("Conceptos de Ingreso", "Ingreso", ArrowDownLeft, "text-chart-2")}
-        {renderSection("Conceptos de Transferencia", "Transferencia", ArrowRightLeft, "text-brand-1")}
-        {renderSection("Conceptos de Egreso", "Egreso", ArrowUpRight, "text-destructive")}
+        {renderSection("Ingresos", "Ingreso", ArrowDownLeft, "text-chart-2")}
+        {renderSection("Transferencias", "Transferencia", ArrowRightLeft, "text-brand-1")}
+        {renderSection("Egresos", "Egreso", ArrowUpRight, "text-destructive")}
       </div>
 
-      <ConceptoForm open={showCreate} onClose={() => setShowCreate(false)} onSuccess={fetchConceptos} />
+      {/* Modal crear / crear hijo */}
+      <ConceptoForm
+        open={showCreate}
+        onClose={() => { setShowCreate(false); setAddChildParent(null); }}
+        onSuccess={fetchConceptos}
+        defaultParentId={addChildParent?.id ?? null}
+      />
+
+      {/* Modal editar */}
       <ConceptoForm
         open={!!editItem}
         onClose={() => setEditItem(null)}
-        onSuccess={fetchConceptos}
-        editItem={editItem}
+        onSuccess={() => { setEditItem(null); fetchConceptos(); }}
+        editItem={
+          editItem
+            ? {
+                id: editItem.id,
+                nombre: editItem.nombre,
+                tipo_movimiento: editItem.tipo_movimiento?.nombre ?? "",
+                parent_id: editItem.parent_id,
+                color: editItem.color,
+              }
+            : null
+        }
       />
+
+      {/* Modal eliminar */}
       <ConfirmDeleteModal
         open={!!deleteItem}
-        onClose={() => setDeleteItem(null)}
+        onClose={() => { setDeleteItem(null); setDeleteError(null); }}
         onConfirm={handleDelete}
         itemName={deleteItem?.nombre}
         isLoading={isDeleting}
+        errorMessage={deleteError ?? undefined}
       />
     </PageShell>
   );

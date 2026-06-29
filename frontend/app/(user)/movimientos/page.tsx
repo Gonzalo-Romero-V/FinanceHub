@@ -19,6 +19,7 @@ import {
   deleteMovimiento,
   type MovimientoRaw,
 } from "@/lib/api/movimientos";
+import { conceptoColor } from "@/lib/api/conceptos";
 import { formatNumber, isSameLocalDay } from "@/lib/utils/format";
 
 type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
@@ -28,6 +29,7 @@ interface MovimientoRow {
   fecha: string;
   nota: string;
   concepto: string;
+  concepto_color: string | null;
   monto: number;
   cuenta: string;
   tipo_movimiento: TipoMov;
@@ -48,6 +50,7 @@ function toRow(item: MovimientoRaw): MovimientoRow {
     fecha: item.fecha,
     nota: item.nota?.trim() ?? "",
     concepto: item.concepto?.nombre ?? "N/A",
+    concepto_color: item.concepto ? conceptoColor(item.concepto as any) : null,
     monto: Number(item.monto) || 0,
     cuenta,
     tipo_movimiento: tipo,
@@ -120,6 +123,7 @@ export default function MovimientosPage() {
     fecha: "Fecha",
     nota: "Descripción",
     concepto: "Concepto",
+    concepto_color: "",
     monto: "Monto",
     cuenta: "Cuenta",
     tipo_movimiento: "Tipo",
@@ -153,6 +157,19 @@ export default function MovimientosPage() {
           id: {
             render: (val) => (
               <span className="font-mono xs text-muted-foreground">#{val}</span>
+            ),
+          },
+          concepto: {
+            render: (val, item) => (
+              <div className="flex items-center gap-2">
+                {item.concepto_color && (
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: item.concepto_color }}
+                  />
+                )}
+                <span>{val}</span>
+              </div>
             ),
           },
           nota: {

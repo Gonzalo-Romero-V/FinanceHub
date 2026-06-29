@@ -13,6 +13,8 @@ import { KPIWidget } from "./kpi-widget";
 interface WidgetRendererProps {
   widget: Widget;
   onRemove: (id: string) => void;
+  /** Mapa de nombre de concepto → color hex. Usado en pie charts para colorear por categoría. */
+  conceptoColors?: Record<string, string>;
 }
 
 export function normalizeWidget(w: Widget): Widget {
@@ -120,7 +122,16 @@ function getSemanticColor(title: string, index: number = 0): string {
   return defaults[index % defaults.length];
 }
 
-export function WidgetRenderer({ widget, onRemove }: WidgetRendererProps) {
+const DEFAULT_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-8)",
+];
+
+export function WidgetRenderer({ widget, onRemove, conceptoColors }: WidgetRendererProps) {
   if (!widget) return null;
 
   if (widget.type !== "kpi" && (!widget.data || !Array.isArray(widget.data) || widget.data.length === 0)) {
@@ -143,8 +154,16 @@ export function WidgetRenderer({ widget, onRemove }: WidgetRendererProps) {
         return <BarChartWidget widget={normalized} onRemove={onRemove} fillColor={semanticColor} />;
       case "line":
         return <LineChartWidget widget={normalized} onRemove={onRemove} strokeColor={semanticColor} />;
-      case "pie":
-        return <PieChartWidget widget={normalized} onRemove={onRemove} />;
+      case "pie": {
+        // Derivar colores por label de concepto cuando el mapa está disponible
+        const pieColors = conceptoColors
+          ? normalized.data.map((item, idx) => {
+              const label = String(item[normalized.categoryKey ?? "label"] ?? "");
+              return conceptoColors[label] ?? DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
+            })
+          : DEFAULT_COLORS;
+        return <PieChartWidget widget={normalized} onRemove={onRemove} colors={pieColors} />;
+      }
       case "table":
         return <TableWidget widget={normalized} onRemove={onRemove} />;
       case "kpi":

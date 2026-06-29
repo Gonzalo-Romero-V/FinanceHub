@@ -77,7 +77,7 @@ class MovimientoController
     {
         $userId = auth()->id();
 
-        $data = MovimientoModel::with(['concepto.tipoMovimiento', 'cuentaOrigen', 'cuentaDestino'])
+        $data = MovimientoModel::with(['concepto.tipoMovimiento', 'concepto.parent', 'cuentaOrigen', 'cuentaDestino'])
             ->whereHas('cuentaOrigen', fn($q) => $q->where('user_id', $userId))
             ->orWhereHas('cuentaDestino', fn($q) => $q->where('user_id', $userId))
             ->orderBy('fecha', 'desc')
@@ -153,7 +153,7 @@ class MovimientoController
     {
         $userId = auth()->id();
 
-        $data = MovimientoModel::with(['concepto.tipoMovimiento', 'cuentaOrigen', 'cuentaDestino'])
+        $data = MovimientoModel::with(['concepto.tipoMovimiento', 'concepto.parent', 'cuentaOrigen', 'cuentaDestino'])
             ->where('id', $id)
             ->where(function ($q) use ($userId) {
                 $q->whereHas('cuentaOrigen',  fn($q) => $q->where('user_id', $userId))

@@ -77,6 +77,7 @@ users 1───* cuentas
 users 1───* conceptos
 tipos_cuenta 1───* cuentas
 tipos_movimiento 1───* conceptos
+conceptos 0..1──* conceptos (parent_id — auto-referencial, max 2 niveles)
 conceptos 1───* movimientos
 cuentas 1───* movimientos (cuenta_origen_id)
 cuentas 1───* movimientos (cuenta_destino_id)
@@ -94,10 +95,19 @@ cuentas 1───* movimientos (cuenta_destino_id)
 
 ---
 
-## conceptos (adición)
+## conceptos (columnas adicionales)
 | Columna | Tipo | Notas |
 |---|---|---|
 | es_sistema | bool default false | Si true, el backend bloquea edición y eliminación. Lo usan los conceptos de ajuste de conciliación. |
+| parent_id | bigint nullable FK → conceptos.id ON DELETE SET NULL | Null = concepto raíz. Máximo 2 niveles (raíz → hijo). |
+| color | varchar(7) nullable | Color hex `#rrggbb`. Solo se guarda en conceptos raíz. Los hijos derivan su color del padre en el frontend (`parent.color + '80'`). |
+
+**Reglas:**
+- `parent_id` debe apuntar a un concepto raíz del mismo usuario (no puede anidar hijos de hijos).
+- Los conceptos con `es_sistema=true` no pueden usarse como padres.
+- El `tipo_movimiento_id` de un hijo se hereda del padre y no es editable desde el hijo.
+- No se puede eliminar un concepto raíz si tiene hijos (`422`).
+- Un concepto sin `color` se muestra en `#64748b` (slate) en la UI.
 
 ---
 

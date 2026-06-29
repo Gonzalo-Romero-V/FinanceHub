@@ -4,26 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-
 class ConceptoModel extends Model
 {
     protected $table = 'conceptos';
-
     protected $primaryKey = 'id';
+    public $timestamps = false;
 
     protected $fillable = [
         'nombre',
         'tipo_movimiento_id',
         'user_id',
         'es_sistema',
+        'parent_id',
+        'color',
     ];
 
     protected $casts = [
         'es_sistema' => 'bool',
     ];
-
-    public $timestamps = false;
-
 
     public function tipoMovimiento()
     {
@@ -38,5 +36,20 @@ class ConceptoModel extends Model
     public function user()
     {
         return $this->belongsTo(UserModel::class);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(ConceptoModel::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(ConceptoModel::class, 'parent_id');
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->parent_id === null;
     }
 }
