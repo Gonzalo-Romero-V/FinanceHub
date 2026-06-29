@@ -126,6 +126,9 @@ Invariantes:
 |---|---|---|
 | id | bigserial PK | |
 | user_id | bigint FK → users.id (unique) | Un registro por usuario. |
-| reconciliacion_frecuencia_dias | int nullable | Cada cuántos días recordar al usuario que reconcilie. Null = sin recordatorio. |
-| reconciliacion_proxima | date nullable | Calculada automáticamente al guardar una reconciliación. |
+| reconciliacion_tipo | string(20) default 'ninguno' | `ninguno` \| `semanal` \| `quincenal` \| `mensual` \| `personalizado` |
+| reconciliacion_dia_semana | tinyint unsigned nullable | 1=lun … 7=dom. Aplica para tipo `semanal` y `quincenal`. |
+| reconciliacion_dia_mes | tinyint unsigned nullable | 1–28, 0 = último día del mes. Aplica para tipo `mensual`. |
+| reconciliacion_frecuencia_dias | int nullable | Solo para tipo `personalizado`: cada N días. |
+| reconciliacion_proxima | date nullable | Calculada automáticamente según el tipo al guardar. |
 | updated_at | timestamp nullable | |

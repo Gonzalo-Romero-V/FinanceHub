@@ -72,7 +72,7 @@ export function ReconciliacionModal({
     <Modal
       open={open}
       onClose={handleClose}
-      title={`Reconciliar: ${cuenta?.nombre ?? ""}`}
+      title={`Conciliar: ${cuenta?.nombre ?? ""}`}
       size="sm"
       persistent={isSaving}
     >
@@ -144,7 +144,8 @@ export function ReconciliacionModal({
             <span className="text-sm">
               Crear movimiento de ajuste automático para cuadrar el saldo
               <span className="block xs text-muted-foreground mt-0.5">
-                Se registrará como «Ajuste de conciliación».
+                Se registrará como «Ajuste de conciliación». Si no lo marcás,
+                solo se documenta el desfase sin modificar el saldo.
               </span>
             </span>
           </label>
@@ -177,7 +178,7 @@ export function ReconciliacionModal({
             ) : (
               <Scale className="h-4 w-4" />
             )}
-            Guardar reconciliación
+            Guardar conciliación
           </Button>
         </div>
       </div>

@@ -120,6 +120,7 @@ export default function CuentasPage() {
     id: c.id,
     nombre: c.nombre,
     saldo_inicial: c.saldo_inicial,
+    saldo: c.saldo,
   }));
 
   const renderSection = (title: string, tipo: string, icon: typeof TrendingUp, colorClass: string) => {
@@ -187,7 +188,7 @@ export default function CuentasPage() {
             <span className="font-semibold">
               {new Date(settings!.reconciliacion_proxima!).toLocaleDateString("es")}
             </span>
-            . Usá el ícono <span className="font-semibold">⚖</span> en cada cuenta para conciliar.
+            . Usá el ícono <span className="font-semibold">⚖</span> en cada cuenta para conciliarla.
           </p>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Bell, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck, User } from "lucide-react";
+import type { ReconciliacionTipo } from "@/lib/api/user-settings";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +37,10 @@ export default function PerfilPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [frecuencia, setFrecuencia] = useState<string>("");
+  const [schedTipo, setSchedTipo] = useState<ReconciliacionTipo>("ninguno");
+  const [schedDiaSemana, setSchedDiaSemana] = useState<number>(1);
+  const [schedDiaMes, setSchedDiaMes] = useState<number>(1);
+  const [schedFrecuencia, setSchedFrecuencia] = useState<string>("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
 
@@ -49,8 +53,12 @@ export default function PerfilPage() {
     if (!token) return;
     getUserSettings(token)
       .then((r) => {
-        setSettings(r.data);
-        setFrecuencia(r.data.reconciliacion_frecuencia_dias?.toString() ?? "");
+        const s = r.data;
+        setSettings(s);
+        setSchedTipo(s.reconciliacion_tipo ?? "ninguno");
+        setSchedDiaSemana(s.reconciliacion_dia_semana ?? 1);
+        setSchedDiaMes(s.reconciliacion_dia_mes ?? 1);
+        setSchedFrecuencia(s.reconciliacion_frecuencia_dias?.toString() ?? "");
       })
       .catch(() => {});
   }, [token]);
@@ -60,13 +68,19 @@ export default function PerfilPage() {
     setIsSavingSettings(true);
     setSettingsSuccess(null);
     try {
-      const dias = frecuencia ? parseInt(frecuencia, 10) : null;
-      const res = await updateUserSettings(token, { reconciliacion_frecuencia_dias: dias });
+      const res = await updateUserSettings(token, {
+        reconciliacion_tipo: schedTipo,
+        reconciliacion_dia_semana: ["semanal", "quincenal"].includes(schedTipo) ? schedDiaSemana : null,
+        reconciliacion_dia_mes: schedTipo === "mensual" ? schedDiaMes : null,
+        reconciliacion_frecuencia_dias: schedTipo === "personalizado" && schedFrecuencia
+          ? parseInt(schedFrecuencia, 10)
+          : null,
+      });
       setSettings(res.data);
       setSettingsSuccess("Configuración guardada.");
       setTimeout(() => setSettingsSuccess(null), 3000);
     } catch {
-      // silencioso — el error es raro aquí
+      // silencioso
     } finally {
       setIsSavingSettings(false);
     }
@@ -264,51 +278,99 @@ export default function PerfilPage() {
         </div>
       </form>
 
-      {/* Configuración de reconciliación */}
+      {/* Configuración de conciliación */}
       <section className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-5 mt-6">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <div>
-            <h3 className="h3 text-foreground">Recordatorio de reconciliación</h3>
+            <h3 className="h3 text-foreground">Recordatorio de conciliación</h3>
             <p className="small text-muted-foreground">
               FinanceHub te alertará cuando sea momento de verificar tus saldos.
             </p>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="frecuencia" className="text-sm font-medium text-foreground">
-              Frecuencia (días)
-            </label>
-            <input
-              id="frecuencia"
-              type="number"
-              min="1"
-              max="365"
-              placeholder="Ej: 30 (mensual) · 7 (semanal)"
-              value={frecuencia}
-              onChange={(e) => setFrecuencia(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            <p className="xs text-muted-foreground">
-              Dejá en blanco para desactivar el recordatorio.
+        <div className="flex flex-col gap-3">
+          <ScheduleOption
+            id="sched-ninguno"
+            label="Sin recordatorio"
+            selected={schedTipo === "ninguno"}
+            onSelect={() => setSchedTipo("ninguno")}
+          />
+
+          <ScheduleOption
+            id="sched-semanal"
+            label="Semanalmente"
+            selected={schedTipo === "semanal"}
+            onSelect={() => setSchedTipo("semanal")}
+            extra={
+              schedTipo === "semanal" && (
+                <DayOfWeekSelect value={schedDiaSemana} onChange={setSchedDiaSemana} />
+              )
+            }
+          />
+
+          <ScheduleOption
+            id="sched-quincenal"
+            label="Quincenalmente"
+            selected={schedTipo === "quincenal"}
+            onSelect={() => setSchedTipo("quincenal")}
+            extra={
+              schedTipo === "quincenal" && (
+                <DayOfWeekSelect value={schedDiaSemana} onChange={setSchedDiaSemana} />
+              )
+            }
+          />
+
+          <ScheduleOption
+            id="sched-mensual"
+            label="Mensualmente"
+            selected={schedTipo === "mensual"}
+            onSelect={() => setSchedTipo("mensual")}
+            extra={
+              schedTipo === "mensual" && (
+                <DayOfMonthSelect value={schedDiaMes} onChange={setSchedDiaMes} />
+              )
+            }
+          />
+
+          <ScheduleOption
+            id="sched-personalizado"
+            label="Personalizado"
+            selected={schedTipo === "personalizado"}
+            onSelect={() => setSchedTipo("personalizado")}
+            extra={
+              schedTipo === "personalizado" && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    placeholder="30"
+                    value={schedFrecuencia}
+                    onChange={(e) => setSchedFrecuencia(e.target.value)}
+                    className="w-20 h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <span className="text-sm text-muted-foreground">días</span>
+                </div>
+              )
+            }
+          />
+        </div>
+
+        {settings?.reconciliacion_proxima && schedTipo !== "ninguno" && (
+          <div className="rounded-lg bg-muted/40 px-4 py-3 space-y-1">
+            <p className="xs text-muted-foreground">Próxima conciliación estimada</p>
+            <p className="font-semibold text-sm">
+              {new Date(settings.reconciliacion_proxima + "T12:00:00").toLocaleDateString("es", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </p>
           </div>
-
-          {settings?.reconciliacion_proxima && (
-            <div className="rounded-lg bg-muted/40 px-4 py-3 space-y-1 self-end">
-              <p className="xs text-muted-foreground">Próxima reconciliación</p>
-              <p className="font-semibold text-sm">
-                {new Date(settings.reconciliacion_proxima).toLocaleDateString("es", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                })}
-              </p>
-            </div>
-          )}
-        </div>
+        )}
 
         {settingsSuccess && (
           <p className="small text-chart-2 bg-chart-2/10 border border-chart-2/20 rounded-lg px-3 py-2">
@@ -400,5 +462,92 @@ function Badge({ icon: Icon, label }: { icon: React.ElementType; label: string }
       <Icon className="h-3.5 w-3.5" />
       {label}
     </span>
+  );
+}
+
+// ─── Scheduling helpers ───────────────────────────────────────────────────────
+
+const DIAS_SEMANA = [
+  { value: 1, label: "Lunes" },
+  { value: 2, label: "Martes" },
+  { value: 3, label: "Miércoles" },
+  { value: 4, label: "Jueves" },
+  { value: 5, label: "Viernes" },
+  { value: 6, label: "Sábado" },
+  { value: 7, label: "Domingo" },
+];
+
+const DIAS_MES = [
+  { value: 1, label: "El día 1" },
+  { value: 5, label: "El día 5" },
+  { value: 10, label: "El día 10" },
+  { value: 15, label: "El día 15" },
+  { value: 20, label: "El día 20" },
+  { value: 25, label: "El día 25" },
+  { value: 0, label: "Último día del mes" },
+];
+
+function DayOfWeekSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {DIAS_SEMANA.map((d) => (
+        <option key={d.value} value={d.value}>{d.label}</option>
+      ))}
+    </select>
+  );
+}
+
+function DayOfMonthSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {DIAS_MES.map((d) => (
+        <option key={d.value} value={d.value}>{d.label}</option>
+      ))}
+    </select>
+  );
+}
+
+function ScheduleOption({
+  id,
+  label,
+  selected,
+  onSelect,
+  extra,
+}: {
+  id: string;
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+        selected
+          ? "border-brand-1/50 bg-brand-1/5"
+          : "border-border bg-transparent hover:bg-muted/30"
+      }`}
+      onClick={onSelect}
+    >
+      <div
+        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+          selected ? "border-brand-1" : "border-muted-foreground/40"
+        }`}
+      >
+        {selected && <div className="w-2 h-2 rounded-full bg-brand-1" />}
+      </div>
+      <span className={`text-sm font-medium ${selected ? "text-foreground" : "text-muted-foreground"}`}>
+        {label}
+      </span>
+      {extra && <div className="ml-auto" onClick={(e) => e.stopPropagation()}>{extra}</div>}
+    </div>
   );
 }

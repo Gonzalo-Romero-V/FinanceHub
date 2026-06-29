@@ -268,8 +268,8 @@ export function DataTable<T extends { [key: string]: any }>({
                               size="icon"
                               className="h-8 w-8 text-muted-foreground hover:text-chart-4 hover:bg-chart-4/10"
                               onClick={() => onReconciliar(item)}
-                              title="Reconciliar"
-                              aria-label="Reconciliar"
+                              title="Conciliar"
+                              aria-label="Conciliar"
                             >
                               <Scale className="h-4 w-4" />
                             </Button>
@@ -328,7 +328,7 @@ export function DataTable<T extends { [key: string]: any }>({
                                     onClick={() => onReconciliar(item)}
                                   >
                                     <Scale className="h-4 w-4" />
-                                    Reconciliar
+                                    Conciliar
                                   </Button>
                                 )}
                                 {onDelete && (

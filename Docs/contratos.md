@@ -93,7 +93,7 @@ Notas:
 | Método | Path | Body | 200 |
 |---|---|---|---|
 | GET | `/user-settings` | — | `{data:UserSettings}` (crea lazy si no existe) |
-| PATCH | `/user-settings` | `{reconciliacion_frecuencia_dias?}` | `{mensaje, data:UserSettings}` |
+| PATCH | `/user-settings` | `{reconciliacion_tipo?, reconciliacion_dia_semana?, reconciliacion_dia_mes?, reconciliacion_frecuencia_dias?}` | `{mensaje, data:UserSettings}` |
 
 ### Balance (Bearer)
 
