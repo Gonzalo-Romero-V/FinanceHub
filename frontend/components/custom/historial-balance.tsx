@@ -79,17 +79,48 @@ function granularityFor(windowDays: number | null): "dia" | "semana" | "mes" {
   return "dia";
 }
 
-// ─── Agregación ──────────────────────────────────────────────────────────────
+// ─── Relleno diario (tooltip suave y continuo) ───────────────────────────────
+//
+// Genera un DataPoint por cada día del rango, llevando el saldo del último
+// rawPoint del día hacia adelante. Esto evita huecos en el eje temporal que
+// producen el efecto de "escalones".
 
-function aggregate(points: RawPoint[], granularity: "dia" | "semana" | "mes"): DataPoint[] {
-  if (granularity === "dia") {
-    return points.map((p) => ({
-      ts: p.ts,
-      label: fmtLabel(p.fecha, "dia"),
-      saldo: p.saldo,
-      esAjuste: p.esAjuste,
-    }));
+function fillDailyData(rawPoints: RawPoint[]): DataPoint[] {
+  if (rawPoints.length === 0) return [];
+
+  const ONE_DAY = 86_400_000;
+  const startTs = new Date(rawPoints[0].ts).setHours(0, 0, 0, 0);
+  const endTs   = new Date(rawPoints[rawPoints.length - 1].ts).setHours(0, 0, 0, 0);
+
+  const result: DataPoint[] = [];
+  let lastSaldo = rawPoints[0].saldo;
+  let rIdx = 0;
+
+  for (let t = startTs; t <= endTs + ONE_DAY / 2; t += ONE_DAY) {
+    const dayEnd = t + ONE_DAY - 1;
+    let dayEsAjuste: boolean | undefined;
+
+    // Consumir todos los rawPoints que caen en este día
+    while (rIdx < rawPoints.length && rawPoints[rIdx].ts <= dayEnd) {
+      lastSaldo   = rawPoints[rIdx].saldo;
+      dayEsAjuste = dayEsAjuste || rawPoints[rIdx].esAjuste;
+      rIdx++;
+    }
+
+    result.push({
+      ts:       t,
+      label:    fmtLabel(new Date(t), "dia"),
+      saldo:    lastSaldo,
+      esAjuste: dayEsAjuste,
+    });
   }
+
+  return result;
+}
+
+// ─── Agregación (semana / mes) ────────────────────────────────────────────────
+
+function aggregate(points: RawPoint[], granularity: "semana" | "mes"): DataPoint[] {
 
   const buckets = new Map<string, RawPoint>();
   for (const p of points) {
@@ -192,24 +223,13 @@ function buildSerie(
     });
   }
 
-  // ── Punto sintético de hoy ────────────────────────────────────────────────
-  // Coincide exactamente con el BalanceGeneral (activos - pasivos) o saldo de la cuenta
+  // ── Saldo real actual (para anclar el extremo derecho al BalanceGeneral) ────
   const currentSaldo = selectedId === "general"
     ? cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((s, c) => s + (c.saldo ?? 0), 0) -
       cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((s, c) => s + (c.saldo ?? 0), 0)
     : (cuentas.find((c) => c.id === selectedId)?.saldo ?? running);
 
-  const lastTs = rawPoints.length > 0 ? rawPoints[rawPoints.length - 1].ts : 0;
-  const todayTs = new Date().setHours(12, 0, 0, 0);
-  if (todayTs - lastTs > 3600000) { // más de 1h de diferencia → añadir punto de hoy
-    rawPoints.push({
-      ts: todayTs,
-      fecha: new Date(todayTs),
-      saldo: Math.round(Number(currentSaldo) * 100) / 100,
-    });
-  }
-
-  // ── Añadir puntos de conciliación verificados (solo vista por cuenta) ──────
+  // ── Puntos de conciliación verificados (solo vista por cuenta) ────────────
   if (selectedId !== "general") {
     for (const r of reconciliaciones) {
       const fecha = new Date(r.fecha);
@@ -219,8 +239,23 @@ function buildSerie(
     rawPoints.sort((a, b) => a.ts - b.ts);
   }
 
-  // ── Agregar según granularidad ────────────────────────────────────────────
+  // ── Punto de hoy anclado al saldo real ────────────────────────────────────
+  // Si el último rawPoint ya es de hoy, sobreescribimos su saldo para que
+  // el extremo de la gráfica siempre coincida con el BalanceGeneral mostrado.
+  const todayMidnight = new Date().setHours(0, 0, 0, 0);
+  const todayNoon     = todayMidnight + 43_200_000;
+  const realSaldo     = Math.round(Number(currentSaldo) * 100) / 100;
+  const lastRaw       = rawPoints[rawPoints.length - 1];
+  if (lastRaw && lastRaw.ts >= todayMidnight) {
+    rawPoints[rawPoints.length - 1] = { ...lastRaw, saldo: realSaldo };
+  } else {
+    rawPoints.push({ ts: todayNoon, fecha: new Date(todayNoon), saldo: realSaldo });
+  }
+
+  // ── Retornar datos ────────────────────────────────────────────────────────
   const gran = granularityFor(windowDays);
+  // Para ventana diaria: rellenar un punto por día → tooltip continuo
+  if (gran === "dia") return fillDailyData(rawPoints);
   return aggregate(rawPoints, gran);
 }
 
