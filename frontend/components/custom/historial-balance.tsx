@@ -351,8 +351,8 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                 itemStyle={{ color: "var(--popover-foreground)" }}
                 labelStyle={{ color: "var(--muted-foreground)", marginBottom: 4 }}
                 cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 2" }}
-                labelFormatter={(ts: number) =>
-                  new Date(ts).toLocaleDateString("es", { day: "2-digit", month: "short", year: "2-digit" })
+                labelFormatter={(ts: unknown) =>
+                  new Date(ts as number).toLocaleDateString("es", { day: "2-digit", month: "short", year: "2-digit" })
                 }
                 formatter={(value: unknown, _name: unknown, props: any) => [
                   formatCurrency(Number(value)),
