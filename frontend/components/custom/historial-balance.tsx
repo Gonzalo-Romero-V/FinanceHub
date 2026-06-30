@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
@@ -69,8 +69,8 @@ function fmtLabel(date: Date, gran: "dia" | "semana" | "mes"): string {
   return date.toLocaleDateString("es", { day: "2-digit", month: "short" });
 }
 
-// Determina granularidad según el rango de días visible.
-// Para "Todo" (null) se llama con el rango real de datos.
+// Granularidad basada en rango de días.
+// Nunca se llama con null — para "Todo" se pasa el rango real de datos.
 function granularityFor(days: number): "dia" | "semana" | "mes" {
   if (days > 365) return "mes";
   if (days > 90)  return "semana";
@@ -84,8 +84,10 @@ function getTipo(m: MovimientoRaw): string {
 }
 
 // ─── Relleno diario ───────────────────────────────────────────────────────────
-// Un punto por día: el saldo se lleva hacia adelante desde el último rawPoint
-// del día. Garantiza que el tooltip siga el cursor sin saltos.
+// Genera un DataPoint por cada día del rango.
+// El saldo se lleva hacia adelante desde el último rawPoint del día.
+// Con type="monotone": períodos sin transacciones = segmento horizontal plano.
+// Con type="stepAfter": mismo efecto pero con ángulos en lugar de curvas.
 
 function fillDailyData(rawPoints: RawPoint[]): DataPoint[] {
   if (rawPoints.length === 0) return [];
@@ -120,9 +122,9 @@ function fillDailyData(rawPoints: RawPoint[]): DataPoint[] {
 }
 
 // ─── Agregación semana / mes ──────────────────────────────────────────────────
-// Toma el ÚLTIMO rawPoint de cada bucket (semana ISO o mes).
-// Con type="stepAfter" en el <Line>, los huecos entre buckets se renderizan
-// como líneas horizontales planas, no como diagonales.
+// Toma el ÚLTIMO rawPoint de cada bucket.
+// Se combina con type="stepAfter" para que los huecos entre buckets se
+// muestren como líneas horizontales, no como diagonales interpoladas.
 
 function aggregate(points: RawPoint[], gran: "semana" | "mes"): DataPoint[] {
   const buckets = new Map<string, RawPoint>();
@@ -149,8 +151,6 @@ function aggregate(points: RawPoint[], gran: "semana" | "mes"): DataPoint[] {
 }
 
 // ─── buildSerie ───────────────────────────────────────────────────────────────
-// Retorna { data, gran } para que el componente y el XAxis usen la misma
-// granularidad que se usó al procesar los datos.
 
 function buildSerie(
   cuentas: CuentaConSaldo[],
@@ -166,7 +166,6 @@ function buildSerie(
   const frameEndEff = frameEnd
     ?? new Date(realNow.getFullYear(), realNow.getMonth(), realNow.getDate(), 23, 59, 59, 999);
 
-  // Cutoff inferior: frameStart → windowDays → sin límite
   const cutoff = frameStart
     ? frameStart
     : windowDays
@@ -203,7 +202,7 @@ function buildSerie(
     }
   }
 
-  // ── Movimientos dentro de la ventana ─────────────────────────────────────
+  // ── Movimientos dentro de la ventana ──────────────────────────────────────
   const inWindow = sorted.filter((m) => {
     const d = new Date(m.fecha);
     if (cutoff && d < cutoff) return false;
@@ -211,12 +210,15 @@ function buildSerie(
     return true;
   });
 
-  // ── Punto de inicio ───────────────────────────────────────────────────────
+  // ── Construir rawPoints ───────────────────────────────────────────────────
   const rawPoints: RawPoint[] = [];
   const startDate = cutoff ?? (inWindow.length > 0 ? new Date(inWindow[0].fecha) : new Date());
-  rawPoints.push({ ts: startDate.getTime(), fecha: startDate, saldo: Math.round(startingSaldo * 100) / 100 });
+  rawPoints.push({
+    ts:    startDate.getTime(),
+    fecha: startDate,
+    saldo: Math.round(startingSaldo * 100) / 100,
+  });
 
-  // ── Acumular movimientos ──────────────────────────────────────────────────
   let running = startingSaldo;
   for (const m of inWindow) {
     const tipo = getTipo(m);
@@ -236,7 +238,7 @@ function buildSerie(
     });
   }
 
-  // ── Puntos de conciliación (solo por cuenta) ──────────────────────────────
+  // ── Puntos de conciliación ────────────────────────────────────────────────
   if (selectedId !== "general") {
     for (const r of reconciliaciones) {
       const fecha = new Date(r.fecha);
@@ -248,8 +250,6 @@ function buildSerie(
   }
 
   // ── Punto final anclado al saldo real ─────────────────────────────────────
-  // Frames actuales: usar saldo real de las cuentas (coincide con BalanceGeneral).
-  // Frames pasados: usar el saldo calculado (running).
   const todayMidnight = new Date().setHours(0, 0, 0, 0);
   const isPastFrame   = frameEnd !== null && frameEnd.getTime() < todayMidnight;
 
@@ -263,11 +263,10 @@ function buildSerie(
   const endTs     = isPastFrame
     ? new Date(frameEndEff).setHours(12, 0, 0, 0)
     : todayMidnight + 43_200_000;
-
-  const lastRaw = rawPoints[rawPoints.length - 1];
   const endDayStart = isPastFrame
     ? new Date(frameEndEff).setHours(0, 0, 0, 0)
     : todayMidnight;
+  const lastRaw = rawPoints[rawPoints.length - 1];
 
   if (lastRaw && lastRaw.ts >= endDayStart) {
     rawPoints[rawPoints.length - 1] = { ...lastRaw, saldo: realSaldo };
@@ -276,9 +275,7 @@ function buildSerie(
   }
 
   // ── Granularidad adaptativa ───────────────────────────────────────────────
-  // Para "Todo" (windowDays=null): usar el rango real de datos para determinar
-  // la granularidad en lugar de siempre forzar "mes" (que con 2-3 meses de datos
-  // produce solo 2-3 puntos y el chart parece una línea recta).
+  // "Todo" (windowDays=null): usa el rango real de los datos, no fuerza "mes".
   const spanDays = rawPoints.length > 1
     ? (rawPoints[rawPoints.length - 1].ts - rawPoints[0].ts) / 86_400_000
     : 1;
@@ -287,10 +284,13 @@ function buildSerie(
     ? Math.ceil((frameEnd.getTime() - frameStart.getTime()) / 86_400_000)
     : windowDays !== null
       ? windowDays
-      : spanDays; // "Todo": usa rango real
+      : spanDays;
 
   const gran = granularityFor(effectiveDays);
 
+  // ── Selección de estrategia de datos ─────────────────────────────────────
+  // "dia": relleno diario → tooltip suave, monotone para curvas suaves.
+  // "semana"/"mes": agregado escaso → stepAfter evita diagonales falsas en gaps.
   if (gran === "dia") return { data: fillDailyData(rawPoints), gran };
   return { data: aggregate(rawPoints, gran), gran };
 }
@@ -317,7 +317,6 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
     return { frameStart: fs, frameEnd: fe > now ? now : fe };
   }, [preset, navOffset]);
 
-  // Máximo offset permitido: hasta el mes del primer movimiento
   const maxNavOffset = useMemo(() => {
     if (movimientos.length === 0) return 0;
     const earliest = new Date(Math.min(...movimientos.map((m) => new Date(m.fecha).getTime())));
@@ -351,17 +350,17 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
       .catch(() => setReconciliaciones([]));
   }, [token, selectedId]);
 
-  // buildSerie ahora devuelve { data, gran } para que el XAxis use la misma
-  // granularidad con la que se procesaron los datos.
   const { data: serie, gran } = useMemo(
     () => buildSerie(cuentas, movimientos, selectedId, windowDays, reconciliaciones, frameStart, frameEnd),
     [cuentas, movimientos, selectedId, windowDays, reconciliaciones, frameStart, frameEnd]
   );
 
-  const minSaldo    = serie.length > 0 ? Math.min(...serie.map((p) => p.saldo)) : 0;
-  // Ocultar dots individuales cuando hay muchos puntos (evita el efecto punteado
-  // en vistas como 3M con 90 puntos diarios).
-  const showDots    = serie.length <= 20;
+  const minSaldo = serie.length > 0 ? Math.min(...serie.map((p) => p.saldo)) : 0;
+  // Dots solo para vistas con pocos puntos (semana/mes con datos dispersos)
+  const showDots = serie.length <= 20;
+  // Para granularidad dia: monotone con daily fill = plano en gaps, suave en caídas.
+  // Para semana/mes: stepAfter = horizontal en gaps, sin diagonales falsas.
+  const lineType: "monotone" | "stepAfter" = gran === "dia" ? "monotone" : "stepAfter";
 
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4">
@@ -373,7 +372,6 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Selector de cuenta */}
           <select
             value={selectedId}
             onChange={(e) => {
@@ -388,7 +386,6 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
             ))}
           </select>
 
-          {/* Presets de ventana */}
           <div className="flex items-center rounded-md border overflow-hidden">
             {PRESETS.map((p) => (
               <button
@@ -405,7 +402,6 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
             ))}
           </div>
 
-          {/* Navegación mensual (solo visible con preset 1M) */}
           {preset === "1M" && (
             <div className="flex items-center rounded-md border overflow-hidden text-xs">
               <button
@@ -434,18 +430,26 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
 
       {/* Gráfica */}
       {loading ? (
-        <div className="h-52 flex items-center justify-center text-muted-foreground text-sm">
+        <div className="h-56 flex items-center justify-center text-muted-foreground text-sm">
           Cargando...
         </div>
       ) : serie.length <= 1 ? (
-        <div className="h-52 flex items-center justify-center text-muted-foreground text-sm">
+        <div className="h-56 flex items-center justify-center text-muted-foreground text-sm">
           Sin movimientos en este período.
         </div>
       ) : (
-        <div className="h-52 w-full">
+        <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={serie} margin={{ top: 8, right: 8, bottom: 20, left: 8 }}>
+            <AreaChart data={serie} margin={{ top: 8, right: 8, bottom: 20, left: 8 }}>
+              <defs>
+                <linearGradient id="gradBalance" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="var(--brand-1)" stopOpacity={0.18} />
+                  <stop offset="100%" stopColor="var(--brand-1)" stopOpacity={0}    />
+                </linearGradient>
+              </defs>
+
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridStroke} />
+
               <XAxis
                 dataKey="ts"
                 type="number"
@@ -457,8 +461,9 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                 axisLine={false}
                 tick={chartAxisTick}
                 dy={6}
-                minTickGap={28}
+                minTickGap={32}
               />
+
               <YAxis
                 fontSize={10}
                 tickLine={false}
@@ -467,33 +472,33 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                 tickFormatter={(v) => formatCurrency(v)}
                 width={80}
               />
+
               {minSaldo < 0 && (
                 <ReferenceLine y={0} stroke="var(--destructive)" strokeDasharray="4 2" />
               )}
+
               <Tooltip
                 contentStyle={chartTooltipStyle}
                 itemStyle={{ color: "var(--popover-foreground)" }}
                 labelStyle={{ color: "var(--muted-foreground)", marginBottom: 4 }}
                 cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 2" }}
                 labelFormatter={(ts: unknown) =>
-                  new Date(ts as number).toLocaleDateString("es", { day: "2-digit", month: "short", year: "2-digit" })
+                  new Date(ts as number).toLocaleDateString("es", {
+                    day: "2-digit", month: "short", year: "2-digit",
+                  })
                 }
                 formatter={(value: unknown, _name: unknown, props: any) => [
                   formatCurrency(Number(value)),
                   props?.payload?.esAjuste ? "Ajuste de conciliación" : "Saldo",
                 ]}
               />
-              {/*
-                type="stepAfter": el saldo se mantiene horizontal al valor actual
-                hasta la siguiente transacción, donde da un salto vertical.
-                Correcto para datos financieros — elimina las diagonales falsas
-                que implicarían un cambio gradual del balance entre movimientos.
-              */}
-              <Line
-                type="stepAfter"
+
+              <Area
+                type={lineType}
                 dataKey="saldo"
                 stroke="var(--brand-1)"
                 strokeWidth={2.5}
+                fill="url(#gradBalance)"
                 dot={showDots
                   ? { r: 3, fill: "var(--brand-1)", stroke: "var(--background)", strokeWidth: 1.5 }
                   : false
@@ -501,7 +506,8 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                 activeDot={{ r: 5, fill: "var(--brand-1)", stroke: "var(--background)", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
-              {/* Puntos naranjas de conciliación */}
+
+              {/* Puntos naranjas de ajuste de conciliación */}
               {serie.filter((p) => p.esAjuste).map((p) => (
                 <ReferenceDot
                   key={p.ts}
@@ -513,7 +519,7 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                   strokeWidth={2}
                 />
               ))}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       )}
