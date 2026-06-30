@@ -43,6 +43,7 @@ interface RawPoint {
 }
 
 interface DataPoint {
+  ts: number;
   label: string;
   saldo: number;
   esAjuste?: boolean;
@@ -83,6 +84,7 @@ function granularityFor(windowDays: number | null): "dia" | "semana" | "mes" {
 function aggregate(points: RawPoint[], granularity: "dia" | "semana" | "mes"): DataPoint[] {
   if (granularity === "dia") {
     return points.map((p) => ({
+      ts: p.ts,
       label: fmtLabel(p.fecha, "dia"),
       saldo: p.saldo,
       esAjuste: p.esAjuste,
@@ -105,6 +107,7 @@ function aggregate(points: RawPoint[], granularity: "dia" | "semana" | "mes"): D
   }
 
   return Array.from(buckets.values()).map((p) => ({
+    ts: p.ts,
     label: fmtLabel(p.fecha, granularity),
     saldo: p.saldo,
     esAjuste: p.esAjuste,
@@ -259,6 +262,7 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
   );
 
   const minSaldo = serie.length > 0 ? Math.min(...serie.map((p) => p.saldo)) : 0;
+  const gran = granularityFor(windowDays);
 
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4">
@@ -319,7 +323,11 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
             <LineChart data={serie} margin={{ top: 8, right: 8, bottom: 20, left: 8 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridStroke} />
               <XAxis
-                dataKey="label"
+                dataKey="ts"
+                type="number"
+                scale="time"
+                domain={["dataMin", "dataMax"]}
+                tickFormatter={(ts: number) => fmtLabel(new Date(ts), gran)}
                 fontSize={10}
                 tickLine={false}
                 axisLine={false}
@@ -343,6 +351,9 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                 itemStyle={{ color: "var(--popover-foreground)" }}
                 labelStyle={{ color: "var(--muted-foreground)", marginBottom: 4 }}
                 cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 2" }}
+                labelFormatter={(ts: number) =>
+                  new Date(ts).toLocaleDateString("es", { day: "2-digit", month: "short", year: "2-digit" })
+                }
                 formatter={(value: unknown, _name: unknown, props: any) => [
                   formatCurrency(Number(value)),
                   props?.payload?.esAjuste ? "Ajuste de conciliación" : "Saldo",
@@ -361,8 +372,8 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                   para no interferir con el tracking del tooltip de Recharts */}
               {serie.filter((p) => p.esAjuste).map((p) => (
                 <ReferenceDot
-                  key={p.label + p.saldo}
-                  x={p.label}
+                  key={p.ts}
+                  x={p.ts}
                   y={p.saldo}
                   r={5}
                   fill="var(--chart-4)"
@@ -376,8 +387,8 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
       )}
 
       <p className="xs text-muted-foreground">
-        {granularityFor(windowDays) === "mes" && "Datos agrupados por mes. "}
-        {granularityFor(windowDays) === "semana" && "Datos agrupados por semana. "}
+        {gran === "mes" && "Datos agrupados por mes. "}
+        {gran === "semana" && "Datos agrupados por semana. "}
         Los puntos naranjas son ajustes de conciliación.
         {selectedId !== "general" && " Las marcas ✓ son saldos conciliados."}
       </p>

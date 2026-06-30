@@ -58,7 +58,7 @@ export function ConceptoTree({
   }
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
+    <div className="w-full bg-background">
       <Table>
         <TableHeader className="sticky top-0 bg-muted/30 backdrop-blur-sm z-10">
           <TableRow className="hover:bg-transparent border-b">

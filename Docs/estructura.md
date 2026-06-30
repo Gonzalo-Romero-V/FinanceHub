@@ -55,8 +55,10 @@ frontend/
       page-shell.tsx
       page-header.tsx
       page-state.tsx            # PageLoading + PageError
-      data-table.tsx            # ← rename de CustomTable
-      balance-general.tsx
+      data-table.tsx            # tabla genérica con filtro de fecha, acciones y footer
+      balance-general.tsx       # resumen activos − pasivos
+      concepto-tree.tsx         # árbol expandible raíz/hijo para conceptos
+      historial-balance.tsx     # gráfico de evolución de balance (por cuenta o general)
     forms/                      # modales de crear / editar / ver
       cuenta-form.tsx
       concepto-form.tsx
@@ -64,6 +66,7 @@ frontend/
       movimiento-edit-form.tsx      # form con cascada tipo → concepto → cuentas
       movimiento-detail-modal.tsx   # solo lectura, todos los campos
       confirm-delete-modal.tsx
+      reconciliacion-modal.tsx      # compara saldo real vs sistema y crea ajuste
     auth/
       auth-gate.tsx
     charts/                     # widgets del dashboard AI
@@ -81,6 +84,8 @@ frontend/
       cuentas.ts
       conceptos.ts
       movimientos.ts
+      reconciliaciones.ts       # listReconciliaciones, createReconciliacion
+      user-settings.ts          # getUserSettings, updateUserSettings
       users.ts                  # updateUser, getUser
       llm.ts                    # analyzeRequest() para el LLM service
                                 #   (manda X-Client-Timezone)
