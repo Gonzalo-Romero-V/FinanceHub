@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { History } from "lucide-react";
+import { ChevronLeft, ChevronRight, History } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/context";
 import { listMovimientos, type MovimientoRaw } from "@/lib/api/movimientos";
@@ -158,13 +158,19 @@ function buildSerie(
   movimientos: MovimientoRaw[],
   selectedId: "general" | number,
   windowDays: number | null,
-  reconciliaciones: Reconciliacion[]
+  reconciliaciones: Reconciliacion[],
+  frameStart: Date | null,
+  frameEnd: Date | null,
 ): DataPoint[] {
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-  const cutoff = windowDays
-    ? new Date(today.getTime() - windowDays * 86400000)
-    : null;
+  const realNow = new Date();
+  // Límite superior efectivo: fin del frame si está definido, si no "ahora"
+  const frameEndEff = frameEnd ?? new Date(realNow.getFullYear(), realNow.getMonth(), realNow.getDate(), 23, 59, 59, 999);
+  // Cutoff inferior: frameStart > windowDays > sin límite
+  const cutoff = frameStart
+    ? frameStart
+    : windowDays
+      ? new Date(frameEndEff.getTime() - windowDays * 86_400_000)
+      : null;
 
   const sorted = [...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
@@ -196,7 +202,12 @@ function buildSerie(
   }
 
   // ── Puntos dentro de la ventana ───────────────────────────────────────────
-  const inWindow = sorted.filter((m) => !cutoff || new Date(m.fecha) >= cutoff);
+  const inWindow = sorted.filter((m) => {
+    const d = new Date(m.fecha);
+    if (cutoff && d < cutoff) return false;
+    if (d > frameEndEff) return false;
+    return true;
+  });
 
   const rawPoints: RawPoint[] = [];
 
@@ -223,38 +234,49 @@ function buildSerie(
     });
   }
 
-  // ── Saldo real actual (para anclar el extremo derecho al BalanceGeneral) ────
-  const currentSaldo = selectedId === "general"
-    ? cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((s, c) => s + (c.saldo ?? 0), 0) -
-      cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((s, c) => s + (c.saldo ?? 0), 0)
-    : (cuentas.find((c) => c.id === selectedId)?.saldo ?? running);
-
   // ── Puntos de conciliación verificados (solo vista por cuenta) ────────────
   if (selectedId !== "general") {
     for (const r of reconciliaciones) {
       const fecha = new Date(r.fecha);
       if (cutoff && fecha < cutoff) continue;
+      if (fecha > frameEndEff) continue;
       rawPoints.push({ ts: fecha.getTime(), fecha, saldo: r.saldo_real });
     }
     rawPoints.sort((a, b) => a.ts - b.ts);
   }
 
-  // ── Punto de hoy anclado al saldo real ────────────────────────────────────
-  // Si el último rawPoint ya es de hoy, sobreescribimos su saldo para que
-  // el extremo de la gráfica siempre coincida con el BalanceGeneral mostrado.
-  const todayMidnight = new Date().setHours(0, 0, 0, 0);
-  const todayNoon     = todayMidnight + 43_200_000;
-  const realSaldo     = Math.round(Number(currentSaldo) * 100) / 100;
-  const lastRaw       = rawPoints[rawPoints.length - 1];
-  if (lastRaw && lastRaw.ts >= todayMidnight) {
+  // ── Punto final del frame ─────────────────────────────────────────────────
+  // Para frames actuales (sin frameEnd o frameEnd ≥ hoy) anclar al saldo real
+  // de las cuentas para coincidir con BalanceGeneral.
+  // Para frames pasados (mes anterior, etc.) usar el saldo calculado (running).
+  const todayMidnight = realNow.setHours(0, 0, 0, 0);
+  const isPastFrame   = frameEnd !== null && frameEnd.getTime() < todayMidnight;
+
+  const currentSaldo = selectedId === "general"
+    ? cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((s, c) => s + (c.saldo ?? 0), 0) -
+      cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((s, c) => s + (c.saldo ?? 0), 0)
+    : (cuentas.find((c) => c.id === selectedId)?.saldo ?? running);
+
+  const endSaldo  = isPastFrame ? running : currentSaldo;
+  const realSaldo = Math.round(Number(endSaldo) * 100) / 100;
+  const endTs     = isPastFrame
+    ? new Date(frameEndEff).setHours(12, 0, 0, 0)
+    : new Date(todayMidnight).valueOf() + 43_200_000; // hoy al mediodía
+
+  const lastRaw = rawPoints[rawPoints.length - 1];
+  if (lastRaw && lastRaw.ts >= (isPastFrame ? frameEndEff.setHours(0, 0, 0, 0) : todayMidnight)) {
+    // Ya existe un punto de hoy (o del fin del frame) → actualizar saldo
     rawPoints[rawPoints.length - 1] = { ...lastRaw, saldo: realSaldo };
   } else {
-    rawPoints.push({ ts: todayNoon, fecha: new Date(todayNoon), saldo: realSaldo });
+    rawPoints.push({ ts: endTs, fecha: new Date(endTs), saldo: realSaldo });
   }
 
   // ── Retornar datos ────────────────────────────────────────────────────────
-  const gran = granularityFor(windowDays);
-  // Para ventana diaria: rellenar un punto por día → tooltip continuo
+  // Granularidad basada en el tamaño efectivo del frame
+  const effectiveDays = frameStart && frameEnd
+    ? Math.ceil((frameEnd.getTime() - frameStart.getTime()) / 86_400_000)
+    : windowDays;
+  const gran = granularityFor(effectiveDays);
   if (gran === "dia") return fillDailyData(rawPoints);
   return aggregate(rawPoints, gran);
 }
@@ -267,9 +289,35 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
   const [reconciliaciones, setReconciliaciones] = useState<Reconciliacion[]>([]);
   const [selectedId, setSelectedId] = useState<"general" | number>("general");
   const [preset, setPreset] = useState<Preset>("3M");
+  const [navOffset, setNavOffset] = useState(0); // meses atrás (solo para "1M")
   const [loading, setLoading] = useState(true);
 
-  const windowDays = PRESETS.find((p) => p.key === preset)?.days ?? 90;
+  // Bug fix: "Todo" tiene days=null; ?? null en lugar de ?? 90
+  const windowDays: number | null = PRESETS.find((p) => p.key === preset)?.days ?? null;
+
+  // ── Frame para navegación mensual ─────────────────────────────────────────
+  const { frameStart, frameEnd } = useMemo(() => {
+    if (preset !== "1M") return { frameStart: null, frameEnd: null };
+    const now = new Date();
+    const fs = new Date(now.getFullYear(), now.getMonth() - navOffset, 1, 0, 0, 0, 0);
+    const fe = new Date(now.getFullYear(), now.getMonth() - navOffset + 1, 0, 23, 59, 59, 999);
+    return { frameStart: fs, frameEnd: fe > now ? now : fe };
+  }, [preset, navOffset]);
+
+  // Cuántos meses atrás puede ir el usuario (hasta el mes del primer movimiento)
+  const maxNavOffset = useMemo(() => {
+    if (movimientos.length === 0) return 0;
+    const earliest = new Date(Math.min(...movimientos.map((m) => new Date(m.fecha).getTime())));
+    const now = new Date();
+    return (now.getFullYear() - earliest.getFullYear()) * 12 + (now.getMonth() - earliest.getMonth());
+  }, [movimientos]);
+
+  // Etiqueta del mes actual en navegación
+  const monthLabel = useMemo(() => {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() - navOffset, 1);
+    return d.toLocaleDateString("es", { month: "short", year: "2-digit" });
+  }, [navOffset]);
 
   const fetchMovimientos = useCallback(async () => {
     if (!token) return;
@@ -292,12 +340,15 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
   }, [token, selectedId]);
 
   const serie = useMemo(
-    () => buildSerie(cuentas, movimientos, selectedId, windowDays, reconciliaciones),
-    [cuentas, movimientos, selectedId, windowDays, reconciliaciones]
+    () => buildSerie(cuentas, movimientos, selectedId, windowDays, reconciliaciones, frameStart, frameEnd),
+    [cuentas, movimientos, selectedId, windowDays, reconciliaciones, frameStart, frameEnd]
   );
 
   const minSaldo = serie.length > 0 ? Math.min(...serie.map((p) => p.saldo)) : 0;
-  const gran = granularityFor(windowDays);
+  const effectiveDays = frameStart && frameEnd
+    ? Math.ceil((frameEnd.getTime() - frameStart.getTime()) / 86_400_000)
+    : windowDays;
+  const gran = granularityFor(effectiveDays);
 
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4">
@@ -329,7 +380,7 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
             {PRESETS.map((p) => (
               <button
                 key={p.key}
-                onClick={() => setPreset(p.key)}
+                onClick={() => { setNavOffset(0); setPreset(p.key); }}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                   preset === p.key
                     ? "bg-brand-1 text-white"
@@ -340,6 +391,31 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
               </button>
             ))}
           </div>
+
+          {/* Navegación mensual (solo visible con preset 1M) */}
+          {preset === "1M" && (
+            <div className="flex items-center rounded-md border overflow-hidden text-xs">
+              <button
+                onClick={() => setNavOffset((n) => Math.min(n + 1, maxNavOffset))}
+                disabled={navOffset >= maxNavOffset}
+                className="px-2 py-1.5 hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Mes anterior"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="px-2 font-medium min-w-[62px] text-center text-muted-foreground">
+                {monthLabel}
+              </span>
+              <button
+                onClick={() => setNavOffset((n) => Math.max(0, n - 1))}
+                disabled={navOffset === 0}
+                className="px-2 py-1.5 hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Mes siguiente"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
