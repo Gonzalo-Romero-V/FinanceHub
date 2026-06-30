@@ -88,9 +88,9 @@ export default function ConceptosPage() {
     );
 
     return (
-      <section className="space-y-3">
-        <div className="flex items-center gap-2 px-1">
-          <Icon className={`w-5 h-5 ${colorClass}`} />
+      <section className="space-y-2">
+        <div className="flex items-center gap-2 p-2 md:px-4">
+          <Icon className={`w-4 h-4 ${colorClass}`} />
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           <span className="text-sm text-muted-foreground">({raices.length})</span>
         </div>

@@ -5,6 +5,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -341,39 +342,34 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                 contentStyle={chartTooltipStyle}
                 itemStyle={{ color: "var(--popover-foreground)" }}
                 labelStyle={{ color: "var(--muted-foreground)", marginBottom: 4 }}
-                formatter={(value: unknown) => [formatCurrency(Number(value)), "Saldo"]}
+                cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 2" }}
+                formatter={(value: unknown, _name: unknown, props: any) => [
+                  formatCurrency(Number(value)),
+                  props?.payload?.esAjuste ? "Ajuste de conciliación" : "Saldo",
+                ]}
               />
               <Line
                 type="monotone"
                 dataKey="saldo"
                 stroke="var(--brand-1)"
                 strokeWidth={2.5}
-                dot={(props: any) => {
-                  const { cx, cy, payload } = props;
-                  if (payload.esAjuste) {
-                    return (
-                      <circle
-                        key={`dot-${cx}-${cy}`}
-                        cx={cx} cy={cy} r={5}
-                        fill="var(--chart-4)"
-                        stroke="var(--background)"
-                        strokeWidth={2}
-                      />
-                    );
-                  }
-                  return (
-                    <circle
-                      key={`dot-${cx}-${cy}`}
-                      cx={cx} cy={cy} r={2}
-                      fill="var(--brand-1)"
-                      stroke="var(--background)"
-                      strokeWidth={1.5}
-                    />
-                  );
-                }}
-                activeDot={{ r: 5, strokeWidth: 0 }}
+                dot={{ r: 2, fill: "var(--brand-1)", stroke: "var(--background)", strokeWidth: 1.5 }}
+                activeDot={{ r: 5, fill: "var(--brand-1)", stroke: "var(--background)", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
+              {/* Puntos naranjas para ajustes de conciliación — separados del Line
+                  para no interferir con el tracking del tooltip de Recharts */}
+              {serie.filter((p) => p.esAjuste).map((p) => (
+                <ReferenceDot
+                  key={p.label + p.saldo}
+                  x={p.label}
+                  y={p.saldo}
+                  r={5}
+                  fill="var(--chart-4)"
+                  stroke="var(--background)"
+                  strokeWidth={2}
+                />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>

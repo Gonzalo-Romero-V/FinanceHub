@@ -60,11 +60,15 @@ export function ConceptoTree({
   return (
     <div className="rounded-xl border border-border overflow-hidden">
       <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
+        <TableHeader className="sticky top-0 bg-muted/30 backdrop-blur-sm z-10">
+          <TableRow className="hover:bg-transparent border-b">
             <TableHead className="w-8" />
-            <TableHead>Nombre</TableHead>
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold">
+              Nombre
+            </TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold text-right">
+              Total
+            </TableHead>
             <TableHead className="w-28" />
           </TableRow>
         </TableHeader>
