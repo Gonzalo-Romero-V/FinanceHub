@@ -61,6 +61,13 @@
 - **Recordatorio**: en `/perfil` el usuario configura la frecuencia en días;
   `user_settings.reconciliacion_proxima` se actualiza tras cada reconciliación exitosa.
 
+### Presupuestos
+- **CRUD**: crear / editar / eliminar presupuestos por concepto con ventana de tiempo (`diario`, `semanal`, `mensual`, `anual`).
+- **Consumo en tiempo real**: el backend calcula el total del período al listar (`GET /presupuestos`) respetando la TZ del cliente. Los movimientos de subcategorías se agregan al presupuesto del padre.
+- **Alertas stateless**: `POST/PATCH /movimientos` devuelven `alertas_presupuesto[]` con los umbrales cruzados por ese movimiento. El frontend muestra un toast por cada alerta (info/warning/error según severidad).
+- **Toast library**: `sonner` integrada en el root layout. También usada en conciliación (éxito) y formularios de movimientos.
+- **Página `/presupuestos`**: tarjetas con barra de progreso, badge de ventana, indicador de color por severidad y acciones de edición/eliminación.
+
 ## NO implementado / pendiente ❌
 
 (Mantengo esto sincronizado con `PENDIENTES.md` que tiene la lista canónica.)

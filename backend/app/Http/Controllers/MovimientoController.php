@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\MovimientoModel;
 use App\Models\CuentaModel;
 use App\Models\ConceptoModel;
+use App\Models\PresupuestoModel;
 use Illuminate\Support\Facades\DB;
 use Carbon\CarbonImmutable;
 use Exception;
@@ -68,6 +69,105 @@ class MovimientoController
         $f = CarbonImmutable::parse($fecha, 'UTC')->setTimezone($tz);
         $hoy = CarbonImmutable::now($tz);
         return $f->isSameDay($hoy);
+    }
+
+    /**
+     * Devuelve [inicio_utc, fin_utc] del período calendario activo en la TZ del cliente.
+     */
+    private function periodoPresupuesto(string $ventana, string $tz): array
+    {
+        $now = CarbonImmutable::now($tz);
+        return match ($ventana) {
+            'diario'  => [
+                $now->startOfDay()->setTimezone('UTC'),
+                $now->endOfDay()->setTimezone('UTC'),
+            ],
+            'semanal' => [
+                $now->startOfWeek()->setTimezone('UTC'),
+                $now->endOfWeek()->setTimezone('UTC'),
+            ],
+            'anual'   => [
+                $now->startOfYear()->setTimezone('UTC'),
+                $now->endOfYear()->setTimezone('UTC'),
+            ],
+            default   => [
+                $now->startOfMonth()->setTimezone('UTC'),
+                $now->endOfMonth()->setTimezone('UTC'),
+            ],
+        };
+    }
+
+    /**
+     * Calcula qué umbrales de presupuesto fueron cruzados por el movimiento recién guardado.
+     *
+     * @param int   $conceptoId   Concepto del movimiento guardado.
+     * @param float $montoNuevo   Monto aplicado en este movimiento.
+     * @param float $montoAnterior Monto revertido (0 para creación, monto previo para edición).
+     * @param string $tz          TZ del cliente.
+     */
+    private function calcularAlertasPresupuesto(
+        int $conceptoId,
+        float $montoNuevo,
+        float $montoAnterior,
+        string $tz
+    ): array {
+        $userId = auth()->id();
+
+        // Buscar presupuestos del concepto directamente o de su concepto padre
+        $concepto = ConceptoModel::find($conceptoId);
+        $idsABuscar = [$conceptoId];
+        if ($concepto?->parent_id) {
+            $idsABuscar[] = $concepto->parent_id;
+        }
+
+        $presupuestos = PresupuestoModel::with('concepto')
+            ->where('activo', true)
+            ->where('user_id', $userId)
+            ->whereIn('concepto_id', $idsABuscar)
+            ->get();
+
+        $alertas = [];
+
+        foreach ($presupuestos as $presupuesto) {
+            [$inicio, $fin] = $this->periodoPresupuesto($presupuesto->ventana, $tz);
+
+            // Total actual del período (ya incluye el movimiento recién guardado)
+            $totalActual = (float) DB::table('movimientos as m')
+                ->join('conceptos as c', 'm.concepto_id', '=', 'c.id')
+                ->where(function ($q) use ($presupuesto) {
+                    $q->where('c.id', $presupuesto->concepto_id)
+                      ->orWhere('c.parent_id', $presupuesto->concepto_id);
+                })
+                ->where('c.user_id', $userId)
+                ->whereBetween('m.fecha', [$inicio, $fin])
+                ->sum('m.monto');
+
+            // Estado antes de aplicar este movimiento
+            $totalAnterior = $totalActual - $montoNuevo + $montoAnterior;
+            $monto = (float) $presupuesto->monto;
+
+            if ($monto <= 0) continue;
+
+            $pctAnterior = ($totalAnterior / $monto) * 100;
+            $pctActual   = ($totalActual / $monto) * 100;
+
+            foreach ((array) $presupuesto->umbrales as $umbral) {
+                if ($pctAnterior < $umbral && $pctActual >= $umbral) {
+                    $alertas[] = [
+                        'presupuesto_id'    => $presupuesto->id,
+                        'concepto_id'       => $presupuesto->concepto_id,
+                        'concepto_nombre'   => $presupuesto->concepto?->nombre ?? '',
+                        'ventana'           => $presupuesto->ventana,
+                        'umbral'            => $umbral,
+                        'pct_actual'        => round($pctActual, 1),
+                        'total_actual'      => $totalActual,
+                        'monto_presupuesto' => $monto,
+                    ];
+                }
+            }
+        }
+
+        return $alertas;
     }
 
     // ─── CRUD ────────────────────────────────────────────────────────────────────
@@ -136,9 +236,18 @@ class MovimientoController
                 );
             });
 
+            $tz = $this->clientTimezone($request);
+            $alertas = $this->calcularAlertasPresupuesto(
+                (int) $request->concepto_id,
+                $monto,
+                0.0,
+                $tz
+            );
+
             return response()->json([
-                'mensaje' => 'Nuevo registro agregado exitosamente',
-                'data'    => $nuevoMovimiento
+                'mensaje'             => 'Nuevo registro agregado exitosamente',
+                'data'                => $nuevoMovimiento,
+                'alertas_presupuesto' => $alertas,
             ], 201);
 
         } catch (Exception $e) {
@@ -202,6 +311,11 @@ class MovimientoController
             return response()->json(['mensaje' => 'No se enviaron campos para actualizar'], 400);
         }
 
+        // Capturar valores anteriores para el cálculo de alertas
+        $montoAnterior    = (float) $movimiento->monto;
+        $conceptoIdNuevo  = isset($datos['concepto_id']) ? (int) $datos['concepto_id'] : (int) $movimiento->concepto_id;
+        $mismoConcepto    = $conceptoIdNuevo === (int) $movimiento->concepto_id;
+
         try {
             DB::transaction(function () use ($movimiento, $datos) {
                 // 1. Revertir el efecto del movimiento anterior
@@ -229,9 +343,18 @@ class MovimientoController
                 );
             });
 
+            $montoNuevo = (float) $movimiento->monto;
+            $alertas = $this->calcularAlertasPresupuesto(
+                $conceptoIdNuevo,
+                $montoNuevo,
+                $mismoConcepto ? $montoAnterior : 0.0,
+                $this->clientTimezone($request)
+            );
+
             return response()->json([
-                'mensaje' => 'Registro actualizado exitosamente: ID = ' . $id,
-                'data'    => $movimiento
+                'mensaje'             => 'Registro actualizado exitosamente: ID = ' . $id,
+                'data'                => $movimiento,
+                'alertas_presupuesto' => $alertas,
             ], 200);
 
         } catch (Exception $e) {

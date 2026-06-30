@@ -17,10 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+import { toast } from "sonner";
+
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, conceptoColor, childConceptoColor, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
-import { createMovimiento } from "@/lib/api/movimientos";
+import { createMovimiento, type AlertaPresupuesto } from "@/lib/api/movimientos";
+import { VENTANA_LABELS } from "@/lib/api/presupuestos";
 import { formatCurrency } from "@/lib/utils/format";
 
 type TipoMovimiento = "Ingreso" | "Egreso" | "Transferencia";
@@ -206,6 +209,24 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
     else if (form.tipo === "Transferencia" && role === "destino") setStep(4);
   };
 
+  const mostrarAlertasPresupuesto = (alertas: AlertaPresupuesto[]) => {
+    alertas.forEach((alerta) => {
+      const ventana = VENTANA_LABELS[alerta.ventana] ?? alerta.ventana;
+      const superado = alerta.pct_actual >= 100;
+      const msg = superado
+        ? `Superaste el presupuesto ${ventana} de ${alerta.concepto_nombre} (${alerta.pct_actual}%)`
+        : `Alcanzaste el ${alerta.umbral}% del presupuesto ${ventana} de ${alerta.concepto_nombre}`;
+
+      if (superado || alerta.umbral >= 90) {
+        toast.error(msg, { duration: 6000 });
+      } else if (alerta.umbral >= 75) {
+        toast.warning(msg, { duration: 5000 });
+      } else {
+        toast.info(msg, { duration: 4500 });
+      }
+    });
+  };
+
   const handleSubmit = async () => {
     setError(null);
     if (!form.monto || isNaN(Number(form.monto)) || Number(form.monto) <= 0) {
@@ -216,13 +237,17 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
     try {
       if (!token) throw new Error("Usuario no autenticado.");
 
-      await createMovimiento(token, {
+      const response = await createMovimiento(token, {
         monto: Number(form.monto),
         concepto_id: form.concepto_id,
         cuenta_origen_id: form.cuenta_origen_id,
         cuenta_destino_id: form.cuenta_destino_id,
         nota: form.nota.trim() || null,
       });
+
+      if (response.alertas_presupuesto?.length) {
+        mostrarAlertasPresupuesto(response.alertas_presupuesto);
+      }
 
       onSuccess();
       onClose();

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Scale } from "lucide-react";
+import { toast } from "sonner";
 
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,11 @@ export function ReconciliacionModal({
         crear_ajuste: true,
         nota: nota.trim() || undefined,
       });
+      toast.success(
+        hayDiferencia
+          ? "Conciliación guardada. Se creó un movimiento de ajuste automático."
+          : "Conciliación guardada. El saldo coincide perfectamente."
+      );
       handleClose();
       onSuccess();
     } catch (e) {

@@ -2,6 +2,7 @@ import {
   BookOpen,
   CircleHelp,
   LayoutDashboard,
+  PiggyBank,
   ReceiptText,
   User,
   WalletMinimal,
@@ -24,6 +25,7 @@ export const userNavLinks: NavLink[] = [
   { href: "/movimientos", label: "Movimientos", icon: ReceiptText },
   { href: "/cuentas", label: "Cuentas", icon: WalletMinimal },
   { href: "/conceptos", label: "Conceptos", icon: BookOpen },
+  { href: "/presupuestos", label: "Presupuestos", icon: PiggyBank },
 ];
 
 export const userSecondaryLinks: NavLink[] = [

@@ -14,7 +14,7 @@
 - [x] Migraciones base y seeders.
 - [x] CRUD de Cuentas y Movimientos.
 - [x] Lógica de Balances.
-- [ ] Implementar sistema de presupuestos mensuales.
+- [x] Implementar sistema de presupuestos (diario/semanal/mensual/anual) con alertas por umbral.
 - [ ] Reportes avanzados de flujo de caja.
 
 ## Frontend (Next.js)

@@ -23,10 +23,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import { toast } from "sonner";
+
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
-import { updateMovimiento } from "@/lib/api/movimientos";
+import { updateMovimiento, type AlertaPresupuesto } from "@/lib/api/movimientos";
+import { VENTANA_LABELS } from "@/lib/api/presupuestos";
 
 type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
 
@@ -152,6 +155,24 @@ export function MovimientoEditForm({
     setError(null);
   };
 
+  const mostrarAlertasPresupuesto = (alertas: AlertaPresupuesto[]) => {
+    alertas.forEach((alerta) => {
+      const ventana = VENTANA_LABELS[alerta.ventana] ?? alerta.ventana;
+      const superado = alerta.pct_actual >= 100;
+      const msg = superado
+        ? `Superaste el presupuesto ${ventana} de ${alerta.concepto_nombre} (${alerta.pct_actual}%)`
+        : `Alcanzaste el ${alerta.umbral}% del presupuesto ${ventana} de ${alerta.concepto_nombre}`;
+
+      if (superado || alerta.umbral >= 90) {
+        toast.error(msg, { duration: 6000 });
+      } else if (alerta.umbral >= 75) {
+        toast.warning(msg, { duration: 5000 });
+      } else {
+        toast.info(msg, { duration: 4500 });
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -175,13 +196,17 @@ export function MovimientoEditForm({
     try {
       if (!token || !editItem) throw new Error("Usuario no autenticado.");
 
-      await updateMovimiento(token, editItem.id, {
+      const response = await updateMovimiento(token, editItem.id, {
         concepto_id: Number(conceptoId),
         monto: Number(monto),
         nota: nota.trim() || null,
         cuenta_origen_id: requiereOrigen ? Number(cuentaOrigenId) : null,
         cuenta_destino_id: requiereDestino ? Number(cuentaDestinoId) : null,
       });
+
+      if (response.alertas_presupuesto?.length) {
+        mostrarAlertasPresupuesto(response.alertas_presupuesto);
+      }
 
       onSuccess();
       onClose();

@@ -95,6 +95,40 @@ Notas:
 | GET | `/user-settings` | — | `{data:UserSettings}` (crea lazy si no existe) |
 | PATCH | `/user-settings` | `{reconciliacion_tipo?, reconciliacion_dia_semana?, reconciliacion_dia_mes?, reconciliacion_frecuencia_dias?}` | `{mensaje, data:UserSettings}` |
 
+### Presupuestos (Bearer)
+
+| Método | Path | Body | 200 |
+|---|---|---|---|
+| GET | `/presupuestos` | — | `{data:Presupuesto[]}` (con `concepto`, `consumo`, `porcentaje` y `periodo` calculados) |
+| POST | `/presupuestos` | `{concepto_id, monto, ventana, umbrales?, activo?}` | `{mensaje, data:Presupuesto}` |
+| GET | `/presupuestos/{id}` | — | `{data:Presupuesto}` |
+| PATCH | `/presupuestos/{id}` | `{monto?, ventana?, umbrales?, activo?}` | `{mensaje, data:Presupuesto}` — `concepto_id` es inmutable tras crear |
+| DELETE | `/presupuestos/{id}` | — | `{mensaje}` |
+
+Errores notables:
+- `422` si ya existe un presupuesto para `(user_id, concepto_id, ventana)`.
+- `404` si el concepto no pertenece al usuario o es `es_sistema = true`.
+
+**Alertas integradas en movimientos:**
+`POST /movimientos` y `PATCH /movimientos/{id}` devuelven además:
+```jsonc
+{
+  "alertas_presupuesto": [
+    {
+      "presupuesto_id": 1,
+      "concepto_id": 5,
+      "concepto_nombre": "Transporte",
+      "ventana": "mensual",
+      "umbral": 75,       // porcentaje cruzado por este movimiento
+      "pct_actual": 78.3, // porcentaje actual tras el movimiento
+      "total_actual": 156.60,
+      "monto_presupuesto": 200.00
+    }
+  ]
+}
+```
+El array está vacío si no se cruzó ningún umbral. El frontend muestra un toast por cada elemento.
+
 ### Balance (Bearer)
 
 | Método | Path | 200 |

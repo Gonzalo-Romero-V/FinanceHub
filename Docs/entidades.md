@@ -131,6 +131,29 @@ Invariantes:
 
 ---
 
+## presupuestos
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| user_id | bigint FK → users.id ON DELETE CASCADE | |
+| concepto_id | bigint FK → conceptos.id ON DELETE CASCADE | |
+| monto | decimal(14,2) | Límite / meta del período. Siempre > 0. |
+| ventana | varchar(20) | `diario` \| `semanal` \| `mensual` \| `anual`. Período calendario en la TZ del cliente. |
+| umbrales | jsonb default `[50,75,90]` | Array de enteros (1–100). Porcentajes en los que se dispara una alerta. |
+| activo | bool default true | Los inactivos no generan alertas. |
+| timestamps | created_at / updated_at | |
+
+UNIQUE `(user_id, concepto_id, ventana)` — un presupuesto por concepto y ventana.
+
+**Comportamiento de consumo:**
+- Si el concepto tiene subcategorías (hijos), el consumo del período agrega movimientos de la categoría raíz **y** todos sus hijos.
+- Si el concepto es un hijo, solo se contabilizan sus propios movimientos.
+
+**Alertas (stateless):**
+Al crear o editar un movimiento, el backend detecta qué umbrales del presupuesto fueron cruzados comparando el estado del período antes y después del movimiento, y los devuelve en `alertas_presupuesto[]` en la respuesta.
+
+---
+
 ## user_settings
 | Columna | Tipo | Notas |
 |---|---|---|

@@ -81,4 +81,11 @@ Route::middleware('auth:sanctum')->group(function () {
         require __DIR__ . '/user_settings/UserSettingsRouter.php';
     });
 
+    // =====================
+    // PRESUPUESTOS
+    // =====================
+    Route::prefix('presupuestos')->group(function () {
+        require __DIR__ . '/presupuestos/PresupuestosRouter.php';
+    });
+
 });

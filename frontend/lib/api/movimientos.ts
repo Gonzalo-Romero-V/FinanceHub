@@ -1,5 +1,21 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
 import type { Concepto } from "./conceptos";
+import type { VentanaPresupuesto } from "./presupuestos";
+
+export interface AlertaPresupuesto {
+  presupuesto_id: number;
+  concepto_id: number;
+  concepto_nombre: string;
+  ventana: VentanaPresupuesto;
+  umbral: number;
+  pct_actual: number;
+  total_actual: number;
+  monto_presupuesto: number;
+}
+
+export interface MovimientoResponse extends ApiResource<MovimientoRaw> {
+  alertas_presupuesto?: AlertaPresupuesto[];
+}
 
 export type Movimiento = MovimientoRaw;
 
@@ -29,7 +45,7 @@ export function listMovimientos(token: string) {
 }
 
 export function createMovimiento(token: string, body: MovimientoPayload) {
-  return apiFetch<ApiResource<MovimientoRaw>>("/movimientos", {
+  return apiFetch<MovimientoResponse>("/movimientos", {
     method: "POST",
     token,
     body,
@@ -37,7 +53,7 @@ export function createMovimiento(token: string, body: MovimientoPayload) {
 }
 
 export function updateMovimiento(token: string, id: number, body: Partial<MovimientoPayload>) {
-  return apiFetch<ApiResource<MovimientoRaw>>(`/movimientos/${id}`, {
+  return apiFetch<MovimientoResponse>(`/movimientos/${id}`, {
     method: "PATCH",
     token,
     body,
