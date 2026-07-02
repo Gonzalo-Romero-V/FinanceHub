@@ -30,14 +30,12 @@ class DeudaController
 
             case 'frances':
                 if ($deuda->cuota_directa !== null) {
-                    // Modo directo: cuota pactada sin desglose capital/interés
                     $cuotaFija = (float) $deuda->cuota_directa;
                     for ($k = 1; $k <= $n; $k++) {
                         $saldo = round(max(0.0, $saldo - $cuotaFija), 2);
                         $cuotas[] = $this->filaCuota($deuda->id, $k, $fechaInicio->copy()->addMonths($k), round($cuotaFija, 2), null, null, $saldo);
                     }
                 } else {
-                    // Modo formal: cuota fija calculada con tasa
                     $i = (float) $deuda->tasa_mensual / 100;
                     $cuotaFija = $i > 0
                         ? $principal * $i / (1 - pow(1 + $i, -$n))
@@ -47,7 +45,7 @@ class DeudaController
                         $interes = round($saldo * $i, 2);
                         $capital = $k < $n
                             ? round($cuotaFija - $interes, 2)
-                            : round($saldo, 2); // última cuota = saldo restante
+                            : round($saldo, 2);
 
                         $saldo = round(max(0.0, $saldo - $capital), 2);
                         $cuotas[] = $this->filaCuota($deuda->id, $k, $fechaInicio->copy()->addMonths($k), round($capital + $interes, 2), $capital, $interes, $saldo);
@@ -56,7 +54,6 @@ class DeudaController
                 break;
 
             case 'aleman':
-                // Capital constante, interés decreciente — siempre formal
                 $capitalFijo = $principal / $n;
                 $i           = (float) $deuda->tasa_mensual / 100;
 
@@ -64,7 +61,7 @@ class DeudaController
                     $interes = round($saldo * $i, 2);
                     $capital = $k < $n
                         ? round($capitalFijo, 2)
-                        : round($saldo, 2); // absorbe el redondeo en la última
+                        : round($saldo, 2);
 
                     $saldo = round(max(0.0, $saldo - $capital), 2);
                     $cuotas[] = $this->filaCuota($deuda->id, $k, $fechaInicio->copy()->addMonths($k), round($capital + $interes, 2), $capital, $interes, $saldo);
@@ -72,15 +69,12 @@ class DeudaController
                 break;
 
             case 'bullet':
-                // Pago único al vencimiento
                 $fechaVenc = $fechaInicio->copy()->addMonths($n);
 
                 if ($deuda->total_informal !== null) {
-                    // Modo informal: total pactado directamente
                     $total = (float) $deuda->total_informal;
                     $cuotas[] = $this->filaCuota($deuda->id, 1, $fechaVenc, round($total, 2), null, null, 0.0);
                 } else {
-                    // Modo formal: interés simple
                     $i            = (float) $deuda->tasa_mensual / 100;
                     $interesTotal = round($principal * $i * $n, 2);
                     $total        = round($principal + $interesTotal, 2);
@@ -117,13 +111,11 @@ class DeudaController
         $montoPagado = round((float) $cuotas->where('pagada', true)->sum('cuota_total'), 2);
         $progresoPct = $totalAPagar > 0 ? round(($montoPagado / $totalAPagar) * 100, 1) : 0.0;
 
-        // Interés implícito para modos sin tasa (directo/informal)
         $interesImplicito = null;
         if ($deuda->cuota_directa !== null || $deuda->total_informal !== null) {
             $interesImplicito = round($totalAPagar - $deuda->monto_original, 2);
         }
 
-        // Próxima cuota pendiente
         $proximaCuota = $cuotas->where('pagada', false)->first();
 
         return array_merge($deuda->toArray(), [
@@ -139,20 +131,32 @@ class DeudaController
         ]);
     }
 
-    // ─── Concepto de sistema ─────────────────────────────────────────────────────
+    // ─── Conceptos de sistema ────────────────────────────────────────────────────
 
-    private function conceptoPagoDeuda(int $userId): ConceptoModel
+    private function conceptoPadreDeudas(int $userId): ConceptoModel
     {
         $tipo = TipoMovimientoModel::where('nombre', 'Egreso')->firstOrFail();
 
-        return ConceptoModel::firstOrCreate(
-            [
-                'user_id'            => $userId,
-                'tipo_movimiento_id' => $tipo->id,
-                'nombre'             => 'Pago de deuda',
-                'es_sistema'         => true,
-            ]
-        );
+        return ConceptoModel::firstOrCreate([
+            'user_id'            => $userId,
+            'tipo_movimiento_id' => $tipo->id,
+            'nombre'             => 'Pago Deudas',
+            'es_sistema'         => true,
+            'parent_id'          => null,
+        ]);
+    }
+
+    private function crearConceptoDeuda(int $userId, int $padreId, string $nombre): ConceptoModel
+    {
+        $tipo = TipoMovimientoModel::where('nombre', 'Egreso')->firstOrFail();
+
+        return ConceptoModel::create([
+            'user_id'            => $userId,
+            'tipo_movimiento_id' => $tipo->id,
+            'nombre'             => $nombre,
+            'es_sistema'         => true,
+            'parent_id'          => $padreId,
+        ]);
     }
 
     // ─── Validación ─────────────────────────────────────────────────────────────
@@ -247,6 +251,11 @@ class DeudaController
                 ]);
 
                 DB::table('cuotas')->insert($this->generarCuotas($deuda));
+
+                // Crear concepto hijo bajo "Pago Deudas" para registro desde movimientos
+                $padre    = $this->conceptoPadreDeudas($userId);
+                $concepto = $this->crearConceptoDeuda($userId, $padre->id, $deuda->nombre);
+                $deuda->update(['concepto_id' => $concepto->id]);
             });
 
             $deuda->load('cuotas');
@@ -289,6 +298,12 @@ class DeudaController
         }
 
         $deuda->update($datos);
+
+        // Sincronizar nombre del concepto hijo si cambió el nombre de la deuda
+        if (isset($datos['nombre']) && $deuda->concepto_id) {
+            ConceptoModel::where('id', $deuda->concepto_id)->update(['nombre' => $datos['nombre']]);
+        }
+
         $deuda->load('cuotas');
 
         return response()->json([
@@ -299,9 +314,19 @@ class DeudaController
 
     public function destroy($id)
     {
-        $userId = auth()->id();
-        $deuda  = DeudaModel::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $userId     = auth()->id();
+        $deuda      = DeudaModel::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $conceptoId = $deuda->concepto_id;
+
         $deuda->delete();
+
+        // Limpiar concepto hijo si no tiene movimientos asociados
+        if ($conceptoId) {
+            $tieneMovimientos = MovimientoModel::where('concepto_id', $conceptoId)->exists();
+            if (!$tieneMovimientos) {
+                ConceptoModel::where('id', $conceptoId)->delete();
+            }
+        }
 
         return response()->json(['mensaje' => 'Deuda eliminada.'], 200);
     }
@@ -324,12 +349,14 @@ class DeudaController
         try {
             DB::transaction(function () use ($request, $deuda, $cuota, $userId, &$movimientoId) {
                 if ($request->cuenta_id) {
-                    $cuenta   = CuentaModel::where('id', $request->cuenta_id)->where('user_id', $userId)->firstOrFail();
-                    $concepto = $this->conceptoPagoDeuda($userId);
+                    $cuenta = CuentaModel::where('id', $request->cuenta_id)->where('user_id', $userId)->firstOrFail();
+
+                    // Usar el concepto específico de esta deuda; fallback al padre si no existe
+                    $conceptoId = $deuda->concepto_id ?? $this->conceptoPadreDeudas($userId)->id;
 
                     $movimiento = MovimientoModel::create([
                         'monto'             => $cuota->cuota_total,
-                        'concepto_id'       => $concepto->id,
+                        'concepto_id'       => $conceptoId,
                         'cuenta_origen_id'  => $cuenta->id,
                         'cuenta_destino_id' => null,
                         'nota'              => "Cuota #{$cuota->numero_cuota} — {$deuda->nombre}",
@@ -346,7 +373,6 @@ class DeudaController
                     'movimiento_id' => $movimientoId,
                 ]);
 
-                // Si todas las cuotas están pagadas → cerrar la deuda
                 $pendientes = CuotaModel::where('deuda_id', $deuda->id)->where('pagada', false)->count();
                 if ($pendientes === 0) {
                     $deuda->update(['estado' => 'pagada']);

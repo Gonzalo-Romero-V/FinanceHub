@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\MovimientoModel;
 use App\Models\CuentaModel;
 use App\Models\ConceptoModel;
+use App\Models\DeudaModel;
+use App\Models\CuotaModel;
 use App\Models\PresupuestoModel;
 use Illuminate\Support\Facades\DB;
 use Carbon\CarbonImmutable;
@@ -217,12 +219,10 @@ class MovimientoController
         }
 
         try {
-            DB::transaction(function () use ($request, $tipo, $monto, &$nuevoMovimiento) {
+            DB::transaction(function () use ($request, $tipo, $monto, $userId, &$nuevoMovimiento) {
                 $payload = $request->only(
                     'monto', 'cuenta_origen_id', 'cuenta_destino_id', 'concepto_id', 'nota'
                 );
-                // La fecha del movimiento la dicta el servidor (UTC). Ignoramos
-                // cualquier `fecha` que venga del cliente.
                 $payload['fecha'] = CarbonImmutable::now('UTC');
 
                 $nuevoMovimiento = MovimientoModel::create($payload);
@@ -234,6 +234,33 @@ class MovimientoController
                     $request->cuenta_destino_id,
                     +1
                 );
+
+                // Auto-marcar cuota si el concepto pertenece a una deuda activa
+                if ($tipo === 'Egreso') {
+                    $deuda = DeudaModel::where('concepto_id', (int) $request->concepto_id)
+                        ->where('user_id', $userId)
+                        ->where('estado', 'activa')
+                        ->first();
+                    if ($deuda) {
+                        $cuota = CuotaModel::where('deuda_id', $deuda->id)
+                            ->where('pagada', false)
+                            ->orderBy('numero_cuota')
+                            ->first();
+                        if ($cuota) {
+                            $cuota->update([
+                                'pagada'        => true,
+                                'fecha_pago'    => CarbonImmutable::now('UTC'),
+                                'movimiento_id' => $nuevoMovimiento->id,
+                            ]);
+                            $pendientes = CuotaModel::where('deuda_id', $deuda->id)
+                                ->where('pagada', false)
+                                ->count();
+                            if ($pendientes === 0) {
+                                $deuda->update(['estado' => 'pagada']);
+                            }
+                        }
+                    }
+                }
             });
 
             $tz = $this->clientTimezone($request);

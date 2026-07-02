@@ -14,10 +14,12 @@ import { PageLoading, PageError } from "@/components/custom/page-state";
 import { CuentaForm } from "@/components/forms/cuenta-form";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
 import { ReconciliacionModal } from "@/components/forms/reconciliacion-modal";
+import { DeudaSection } from "@/components/sections/deuda-section";
 
 import { useAuth } from "@/lib/auth/context";
 import { listCuentas, deleteCuenta, type Cuenta as CuentaApi } from "@/lib/api/cuentas";
 import { getUserSettings, type UserSettings } from "@/lib/api/user-settings";
+import { type Deuda } from "@/lib/api/deudas";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
 
 interface CuentaRow {
@@ -49,6 +51,7 @@ export default function CuentasPage() {
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [historialRefresh, setHistorialRefresh] = useState(0);
+  const [deudasBalance, setDeudasBalance] = useState<Deuda[]>([]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<CuentaRow | null>(null);
@@ -100,7 +103,9 @@ export default function CuentasPage() {
     new Date(settings.reconciliacion_proxima) <= new Date();
 
   const totalActivos = cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((acc, c) => acc + c.saldo, 0);
-  const totalPasivos = cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((acc, c) => acc + c.saldo, 0);
+  const totalPasivos =
+    cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((acc, c) => acc + c.saldo, 0) +
+    deudasBalance.filter((d) => d.estado === "activa").reduce((acc, d) => acc + d.saldo_pendiente, 0);
 
   const columns: (keyof CuentaRow)[] = ["nombre", "tipo_cuenta", "saldo", "activa", "fecha_creacion"];
   const columnHeaders: Record<keyof CuentaRow, string> = {
@@ -201,6 +206,10 @@ export default function CuentasPage() {
       <div className="space-y-10 mt-10">
         {renderSection("Cuentas de Activos", "Activo", TrendingUp, "text-chart-2")}
         {renderSection("Cuentas de Pasivos", "Pasivo", TrendingDown, "text-destructive")}
+      </div>
+
+      <div className="mt-10 pt-10 border-t border-border">
+        <DeudaSection onDeudasChange={setDeudasBalance} />
       </div>
 
       <CuentaForm open={showCreate} onClose={() => setShowCreate(false)} onSuccess={fetchCuentas} />

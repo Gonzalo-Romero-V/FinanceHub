@@ -21,6 +21,7 @@ class DeudaModel extends Model
         'total_informal',
         'notas',
         'estado',
+        'concepto_id',
     ];
 
     protected $casts = [
