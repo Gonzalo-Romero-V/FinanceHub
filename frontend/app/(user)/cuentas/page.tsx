@@ -64,6 +64,7 @@ interface CuentaRow {
   saldo_inicial: number;
   activa: string;
   fecha_creacion: string;
+  fecha_creacion_raw: string;
 }
 
 function toCuentaRow(item: CuentaApi): CuentaRow {
@@ -75,6 +76,7 @@ function toCuentaRow(item: CuentaApi): CuentaRow {
     saldo_inicial: Number(item.saldo_inicial) || 0,
     activa: item.activa ? "Activa" : "Inactiva",
     fecha_creacion: formatDate(item.fecha_creacion),
+    fecha_creacion_raw: item.fecha_creacion,
   };
 }
 
@@ -488,6 +490,7 @@ export default function CuentasPage() {
     saldo_inicial: "Saldo inicial",
     activa: "Estado",
     fecha_creacion: "Fecha creación",
+    fecha_creacion_raw: "Fecha creación",
   };
 
   if (isLoading) return <PageLoading />;
@@ -499,6 +502,7 @@ export default function CuentasPage() {
     tipo_cuenta: c.tipo_cuenta,
     saldo_inicial: c.saldo_inicial,
     saldo: c.saldo,
+    fecha_creacion: c.fecha_creacion_raw,
   }));
 
   const activos = cuentas.filter((c) => c.tipo_cuenta === "Activo");
