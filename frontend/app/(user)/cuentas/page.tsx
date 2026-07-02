@@ -1,10 +1,33 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import {
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
+  CreditCard,
+  MoreVertical,
+  CheckCircle2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { TableRow, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { DataTable } from "@/components/custom/data-table";
 import { BalanceGeneral } from "@/components/custom/balance-general";
 import { HistorialBalance } from "@/components/custom/historial-balance";
@@ -14,13 +37,24 @@ import { PageLoading, PageError } from "@/components/custom/page-state";
 import { CuentaForm } from "@/components/forms/cuenta-form";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
 import { ReconciliacionModal } from "@/components/forms/reconciliacion-modal";
-import { DeudaSection } from "@/components/sections/deuda-section";
+import { DeudaForm } from "@/components/forms/deuda-form";
+import { DeudaDetailModal } from "@/components/forms/deuda-detail-modal";
+import { PagoCuotaModal } from "@/components/forms/pago-cuota-modal";
 
 import { useAuth } from "@/lib/auth/context";
 import { listCuentas, deleteCuenta, type Cuenta as CuentaApi } from "@/lib/api/cuentas";
 import { getUserSettings, type UserSettings } from "@/lib/api/user-settings";
-import { type Deuda } from "@/lib/api/deudas";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
+import {
+  listDeudas,
+  deleteDeuda as apiDeleteDeuda,
+  SISTEMA_LABELS,
+  type Deuda,
+  type Cuota,
+} from "@/lib/api/deudas";
+import { formatCurrency, formatDate, formatNumber, todayIsoDate } from "@/lib/utils/format";
+import { cn } from "@/lib/utils";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CuentaRow {
   id: number;
@@ -44,21 +78,317 @@ function toCuentaRow(item: CuentaApi): CuentaRow {
   };
 }
 
+// ─── Helpers de estilo para deudas ───────────────────────────────────────────
+
+function sistemaBadgeClass(sistema: string) {
+  if (sistema === "frances") return "bg-brand-1/10 text-brand-1";
+  if (sistema === "aleman") return "bg-chart-2/10 text-chart-2";
+  return "bg-chart-4/10 text-chart-4";
+}
+
+// ─── Tabla de deudas (estilo DataTable) ──────────────────────────────────────
+
+function DeudasTable({
+  deudas,
+  onVerTabla,
+  onPagarCuota,
+  onEdit,
+  onDelete,
+}: {
+  deudas: Deuda[];
+  onVerTabla: (d: Deuda) => void;
+  onPagarCuota: (d: Deuda) => void;
+  onEdit: (d: Deuda) => void;
+  onDelete: (d: Deuda) => void;
+}) {
+  const hoy = todayIsoDate();
+  const totalSaldo = deudas
+    .filter((d) => d.estado === "activa")
+    .reduce((acc, d) => acc + d.saldo_pendiente, 0);
+
+  return (
+    <div className="w-full bg-background">
+      <div className="relative bg-transparent" style={{ height: "350px", overflowY: "auto" }}>
+        <Table>
+          <TableHeader className="sticky top-0 bg-muted/30 backdrop-blur-sm z-10">
+            <TableRow className="hover:bg-transparent border-b">
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold">
+                Nombre
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold">
+                Sistema
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold text-right">
+                Capital
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold min-w-[140px]">
+                Progreso
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold text-right">
+                Saldo pendiente
+              </TableHead>
+              <TableHead className="text-xs uppercase tracking-wider text-muted-foreground/70 font-bold">
+                Próxima cuota
+              </TableHead>
+              <TableHead className="w-[90px]" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {deudas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground small">
+                  No hay deudas registradas.
+                </TableCell>
+              </TableRow>
+            ) : (
+              deudas.map((deuda) => {
+                const proxima = deuda.proxima_cuota;
+                const hayVencidas = deuda.cuotas.some(
+                  (c) => !c.pagada && c.fecha_vencimiento < hoy,
+                );
+                const puedeP = proxima && deuda.estado === "activa";
+
+                return (
+                  <TableRow
+                    key={deuda.id}
+                    className={cn(
+                      "group transition-colors border-b border-border/50",
+                      deuda.estado !== "activa" && "opacity-60",
+                    )}
+                  >
+                    {/* Nombre */}
+                    <TableCell className="py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-foreground">{deuda.nombre}</span>
+                        {deuda.acreedor && (
+                          <span className="xs text-muted-foreground">{deuda.acreedor}</span>
+                        )}
+                        {hayVencidas && deuda.estado === "activa" && (
+                          <span className="xs text-destructive font-medium">Cuotas vencidas</span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* Sistema */}
+                    <TableCell className="py-3">
+                      <span
+                        className={cn(
+                          "xs font-semibold px-2 py-0.5 rounded-md uppercase tracking-wide",
+                          sistemaBadgeClass(deuda.sistema),
+                        )}
+                      >
+                        {SISTEMA_LABELS[deuda.sistema]}
+                      </span>
+                    </TableCell>
+
+                    {/* Capital */}
+                    <TableCell className="py-3 text-right tabular-nums text-foreground/80">
+                      {formatCurrency(deuda.monto_original)}
+                    </TableCell>
+
+                    {/* Progreso */}
+                    <TableCell className="py-3">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between xs">
+                          <span className="text-muted-foreground">
+                            {deuda.cuotas_pagadas}/{deuda.total_cuotas} cuotas
+                          </span>
+                          <span className="font-semibold text-brand-1">{deuda.progreso_pct}%</span>
+                        </div>
+                        <div className="w-full bg-muted/50 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="h-full bg-brand-1 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(deuda.progreso_pct, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* Saldo pendiente */}
+                    <TableCell className="py-3 text-right">
+                      {deuda.estado === "pagada" ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-chart-3" />
+                          <span className="xs text-chart-3 font-semibold">Saldada</span>
+                        </div>
+                      ) : (
+                        <span className="font-semibold tabular-nums text-destructive">
+                          {formatCurrency(deuda.saldo_pendiente)}
+                        </span>
+                      )}
+                    </TableCell>
+
+                    {/* Próxima cuota */}
+                    <TableCell className="py-3">
+                      {proxima && deuda.estado === "activa" ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="xs text-muted-foreground">
+                            #{proxima.numero_cuota} · {formatDate(proxima.fecha_vencimiento)}
+                          </span>
+                          <span
+                            className={cn(
+                              "small font-semibold tabular-nums",
+                              proxima.fecha_vencimiento < hoy ? "text-destructive" : "",
+                            )}
+                          >
+                            {formatCurrency(proxima.cuota_total)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Acciones */}
+                    <TableCell className="w-[90px] text-right">
+                      {/* Desktop */}
+                      <div className="hidden md:flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10"
+                          onClick={() => onVerTabla(deuda)}
+                          title="Ver tabla de amortización"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {puedeP && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-chart-3 hover:bg-chart-3/10"
+                            onClick={() => onPagarCuota(deuda)}
+                            title="Pagar próxima cuota"
+                          >
+                            <CreditCard className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10"
+                          onClick={() => onEdit(deuda)}
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => onDelete(deuda)}
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Mobile */}
+                      <div className="flex md:hidden items-center justify-end">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-1" align="end">
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                variant="ghost"
+                                className="justify-start gap-2 h-9 px-2 small"
+                                onClick={() => onVerTabla(deuda)}
+                              >
+                                <Eye className="h-4 w-4" />
+                                Ver tabla
+                              </Button>
+                              {puedeP && (
+                                <Button
+                                  variant="ghost"
+                                  className="justify-start gap-2 h-9 px-2 small text-chart-3 hover:text-chart-3 hover:bg-chart-3/10"
+                                  onClick={() => onPagarCuota(deuda)}
+                                >
+                                  <CreditCard className="h-4 w-4" />
+                                  Pagar cuota
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                className="justify-start gap-2 h-9 px-2 small"
+                                onClick={() => onEdit(deuda)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Editar
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="justify-start gap-2 h-9 px-2 small text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => onDelete(deuda)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+
+            {/* Footer total */}
+            <TableRow className="bg-muted/10 font-bold border-t-2">
+              <TableCell colSpan={4}>TOTAL PASIVOS (DEUDAS ACTIVAS)</TableCell>
+              <TableCell className="text-right text-destructive">
+                {formatCurrency(totalSaldo)}
+              </TableCell>
+              <TableCell colSpan={2} />
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Página ───────────────────────────────────────────────────────────────────
+
 export default function CuentasPage() {
   const { token } = useAuth();
+
+  // ── Cuentas ──
   const [cuentas, setCuentas] = useState<CuentaRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [historialRefresh, setHistorialRefresh] = useState(0);
-  const [deudasBalance, setDeudasBalance] = useState<Deuda[]>([]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<CuentaRow | null>(null);
   const [deleteItem, setDeleteItem] = useState<CuentaRow | null>(null);
-  const [reconciliarItem, setReconciliarItem] = useState<{ id: number; nombre: string; saldo: number } | null>(null);
+  const [reconciliarItem, setReconciliarItem] = useState<{
+    id: number;
+    nombre: string;
+    saldo: number;
+  } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // ── Deudas ──
+  const [deudas, setDeudas] = useState<Deuda[]>([]);
+  const [isLoadingDeudas, setIsLoadingDeudas] = useState(true);
+  const [showCreateDeuda, setShowCreateDeuda] = useState(false);
+  const [editDeuda, setEditDeuda] = useState<Deuda | null>(null);
+  const [deleteDeuda, setDeleteDeuda] = useState<Deuda | null>(null);
+  const [detailDeuda, setDetailDeuda] = useState<Deuda | null>(null);
+  const [pagoDeuda, setPagoDeuda] = useState<{
+    cuota: Cuota;
+    deudaId: number;
+    deudaNombre: string;
+  } | null>(null);
+  const [isDeletingDeuda, setIsDeletingDeuda] = useState(false);
+
+  // ── Fetch ──
   const fetchCuentas = useCallback(async () => {
     if (!token) { setIsLoading(false); setError("Usuario no autenticado."); return; }
     setIsLoading(true);
@@ -77,9 +407,26 @@ export default function CuentasPage() {
     }
   }, [token]);
 
-  useEffect(() => { fetchCuentas(); }, [fetchCuentas]);
+  const fetchDeudas = useCallback(async () => {
+    if (!token) { setIsLoadingDeudas(false); return; }
+    setIsLoadingDeudas(true);
+    try {
+      const res = await listDeudas(token);
+      const data = Array.isArray(res.data) ? res.data : [];
+      setDeudas(data);
+      setDetailDeuda((prev) => prev ? (data.find((d) => d.id === prev.id) ?? null) : null);
+    } catch {
+      // silencioso: la sección de deudas muestra vacío
+    } finally {
+      setIsLoadingDeudas(false);
+    }
+  }, [token]);
 
-  const handleDelete = async () => {
+  useEffect(() => { fetchCuentas(); }, [fetchCuentas]);
+  useEffect(() => { fetchDeudas(); }, [fetchDeudas]);
+
+  // ── Handlers cuentas ──
+  const handleDeleteCuenta = async () => {
     if (!deleteItem || !token) return;
     setIsDeleting(true);
     try {
@@ -98,15 +445,40 @@ export default function CuentasPage() {
     setHistorialRefresh((n) => n + 1);
   };
 
+  // ── Handlers deudas ──
+  const handleDeleteDeuda = async () => {
+    if (!deleteDeuda || !token) return;
+    setIsDeletingDeuda(true);
+    try {
+      await apiDeleteDeuda(token, deleteDeuda.id);
+      setDeleteDeuda(null);
+      if (detailDeuda?.id === deleteDeuda.id) setDetailDeuda(null);
+      fetchDeudas();
+    } catch (err) {
+      console.error("Error al eliminar deuda:", err);
+    } finally {
+      setIsDeletingDeuda(false);
+    }
+  };
+
+  const handlePagarCuota = (cuota: Cuota, deuda: Deuda) => {
+    setPagoDeuda({ cuota, deudaId: deuda.id, deudaNombre: deuda.nombre });
+  };
+
+  // ── Balance ──
   const alertaVencida =
     settings?.reconciliacion_proxima &&
     new Date(settings.reconciliacion_proxima) <= new Date();
 
-  const totalActivos = cuentas.filter((c) => c.tipo_cuenta === "Activo").reduce((acc, c) => acc + c.saldo, 0);
-  const totalPasivos =
-    cuentas.filter((c) => c.tipo_cuenta === "Pasivo").reduce((acc, c) => acc + c.saldo, 0) +
-    deudasBalance.filter((d) => d.estado === "activa").reduce((acc, d) => acc + d.saldo_pendiente, 0);
+  const totalActivos = cuentas
+    .filter((c) => c.tipo_cuenta === "Activo")
+    .reduce((acc, c) => acc + c.saldo, 0);
 
+  const totalPasivos = deudas
+    .filter((d) => d.estado === "activa")
+    .reduce((acc, d) => acc + d.saldo_pendiente, 0);
+
+  // ── Config tabla activos ──
   const columns: (keyof CuentaRow)[] = ["nombre", "tipo_cuenta", "saldo", "activa", "fecha_creacion"];
   const columnHeaders: Record<keyof CuentaRow, string> = {
     id: "ID",
@@ -129,52 +501,14 @@ export default function CuentasPage() {
     saldo: c.saldo,
   }));
 
-  const renderSection = (title: string, tipo: string, icon: typeof TrendingUp, colorClass: string) => {
-    const filtered = cuentas.filter((c) => c.tipo_cuenta === tipo);
-    const totalNumeric = filtered.reduce((acc, curr) => acc + curr.saldo, 0);
-    const Icon = icon;
-
-    return (
-      <DataTable<CuentaRow>
-        title={title}
-        titleIcon={<Icon className={`w-5 h-5 ${colorClass}`} />}
-        data={filtered}
-        columns={columns}
-        columnHeaders={columnHeaders}
-        columnConfig={{
-          saldo: {
-            align: "right",
-            render: (val) => (
-              <div className="flex items-center justify-between w-full font-medium tabular-nums text-foreground/80">
-                <span className="text-muted-foreground/30 font-normal mr-4">$</span>
-                <span>{formatNumber(val)}</span>
-              </div>
-            ),
-          },
-        }}
-        onEdit={(item) => setEditItem(item)}
-        onDelete={(item) => setDeleteItem(item)}
-        onReconciliar={(item) =>
-          setReconciliarItem({ id: item.id, nombre: item.nombre, saldo: item.saldo })
-        }
-        rowsOnDisplay={8}
-        dateFilter={false}
-        footer={
-          <TableRow className="bg-muted/10 font-bold border-t-2">
-            <TableCell colSpan={2}>TOTAL {title.toUpperCase()}</TableCell>
-            <TableCell className={`text-right ${colorClass}`}>{formatCurrency(totalNumeric)}</TableCell>
-            <TableCell colSpan={3}></TableCell>
-          </TableRow>
-        }
-      />
-    );
-  };
+  const activos = cuentas.filter((c) => c.tipo_cuenta === "Activo");
+  const totalActivosNum = activos.reduce((acc, c) => acc + c.saldo, 0);
 
   return (
     <PageShell>
       <PageHeader
         title="Cuentas"
-        description="Gestiona tus cuentas financieras. Visualiza saldos, estados y tipos de cuenta."
+        description="Gestiona tus cuentas financieras y deudas. Visualiza saldos, estados y tipos de cuenta."
         action={
           <Button
             className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
@@ -204,14 +538,73 @@ export default function CuentasPage() {
       <HistorialBalance cuentas={cuentasParaHistorial} onRefresh={historialRefresh} />
 
       <div className="space-y-10 mt-10">
-        {renderSection("Cuentas de Activos", "Activo", TrendingUp, "text-chart-2")}
-        {renderSection("Cuentas de Pasivos", "Pasivo", TrendingDown, "text-destructive")}
+        {/* Activos */}
+        <DataTable<CuentaRow>
+          title="Activos"
+          titleIcon={<TrendingUp className="w-5 h-5 text-chart-2" />}
+          data={activos}
+          columns={columns}
+          columnHeaders={columnHeaders}
+          columnConfig={{
+            saldo: {
+              align: "right",
+              render: (val) => (
+                <div className="flex items-center justify-between w-full font-medium tabular-nums text-foreground/80">
+                  <span className="text-muted-foreground/30 font-normal mr-4">$</span>
+                  <span>{formatNumber(val)}</span>
+                </div>
+              ),
+            },
+          }}
+          onEdit={(item) => setEditItem(item)}
+          onDelete={(item) => setDeleteItem(item)}
+          onReconciliar={(item) =>
+            setReconciliarItem({ id: item.id, nombre: item.nombre, saldo: item.saldo })
+          }
+          rowsOnDisplay={8}
+          dateFilter={false}
+          footer={
+            <TableRow className="bg-muted/10 font-bold border-t-2">
+              <TableCell colSpan={2}>TOTAL ACTIVOS</TableCell>
+              <TableCell className="text-right text-chart-2">{formatCurrency(totalActivosNum)}</TableCell>
+              <TableCell colSpan={3} />
+            </TableRow>
+          }
+        />
+
+        {/* Pasivos / Deudas */}
+        <div className="w-full">
+          <div className="flex items-center justify-between p-2 md:px-4 bg-transparent mb-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-foreground">Pasivos</h2>
+              <TrendingDown className="w-5 h-5 text-destructive" />
+            </div>
+            <Button
+              className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
+              onClick={() => setShowCreateDeuda(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Nueva deuda
+            </Button>
+          </div>
+
+          {isLoadingDeudas ? (
+            <div className="flex justify-center py-10">
+              <div className="h-5 w-5 border-2 border-brand-1 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <DeudasTable
+              deudas={deudas}
+              onVerTabla={(d) => setDetailDeuda(d)}
+              onPagarCuota={(d) => d.proxima_cuota && handlePagarCuota(d.proxima_cuota, d)}
+              onEdit={(d) => setEditDeuda(d)}
+              onDelete={(d) => setDeleteDeuda(d)}
+            />
+          )}
+        </div>
       </div>
 
-      <div className="mt-10 pt-10 border-t border-border">
-        <DeudaSection onDeudasChange={setDeudasBalance} />
-      </div>
-
+      {/* ── Modales cuentas ── */}
       <CuentaForm open={showCreate} onClose={() => setShowCreate(false)} onSuccess={fetchCuentas} />
       <CuentaForm
         open={!!editItem}
@@ -222,7 +615,7 @@ export default function CuentasPage() {
       <ConfirmDeleteModal
         open={!!deleteItem}
         onClose={() => setDeleteItem(null)}
-        onConfirm={handleDelete}
+        onConfirm={handleDeleteCuenta}
         itemName={deleteItem?.nombre}
         isLoading={isDeleting}
       />
@@ -231,6 +624,41 @@ export default function CuentasPage() {
         onClose={() => setReconciliarItem(null)}
         onSuccess={handleReconciliacionSuccess}
         cuenta={reconciliarItem}
+      />
+
+      {/* ── Modales deudas ── */}
+      <DeudaForm
+        open={showCreateDeuda}
+        onClose={() => setShowCreateDeuda(false)}
+        onSuccess={fetchDeudas}
+      />
+      <DeudaForm
+        open={!!editDeuda}
+        onClose={() => setEditDeuda(null)}
+        onSuccess={fetchDeudas}
+        editItem={editDeuda}
+      />
+      {detailDeuda && (
+        <DeudaDetailModal
+          deuda={detailDeuda}
+          onClose={() => setDetailDeuda(null)}
+          onPagarCuota={(cuota) => handlePagarCuota(cuota, detailDeuda)}
+        />
+      )}
+      <PagoCuotaModal
+        open={!!pagoDeuda}
+        onClose={() => setPagoDeuda(null)}
+        onSuccess={() => { fetchDeudas(); setPagoDeuda(null); }}
+        cuota={pagoDeuda?.cuota ?? null}
+        deudaId={pagoDeuda?.deudaId ?? null}
+        deudaNombre={pagoDeuda?.deudaNombre ?? null}
+      />
+      <ConfirmDeleteModal
+        open={!!deleteDeuda}
+        onClose={() => setDeleteDeuda(null)}
+        onConfirm={handleDeleteDeuda}
+        itemName={deleteDeuda?.nombre}
+        isLoading={isDeletingDeuda}
       />
     </PageShell>
   );
