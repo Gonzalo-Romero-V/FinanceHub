@@ -88,4 +88,11 @@ Route::middleware('auth:sanctum')->group(function () {
         require __DIR__ . '/presupuestos/PresupuestosRouter.php';
     });
 
+    // =====================
+    // DEUDAS
+    // =====================
+    Route::prefix('deudas')->group(function () {
+        require __DIR__ . '/deudas/DeudasRouter.php';
+    });
+
 });

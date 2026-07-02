@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   PiggyBank,
   ReceiptText,
+  TrendingDown,
   User,
   WalletMinimal,
   type LucideIcon,
@@ -26,6 +27,7 @@ export const userNavLinks: NavLink[] = [
   { href: "/cuentas", label: "Cuentas", icon: WalletMinimal },
   { href: "/conceptos", label: "Conceptos", icon: BookOpen },
   { href: "/presupuestos", label: "Presupuestos", icon: PiggyBank },
+  { href: "/deudas", label: "Deudas", icon: TrendingDown },
 ];
 
 export const userSecondaryLinks: NavLink[] = [
