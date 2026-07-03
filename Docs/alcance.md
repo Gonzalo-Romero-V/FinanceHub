@@ -54,9 +54,21 @@
   registra la diferencia y crea opcionalmente un movimiento de ajuste que corrige el saldo.
 - **Historial**: `GET /cuentas/{id}/reconciliaciones` devuelve todos los puntos de
   conciliación; la UI los muestra como marcas ✓ en la curva histórica.
-- **Curva histórica**: componente `HistorialBalance` en la página de cuentas — línea de
-  evolución de saldo con filtro "Balance General / por cuenta". Computada client-side desde
+- **Curva histórica**: componente `HistorialBalance` en la página de cuentas — evolución de
+  saldo con selector de 3 vistas: "Balance General" (suma activos − pasivos), una cuenta
+  individual (con marcas ✓ de conciliación), o "Cuentas individuales (comparar)" (una línea
+  por cuenta superpuesta en el mismo gráfico, con leyenda y colores categóricos). Presets de
+  rango 1M/3M/6M/1A/Todo, más navegación mes a mes en 1M. Computada client-side desde
   `movimientos + saldo_inicial`; los ajustes aparecen como puntos diferenciados.
+  - Serie siempre con relleno diario (un punto por día, `type="monotone"`) en todas las
+    ventanas, para que el tooltip sea continuo al recorrer el gráfico con el mouse — la
+    granularidad (día/mes) sólo cambia el formato de las etiquetas del eje X, no la
+    densidad de puntos.
+  - El inicio de cada serie (incluida "Todo") se acota (clamp) contra `fecha_creacion` real
+    de la cuenta: nunca se inventa/rellena saldo hacia atrás de la fecha en que la cuenta
+    existió, y el "día uno" es el mismo sin importar el preset de rango elegido. En el modo
+    "Cuentas individuales", cada línea además usa `connectNulls={false}` y sólo empieza a
+    dibujarse en su propia fecha de creación.
 - **Badge de alerta**: banner en la página de cuentas cuando `reconciliacion_proxima ≤ hoy`.
 - **Recordatorio**: en `/perfil` el usuario configura la frecuencia en días;
   `user_settings.reconciliacion_proxima` se actualiza tras cada reconciliación exitosa.

@@ -58,7 +58,7 @@ frontend/
       data-table.tsx            # tabla genérica con filtro de fecha, acciones y footer
       balance-general.tsx       # resumen activos − pasivos
       concepto-tree.tsx         # árbol expandible raíz/hijo para conceptos
-      historial-balance.tsx     # gráfico de evolución de balance (por cuenta o general)
+      historial-balance.tsx     # evolución de balance: general, por cuenta o todas comparadas
     forms/                      # modales de crear / editar / ver
       cuenta-form.tsx
       concepto-form.tsx
