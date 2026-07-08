@@ -37,6 +37,12 @@ EXCLUDED_TABLES = {
     "sessions",
     "password_reset_tokens",
     "personal_access_tokens",
+    # Deudas/cuotas/presupuestos ya no se exponen como tablas SQL libres: se
+    # sirven exclusivamente a través de las funciones de solo lectura de
+    # `app/services/finance_tools.py` (SQL fijo, sin intervención del LLM).
+    "deudas",
+    "cuotas",
+    "presupuestos",
 }
 
 # Tablas para las que enviamos un puñado de valores reales como referencia.
@@ -170,13 +176,29 @@ class DatabaseService:
         try:
             with self.engine.connect() as conn:
                 if user_id is not None and table_name in USER_SCOPED_TABLES:
+                    sample_columns = (
+                        "nombre, parent_id, color"
+                        if table_name == "conceptos"
+                        else "nombre"
+                    )
                     sql = text(
-                        f"SELECT nombre FROM {table_name} WHERE user_id = :uid LIMIT 5"
+                        f"SELECT {sample_columns} FROM {table_name} "
+                        "WHERE user_id = :uid LIMIT 5"
                     )
                     res = conn.execute(sql, {"uid": user_id})
                 else:
                     sql = text(f"SELECT nombre FROM {table_name} LIMIT 5")
                     res = conn.execute(sql)
+
+                if table_name == "conceptos" and user_id is not None:
+                    return [
+                        {
+                            "nombre": row[0],
+                            "parent_id": row[1],
+                            "color": row[2],
+                        }
+                        for row in res
+                    ]
                 return [row[0] for row in res]
         except Exception:
             log.exception("No se pudieron leer samples de %s", table_name)

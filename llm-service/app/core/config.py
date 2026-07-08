@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4o"
     OPENAI_TEMPERATURE: float = 0.0
+    OPENAI_TRANSCRIPTION_MODEL: str = "gpt-4o-transcribe"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "mistral"
 
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
     STATEMENT_TIMEOUT_MS: int = 5000
     # Tope de filas por widget para evitar respuestas gigantes.
     MAX_ROWS_PER_QUERY: int = 500
+    MAX_AUDIO_BYTES: int = 25 * 1024 * 1024
 
     # ─── App ──────────────────────────────────────────────────────────────────
     APP_NAME: str = "FinanceHub-LLM-Service"
@@ -33,6 +35,9 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = (
         "http://localhost:3000,http://127.0.0.1:3000,http://0.0.0.0:3000"
     )
+    # Consultas/día por usuario a /api/analyze + endpoints de voz. Generoso
+    # para uso normal, pone techo real contra abuso o un token filtrado.
+    DAILY_LLM_LIMIT: int = 50
 
     class Config:
         env_file = ".env"

@@ -77,14 +77,24 @@ def _strip_markdown(text: str) -> str:
 
 
 def _output_contract_for(widget_type: str) -> str:
+    concept_category_contract = (
+        " Si la categoría proviene de `conceptos`, devuelve además "
+        "`concepto_id` (el `conceptos.id` de la misma fila usada como categoría) "
+        "y usa exactamente `conceptos.nombre AS label`, sin concatenar, traducir, "
+        "normalizar ni transformar el nombre."
+    )
     if widget_type == "kpi":
         return "Devuelve UNA fila con UNA columna llamada `metric` (numérica)."
     if widget_type == "pie":
-        return "Devuelve dos columnas: `label` (texto) y `value` (numérico)."
+        return (
+            "Devuelve `label` (texto) y `value` (numérico)."
+            + concept_category_contract
+        )
     if widget_type in {"bar", "line"}:
         return (
             "Devuelve dos columnas: una categórica o temporal (alias `label` o "
             "`x`) y una numérica (alias `value` o `y`)."
+            + concept_category_contract
         )
     return "Devuelve columnas tabulares con alias legibles."
 
@@ -134,7 +144,34 @@ REGLAS OBLIGATORIAS (el SQL será validado automáticamente y rechazado si las v
    - Para INGRESO: el dinero entra por `m.cuenta_destino_id`.
    - Para TRANSFERENCIA: ambas cuentas son del mismo usuario.
 
-7. FECHAS Y ZONAS HORARIAS:
+7. JERARQUÍA DE CONCEPTOS:
+   - `conceptos.parent_id IS NULL` identifica un concepto raíz.
+   - `conceptos.parent_id = <raíz.id>` identifica una subcategoría. La jerarquía
+     tiene como máximo dos niveles: raíz → hija.
+   - Salvo pedido explícito de contar sólo asignaciones directas a la raíz, el
+     total de un concepto raíz DEBE incluir movimientos de la raíz y sus hijas.
+   - Para agrupar movimientos por raíz, une dos veces `conceptos` y usa
+     `COALESCE(co.parent_id, co.id)` para resolver la raíz. Si el usuario pide
+     desglose por subcategoría, agrupa por `co.nombre` sin colapsar las hijas.
+   - Cuando la categoría del widget sea un concepto, devuelve el ID y nombre del
+     MISMO concepto: `<alias>.id AS concepto_id, <alias>.nombre AS label`. El
+     `label` debe ser exactamente `conceptos.nombre`, sin transformaciones. Para
+     agrupación por raíz usa `raiz.id`/`raiz.nombre`; para desglose usa
+     `co.id`/`co.nombre`.
+   - Cada alias de `conceptos` debe quedar filtrado por `user_id = :uid`.
+   - Ejemplo correcto de agregación por concepto raíz:
+       SELECT raiz.id AS concepto_id, raiz.nombre AS label, SUM(m.monto) AS value
+       FROM movimientos AS m
+       JOIN conceptos AS co ON co.id = m.concepto_id
+       JOIN conceptos AS raiz
+         ON raiz.id = COALESCE(co.parent_id, co.id)
+        AND raiz.user_id = :uid
+       WHERE co.user_id = :uid
+        AND date_trunc('month', ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date)
+            = date_trunc('month', (:today)::date)
+       GROUP BY raiz.id, raiz.nombre
+
+8. FECHAS Y ZONAS HORARIAS:
    - `movimientos.fecha` y `cuentas.fecha_creacion` se almacenan en UTC.
    - Para comparar contra el día calendario del usuario, convierte a TZ local:
        ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date
@@ -151,12 +188,12 @@ REGLAS OBLIGATORIAS (el SQL será validado automáticamente y rechazado si las v
                        >= ((:today)::date - INTERVAL '6 days')
    - Si el usuario no especifica rango, asume "mes actual".
 
-8. AGREGACIONES PARA GRÁFICOS:
+9. AGREGACIONES PARA GRÁFICOS:
    - pie: `SELECT <categoría> AS label, SUM(...) AS value`.
    - bar/line: una columna categórica/temporal y una numérica, con alias claros.
    - kpi: una sola fila, una sola columna `metric`.
 
-9. FORMATO DE RESPUESTA:
+10. FORMATO DE RESPUESTA:
    - Devuelve ÚNICAMENTE el SQL ejecutable.
    - Sin markdown, sin explicaciones, sin texto adicional.
 
