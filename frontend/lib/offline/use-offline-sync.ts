@@ -12,8 +12,10 @@ import { notifyError } from "@/lib/ui/notify";
  * Hook mobile-only: se monta una vez en el layout autenticado. Mantiene el
  * estado online/offline + cantidad de movimientos pendientes para el
  * indicador de UI, y dispara la sincronización automáticamente al reconectar
- * (y una vez al montar, por si la app se abrió ya con conexión habiendo
- * quedado algo pendiente de una sesión offline anterior).
+ * y también una vez al montar — cubre el caso de que la app se haya abierto
+ * ya con conexión (ej. el servicio estuvo caído temporalmente y ya volvió,
+ * sin que haya habido ninguna transición real de red que dispare el otro
+ * camino) habiendo quedado algo pendiente de antes.
  */
 export function useOfflineSync() {
   const { token, logout } = useAuth();
@@ -32,30 +34,34 @@ export function useOfflineSync() {
 
     let cancelled = false;
 
-    checkOnline().then((status) => {
-      if (!cancelled) setOnline(status);
+    const runSync = async (currentToken: string) => {
+      setSyncing(true);
+      const result = await syncPendingQueue(currentToken);
+      if (result.authInvalid) {
+        // La misma condición de auth que habilita la UI debe habilitar el
+        // sync — si el servidor ya no reconoce el token, tratar la sesión
+        // como cerrada en vez de dejar el movimiento pendiente para
+        // siempre en silencio (antes la única salida era que el usuario
+        // cerrara sesión manualmente para notar el problema).
+        notifyError("Tu sesión expiró. Inicia sesión de nuevo para sincronizar tus movimientos pendientes.");
+        await logout();
+      } else {
+        await refreshPendingCount();
+      }
+      setSyncing(false);
+    };
+
+    checkOnline().then(async (status) => {
+      if (cancelled) return;
+      setOnline(status);
+      if (status && token) await runSync(token);
     });
     refreshPendingCount();
 
     const unsubscribe = onNetworkChange(async (isOnlineNow) => {
       if (cancelled) return;
       setOnline(isOnlineNow);
-      if (isOnlineNow && token) {
-        setSyncing(true);
-        const result = await syncPendingQueue(token);
-        if (result.authInvalid) {
-          // La misma condición de auth que habilita la UI debe habilitar el
-          // sync — si el servidor ya no reconoce el token, tratar la sesión
-          // como cerrada en vez de dejar el movimiento pendiente para
-          // siempre en silencio (antes la única salida era que el usuario
-          // cerrara sesión manualmente para notar el problema).
-          notifyError("Tu sesión expiró. Inicia sesión de nuevo para sincronizar tus movimientos pendientes.");
-          await logout();
-        } else {
-          await refreshPendingCount();
-        }
-        setSyncing(false);
-      }
+      if (isOnlineNow && token) await runSync(token);
     });
 
     return () => {

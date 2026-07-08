@@ -1,4 +1,4 @@
-import { apiFetch, type ApiCollection, type ApiResource } from "./client";
+import { apiFetch, ApiError, type ApiCollection, type ApiResource } from "./client";
 import type { Concepto } from "./conceptos";
 import type { VentanaPresupuesto } from "./presupuestos";
 import { OFFLINE_CACHE_KEYS, scopedKey, withOfflineCache } from "@/lib/offline/cached-fetch";
@@ -92,25 +92,44 @@ export function listMovimientos(token: string) {
   });
 }
 
+async function queueOffline(token: string, body: MovimientoPayload): Promise<MovimientoResponse> {
+  await enqueueMovimiento(token, body);
+  return {
+    mensaje: "Movimiento guardado sin conexión. Se sincronizará automáticamente.",
+    data: await queuedToRaw(token, {
+      localId: "temp",
+      payload: body,
+      createdAt: new Date().toISOString(),
+      userId: "",
+    }),
+  };
+}
+
 export async function createMovimiento(token: string, body: MovimientoPayload): Promise<MovimientoResponse> {
-  if (isNativeApp() && !(await isOnline())) {
-    await enqueueMovimiento(token, body);
-    return {
-      mensaje: "Movimiento guardado sin conexión. Se sincronizará automáticamente.",
-      data: await queuedToRaw(token, {
-        localId: "temp",
-        payload: body,
-        createdAt: new Date().toISOString(),
-        userId: "",
-      }),
-    };
+  if (!isNativeApp()) {
+    return apiFetch<MovimientoResponse>("/movimientos", { method: "POST", token, body });
   }
 
-  return apiFetch<MovimientoResponse>("/movimientos", {
-    method: "POST",
-    token,
-    body,
-  });
+  if (!(await isOnline())) {
+    return queueOffline(token, body);
+  }
+
+  try {
+    return await apiFetch<MovimientoResponse>("/movimientos", { method: "POST", token, body });
+  } catch (err) {
+    // El dispositivo dice "conectado" (tiene wifi/datos), pero la petición
+    // igual falló sin llegar a una respuesta real del servidor (no hay
+    // ApiError, o el servidor respondió con un 5xx — caído/sobrecargado) —
+    // desde la perspectiva del usuario es lo mismo que estar sin conexión:
+    // el movimiento se encola en vez de perderse. Un error real de la API
+    // (4xx — validación, datos inválidos) sí se propaga tal cual, porque
+    // reintentarlo más tarde sin cambios no lo va a arreglar.
+    const esFalloDeServicio = !(err instanceof ApiError) || err.status >= 500;
+    if (esFalloDeServicio) {
+      return queueOffline(token, body);
+    }
+    throw err;
+  }
 }
 
 export function updateMovimiento(token: string, id: number, body: Partial<MovimientoPayload>) {
