@@ -22,8 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FormError } from "@/components/ui/form-error";
 
-import { toast } from "sonner";
+import { notifyError, notifyWarning, notifyInfo } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
@@ -164,11 +165,11 @@ export function MovimientoEditForm({
         : `Alcanzaste el ${alerta.umbral}% del presupuesto ${ventana} de ${alerta.concepto_nombre}`;
 
       if (superado || alerta.umbral >= 90) {
-        toast.error(msg, { duration: 6000 });
+        notifyError(msg);
       } else if (alerta.umbral >= 75) {
-        toast.warning(msg, { duration: 5000 });
+        notifyWarning(msg);
       } else {
-        toast.info(msg, { duration: 4500 });
+        notifyInfo(msg);
       }
     });
   };
@@ -359,11 +360,7 @@ export function MovimientoEditForm({
             />
           </div>
 
-          {error && (
-            <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
+          {error && <FormError message={error} />}
 
           <div className="flex justify-end gap-3 pt-1">
             <Button variant="outline" type="button" onClick={onClose} disabled={isLoading}>

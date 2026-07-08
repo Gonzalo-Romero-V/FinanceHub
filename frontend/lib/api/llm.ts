@@ -6,7 +6,6 @@ export function getLlmBaseUrl() {
 
 export interface AnalyzeRequestBody {
   prompt: string;
-  user_id: number;
 }
 
 export interface AnalyzeWidget {
@@ -14,6 +13,7 @@ export interface AnalyzeWidget {
   type: "kpi" | "line" | "bar" | "pie" | "table";
   title: string;
   description?: string;
+  auto_discovery?: boolean;
   data: Array<Record<string, unknown>>;
   raw_total_records: number;
   sql?: string | null;
@@ -36,12 +36,16 @@ export interface AnalyzeResponse {
  * con la TZ del browser; el LLM la usa para interpretar "hoy", "ayer", etc.
  * sin desfases.
  */
-export async function analyzeRequest(body: AnalyzeRequestBody): Promise<AnalyzeResponse> {
+export async function analyzeRequest(
+  token: string,
+  body: AnalyzeRequestBody,
+): Promise<AnalyzeResponse> {
   const response = await fetch(`${getLlmBaseUrl()}/api/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      Authorization: `Bearer ${token}`,
       "X-Client-Timezone": getBrowserTimezone(),
     },
     body: JSON.stringify(body),

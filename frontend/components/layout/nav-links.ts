@@ -30,5 +30,9 @@ export const userNavLinks: NavLink[] = [
 
 export const userSecondaryLinks: NavLink[] = [
   { href: "/perfil", label: "Mi perfil", icon: User },
-  { href: "/help", label: "Tutorial", icon: CircleHelp },
+  // "/help" es especial: en header-user.tsx y aside-user.tsx no se
+  // renderiza como link — el ícono reinicia las coach marks de la página
+  // actual (ver useHelpIconAction). La guía rápida en sí se accede desde
+  // Perfil o desde los links "Más info" de cada coach mark.
+  { href: "/help", label: "Ayuda", icon: CircleHelp },
 ];

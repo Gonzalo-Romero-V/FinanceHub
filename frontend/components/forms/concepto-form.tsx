@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
 import {
   Select,
   SelectContent,
@@ -285,11 +286,7 @@ export function ConceptoForm({
           </div>
         )}
 
-        {error && (
-          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
+        {error && <FormError message={error} />}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" type="button" onClick={onClose} disabled={isLoading}>

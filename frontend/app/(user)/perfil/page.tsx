@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck, User } from "lucide-react";
+import Link from "next/link";
+import { Bell, CheckCircle2, KeyRound, Loader2, Mail, RotateCcw, ShieldCheck, User } from "lucide-react";
 import type { ReconciliacionTipo } from "@/lib/api/user-settings";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
+import { useOnboarding } from "@/lib/onboarding/context";
+import { notifySuccess } from "@/lib/ui/notify";
 import {
   Select,
   SelectContent,
@@ -21,15 +25,17 @@ import { PageLoading } from "@/components/custom/page-state";
 import { useAuth } from "@/lib/auth/context";
 import { updateUser, type UpdateUserPayload } from "@/lib/api/users";
 import { getUserSettings, updateUserSettings, type UserSettings } from "@/lib/api/user-settings";
+import { isPushSupported, registerForPush } from "@/lib/notifications";
 
 interface ProfileFormState {
   name: string;
   email: string;
   password: string;
   passwordConfirm: string;
+  currentPassword: string;
 }
 
-const EMPTY_PASSWORDS = { password: "", passwordConfirm: "" };
+const EMPTY_PASSWORDS = { password: "", passwordConfirm: "", currentPassword: "" };
 
 export default function PerfilPage() {
   const { user, token, loading, refreshSession } = useAuth();
@@ -50,6 +56,34 @@ export default function PerfilPage() {
   const [schedFrecuencia, setSchedFrecuencia] = useState<string>("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+  const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
+  const [isEnablingPush, setIsEnablingPush] = useState(false);
+  const [pushStatus, setPushStatus] = useState<"idle" | "registered" | "denied" | "unsupported">(
+    "idle",
+  );
+  const { resetAll } = useOnboarding();
+
+  useEffect(() => {
+    if (!isPushSupported()) setPushStatus("unsupported");
+  }, []);
+
+  const handleEnablePush = async () => {
+    if (!token) return;
+    setIsEnablingPush(true);
+    try {
+      const result = await registerForPush(token);
+      if (result.registered) {
+        setPushStatus("registered");
+        notifySuccess("Notificaciones activadas.");
+      } else if (result.reason === "permission-denied") {
+        setPushStatus("denied");
+      } else if (result.reason === "unsupported") {
+        setPushStatus("unsupported");
+      }
+    } finally {
+      setIsEnablingPush(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -93,7 +127,18 @@ export default function PerfilPage() {
     }
   };
 
+  const handleResetOnboarding = async () => {
+    setIsResettingOnboarding(true);
+    try {
+      await resetAll();
+      notifySuccess("Recorrido reiniciado. Lo vas a volver a ver a medida que navegues.");
+    } finally {
+      setIsResettingOnboarding(false);
+    }
+  };
+
   const isOAuth = Boolean(user?.provider);
+  const hasPassword = Boolean(user?.has_password);
 
   const initials = useMemo(() => {
     if (!user?.name) return "US";
@@ -112,7 +157,10 @@ export default function PerfilPage() {
     const trimmedEmail = form.email.trim();
     if (trimmedName && trimmedName !== user.name) payload.name = trimmedName;
     if (trimmedEmail && trimmedEmail !== user.email) payload.email = trimmedEmail;
-    if (form.password) payload.password = form.password;
+    if (form.password) {
+      payload.password = form.password;
+      if (user.has_password) payload.current_password = form.currentPassword;
+    }
     return payload;
   }, [form, user]);
 
@@ -145,6 +193,10 @@ export default function PerfilPage() {
       }
       if (form.password !== form.passwordConfirm) {
         setError("La confirmación de contraseña no coincide.");
+        return;
+      }
+      if (hasPassword && !form.currentPassword) {
+        setError("Ingresá tu contraseña actual para poder cambiarla.");
         return;
       }
     }
@@ -222,13 +274,26 @@ export default function PerfilPage() {
         </FormSection>
 
         <FormSection
-          title={isOAuth ? "Establecer contraseña" : "Cambiar contraseña"}
+          title={hasPassword ? "Cambiar contraseña" : "Establecer contraseña"}
           description={
-            isOAuth
-              ? "Tu cuenta entra con un proveedor externo. Si configuras una contraseña, también podrás iniciar sesión con email + contraseña."
-              : "Déjalo en blanco si no deseas cambiarla. Mínimo 6 caracteres."
+            hasPassword
+              ? "Déjalo en blanco si no deseas cambiarla. Mínimo 6 caracteres."
+              : "Tu cuenta entra con un proveedor externo. Si configuras una contraseña, también podrás iniciar sesión con email + contraseña."
           }
         >
+          {hasPassword && (
+            <Field
+              id="profile-current-password"
+              type="password"
+              label="Contraseña actual"
+              icon={KeyRound}
+              value={form.currentPassword}
+              onChange={(v) => setForm((f) => ({ ...f, currentPassword: v }))}
+              placeholder="••••••"
+              disabled={isSaving}
+              autoComplete="current-password"
+            />
+          )}
           <Field
             id="profile-password"
             type="password"
@@ -253,11 +318,7 @@ export default function PerfilPage() {
           />
         </FormSection>
 
-        {error && (
-          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
+        {error && <FormError message={error} />}
         {success && (
           <p className="small text-chart-2 bg-chart-2/10 border border-chart-2/20 rounded-lg px-3 py-2">
             {success}
@@ -396,6 +457,69 @@ export default function PerfilPage() {
             ) : (
               "Guardar preferencia"
             )}
+          </Button>
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-border bg-card p-6 flex flex-col gap-4">
+        <div>
+          <h2 className="h3 text-foreground">Notificaciones</h2>
+          <p className="small text-muted-foreground mt-1">
+            Activá los avisos push para enterarte de reconciliaciones próximas, alertas de
+            presupuesto y cuotas de deuda por vencer apenas pasan, sin tener que abrir la app.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleEnablePush}
+            disabled={isEnablingPush || pushStatus === "registered"}
+            className="gap-2"
+          >
+            {isEnablingPush ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Bell className="h-4 w-4" />
+            )}
+            {pushStatus === "registered" ? "Notificaciones activadas" : "Activar notificaciones"}
+          </Button>
+          {pushStatus === "denied" && (
+            <p className="xs text-muted-foreground">
+              El navegador bloqueó el permiso — habilitalo desde la configuración del sitio.
+            </p>
+          )}
+          {pushStatus === "unsupported" && (
+            <p className="xs text-muted-foreground">Tu navegador no soporta notificaciones push.</p>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-border bg-card p-6 flex flex-col gap-4">
+        <div>
+          <h2 className="h3 text-foreground">¿Necesitás ayuda?</h2>
+          <p className="small text-muted-foreground mt-1">
+            Consultá la guía rápida o volvé a ver las guías paso a paso de la app.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/help"
+            className="small font-semibold text-brand-1 hover:underline"
+          >
+            Ver guía rápida
+          </Link>
+          <Button
+            variant="outline"
+            onClick={handleResetOnboarding}
+            disabled={isResettingOnboarding}
+            className="gap-2 ml-auto"
+          >
+            {isResettingOnboarding ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            Reiniciar recorrido
           </Button>
         </div>
       </section>

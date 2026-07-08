@@ -1,27 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth/context"
-import { loginRequest, registerRequest } from "@/lib/auth/api"
-import { getApiBaseUrl } from "@/lib/api/client"
+import { loginRequest, registerRequest, resendVerificationRequest } from "@/lib/auth/api"
+import { ApiError, getApiBaseUrl } from "@/lib/api/client"
+import { notifySuccess } from "@/lib/ui/notify"
 
-export default function AuthPage() {
+function AuthForm() {
+  const searchParams = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [resending, setResending] = useState(false)
   const { login } = useAuth()
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "1") {
+      notifySuccess("Email confirmado. Ya podés iniciar sesión.")
+    } else if (searchParams.get("error") === "invalid_verification_link") {
+      setError("El enlace de confirmación no es válido o ya expiró. Pedí uno nuevo iniciando sesión.")
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setUnverifiedEmail(null)
     setLoading(true)
 
     try {
@@ -35,14 +50,30 @@ export default function AuthPage() {
           login(data.token, data.data)
         } else {
           setIsLogin(true)
-          setError("Registro exitoso. Por favor inicia sesión.")
+          setError("Registro exitoso. Te enviamos un email para confirmar tu cuenta — revisá tu bandeja de entrada.")
         }
       }
     } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setUnverifiedEmail(email)
+      }
       setError(err instanceof Error ? err.message : "Error de conexión. Intenta nuevamente.")
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return
+    setResending(true)
+    try {
+      await resendVerificationRequest(unverifiedEmail)
+      notifySuccess("Te reenviamos el email de confirmación.")
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setResending(false)
     }
   }
 
@@ -59,26 +90,37 @@ export default function AuthPage() {
               {isLogin ? "Iniciar sesión" : "Crear cuenta"}
             </CardTitle>
             <CardDescription>
-              {isLogin 
-                ? "Ingresa tus credenciales para acceder a tu cuenta" 
+              {isLogin
+                ? "Ingresa tus credenciales para acceder a tu cuenta"
                 : "Ingresa tus datos para registrarte en la plataforma"}
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               {error && (
-                <div className="small p-3 rounded bg-destructive/10 text-destructive">
-                  {error}
+                <div className="small p-3 rounded bg-destructive/10 text-destructive space-y-2">
+                  <p>{error}</p>
+                  {unverifiedEmail && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={resending}
+                      onClick={handleResendVerification}
+                    >
+                      {resending ? "Enviando..." : "Reenviar email de confirmación"}
+                    </Button>
+                  )}
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 {!isLogin && (
                    <div className="space-y-1">
                     <Label htmlFor="name">Nombre completo</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="Ej. Juan Pérez" 
+                    <Input
+                      id="name"
+                      placeholder="Ej. Juan Pérez"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required={!isLogin}
@@ -87,13 +129,13 @@ export default function AuthPage() {
                 )}
                 <div className="space-y-1">
                   <Label htmlFor="email">Correo electrónico</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
+                  <Input
+                    id="email"
+                    type="email"
                     placeholder="correo@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
                 <div className="space-y-1">
@@ -101,23 +143,23 @@ export default function AuthPage() {
                     <Label htmlFor="password">Contraseña</Label>
                     {isLogin && (
                       <Link
-                        href="#"
+                        href="/forgot-password"
                         className="xs font-medium text-muted-foreground hover:text-brand-1 hover:underline"
                       >
                         ¿Olvidaste tu contraseña?
                       </Link>
                     )}
                   </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
+                  <Input
+                    id="password"
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              
+
               <Button type="submit" disabled={loading} className="w-full font-bold bg-brand-1 hover:bg-brand-1/90 text-white" size="lg">
                 {loading ? "Cargando..." : (isLogin ? "Acceder" : "Registrarse")}
               </Button>
@@ -157,5 +199,13 @@ export default function AuthPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthForm />
+    </Suspense>
   )
 }

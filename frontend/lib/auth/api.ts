@@ -27,3 +27,29 @@ export async function logoutRequest(token: string) {
   });
   return true;
 }
+
+export function forgotPasswordRequest(email: string) {
+  return apiFetch<{ mensaje: string }>("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export function resetPasswordRequest(payload: {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}) {
+  return apiFetch<{ mensaje: string }>("/auth/reset-password", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export function resendVerificationRequest(email: string) {
+  return apiFetch<{ mensaje: string }>("/auth/resend-verification", {
+    method: "POST",
+    body: { email },
+  });
+}

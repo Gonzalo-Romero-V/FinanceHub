@@ -9,9 +9,12 @@ import { HeaderShell } from "@/components/layout/header-shell";
 import { AsideUser } from "@/components/layout/aside-user";
 import { userNavLinks } from "@/components/layout/nav-links";
 import { useAuth } from "@/lib/auth/context";
+import { useHelpIconAction } from "@/lib/onboarding/use-help-icon-action";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 export function HeaderUser() {
   const { user, logout } = useAuth();
+  const handleHelp = useHelpIconAction();
 
   const userInitials = useMemo(() => {
     if (!user?.name) return "US";
@@ -50,10 +53,16 @@ export function HeaderUser() {
             Cerrar sesión
           </Button>
 
-          <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-brand-1" asChild>
-            <Link href="/help" aria-label="Tutorial">
-              <CircleHelp size={20} />
-            </Link>
+          <NotificationBell />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full text-muted-foreground hover:text-brand-1"
+            onClick={handleHelp}
+            aria-label="Ayuda"
+          >
+            <CircleHelp size={20} />
           </Button>
         </>
       }

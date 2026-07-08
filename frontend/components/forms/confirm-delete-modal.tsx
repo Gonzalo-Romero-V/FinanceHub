@@ -3,6 +3,7 @@
 import { Loader2, Trash2 } from "lucide-react"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
+import { FormError } from "@/components/ui/form-error"
 
 interface ConfirmDeleteModalProps {
   open: boolean
@@ -38,11 +39,7 @@ export function ConfirmDeleteModal({
             Esta acción no se puede deshacer.
           </p>
         </div>
-        {errorMessage && (
-          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            {errorMessage}
-          </p>
-        )}
+        {errorMessage && <FormError message={errorMessage} />}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button

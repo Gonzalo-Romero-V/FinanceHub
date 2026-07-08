@@ -16,6 +16,8 @@ export interface Widget {
   type: WidgetType;
   title: string;
   description?: string;
+  /** Indica que el resultado proviene de una búsqueda aproximada de reintento. */
+  auto_discovery?: boolean;
   data: Array<Record<string, unknown>>;
   /** Ejes / claves para bar y line. */
   xKey?: string;

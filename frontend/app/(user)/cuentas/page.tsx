@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
   TrendingUp,
@@ -40,10 +41,12 @@ import { ReconciliacionModal } from "@/components/forms/reconciliacion-modal";
 import { DeudaForm } from "@/components/forms/deuda-form";
 import { DeudaDetailModal } from "@/components/forms/deuda-detail-modal";
 import { PagoCuotaModal } from "@/components/forms/pago-cuota-modal";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 
 import { useAuth } from "@/lib/auth/context";
+import { useOnboarding } from "@/lib/onboarding/context";
 import { listCuentas, deleteCuenta, type Cuenta as CuentaApi } from "@/lib/api/cuentas";
-import { getUserSettings, type UserSettings } from "@/lib/api/user-settings";
+import { getBalance, type Balance } from "@/lib/api/balance";
 import {
   listDeudas,
   deleteDeuda as apiDeleteDeuda,
@@ -53,6 +56,7 @@ import {
 } from "@/lib/api/deudas";
 import { formatCurrency, formatDate, formatNumber, todayIsoDate } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
+import { notifyError } from "@/lib/ui/notify";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -358,15 +362,24 @@ function DeudasTable({
 
 export default function CuentasPage() {
   const { token } = useAuth();
+  const { isSeen } = useOnboarding();
 
   // ── Cuentas ──
   const [cuentas, setCuentas] = useState<CuentaRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [balance, setBalance] = useState<Balance | null>(null);
   const [historialRefresh, setHistorialRefresh] = useState(0);
 
+  const searchParams = useSearchParams();
   const [showCreate, setShowCreate] = useState(false);
+
+  // Soporta ?crear=1 (ej. desde el CTA final del carrusel de bienvenida) para
+  // abrir el formulario de alta directamente al llegar a la página.
+  useEffect(() => {
+    if (searchParams.get("crear") === "1") setShowCreate(true);
+  }, [searchParams]);
+
   const [editItem, setEditItem] = useState<CuentaRow | null>(null);
   const [deleteItem, setDeleteItem] = useState<CuentaRow | null>(null);
   const [reconciliarItem, setReconciliarItem] = useState<{
@@ -395,17 +408,26 @@ export default function CuentasPage() {
     if (!token) { setIsLoading(false); setError("Usuario no autenticado."); return; }
     setIsLoading(true);
     try {
-      const [cuentasRes, settingsRes] = await Promise.all([
+      const [cuentasRes, balanceRes] = await Promise.all([
         listCuentas(token),
-        getUserSettings(token).catch(() => null),
+        getBalance(token),
       ]);
       setCuentas((Array.isArray(cuentasRes.data) ? cuentasRes.data : []).map(toCuentaRow));
-      setSettings(settingsRes?.data ?? null);
+      setBalance(balanceRes);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
     } finally {
       setIsLoading(false);
+    }
+  }, [token]);
+
+  const fetchBalance = useCallback(async () => {
+    if (!token) return;
+    try {
+      setBalance(await getBalance(token));
+    } catch (err) {
+      console.error("Error al actualizar el balance:", err);
     }
   }, [token]);
 
@@ -437,6 +459,7 @@ export default function CuentasPage() {
       fetchCuentas();
     } catch (err) {
       console.error("Error al eliminar:", err);
+      notifyError(err instanceof Error ? err.message : "No se pudo eliminar la cuenta.");
     } finally {
       setIsDeleting(false);
     }
@@ -455,9 +478,11 @@ export default function CuentasPage() {
       await apiDeleteDeuda(token, deleteDeuda.id);
       setDeleteDeuda(null);
       if (detailDeuda?.id === deleteDeuda.id) setDetailDeuda(null);
-      fetchDeudas();
+      void fetchDeudas();
+      void fetchBalance();
     } catch (err) {
       console.error("Error al eliminar deuda:", err);
+      notifyError(err instanceof Error ? err.message : "No se pudo eliminar la deuda.");
     } finally {
       setIsDeletingDeuda(false);
     }
@@ -467,18 +492,15 @@ export default function CuentasPage() {
     setPagoDeuda({ cuota, deudaId: deuda.id, deudaNombre: deuda.nombre });
   };
 
+  const handleDeudaSuccess = () => {
+    void fetchDeudas();
+    void fetchBalance();
+  };
+
   // ── Balance ──
-  const alertaVencida =
-    settings?.reconciliacion_proxima &&
-    new Date(settings.reconciliacion_proxima) <= new Date();
-
-  const totalActivos = cuentas
-    .filter((c) => c.tipo_cuenta === "Activo")
-    .reduce((acc, c) => acc + c.saldo, 0);
-
-  const totalPasivos = deudas
-    .filter((d) => d.estado === "activa")
-    .reduce((acc, d) => acc + d.saldo_pendiente, 0);
+  const alertaVencida = balance?.alerta_reconciliacion ?? false;
+  const totalActivos = balance?.total_activos ?? 0;
+  const totalPasivos = balance?.total_pasivos ?? 0;
 
   // ── Config tabla activos ──
   const columns: (keyof CuentaRow)[] = ["nombre", "tipo_cuenta", "saldo", "activa", "fecha_creacion"];
@@ -530,19 +552,36 @@ export default function CuentasPage() {
           <p className="text-sm text-chart-4">
             Tenés una reconciliación pendiente desde el{" "}
             <span className="font-semibold">
-              {new Date(settings!.reconciliacion_proxima!).toLocaleDateString("es")}
+              {balance?.proxima_reconciliacion
+                ? new Date(balance.proxima_reconciliacion).toLocaleDateString("es")
+                : "fecha no disponible"}
             </span>
             . Usá el ícono <span className="font-semibold">⚖</span> en cada cuenta para conciliarla.
           </p>
         </div>
       )}
 
-      <BalanceGeneral totalActivos={totalActivos} totalPasivos={totalPasivos} />
+      <CoachMark
+        id="balance_general"
+        text="Cada movimiento que registrás actualiza este número al instante: tu Balance General es Activos menos Pasivos."
+        guideHref="/help"
+        enabled={isSeen("tipos_movimiento") && isSeen("conceptos")}
+      >
+        <div>
+          <BalanceGeneral totalActivos={totalActivos} totalPasivos={totalPasivos} />
+        </div>
+      </CoachMark>
 
       <HistorialBalance cuentas={cuentasParaHistorial} onRefresh={historialRefresh} />
 
       <div className="space-y-10 mt-10">
         {/* Activos */}
+        <CoachMark
+          id="cuentas_activos"
+          text="Acá van tus cuentas con dinero disponible: banco, efectivo, ahorros. Sumá al menos una para empezar."
+          guideHref="/help"
+        >
+        <div>
         <DataTable<CuentaRow>
           title="Activos"
           titleIcon={<TrendingUp className="w-5 h-5 text-chart-2" />}
@@ -575,9 +614,17 @@ export default function CuentasPage() {
             </TableRow>
           }
         />
+        </div>
+        </CoachMark>
 
         {/* Pasivos / Deudas */}
         <div className="w-full">
+          <CoachMark
+            id="pasivos"
+            text="Tus deudas van acá: tarjetas, préstamos. Armamos la tabla de cuotas sola y la restamos de tu Balance General."
+            guideHref="/help"
+            enabled={isSeen("balance_general")}
+          >
           <div className="flex items-center justify-between p-2 md:px-4 bg-transparent mb-2">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-foreground">Pasivos</h2>
@@ -591,6 +638,7 @@ export default function CuentasPage() {
               Nueva deuda
             </Button>
           </div>
+          </CoachMark>
 
           {isLoadingDeudas ? (
             <div className="flex justify-center py-10">
@@ -634,12 +682,12 @@ export default function CuentasPage() {
       <DeudaForm
         open={showCreateDeuda}
         onClose={() => setShowCreateDeuda(false)}
-        onSuccess={fetchDeudas}
+        onSuccess={handleDeudaSuccess}
       />
       <DeudaForm
         open={!!editDeuda}
         onClose={() => setEditDeuda(null)}
-        onSuccess={fetchDeudas}
+        onSuccess={handleDeudaSuccess}
         editItem={editDeuda}
       />
       {detailDeuda && (
@@ -652,7 +700,7 @@ export default function CuentasPage() {
       <PagoCuotaModal
         open={!!pagoDeuda}
         onClose={() => setPagoDeuda(null)}
-        onSuccess={() => { fetchDeudas(); setPagoDeuda(null); }}
+        onSuccess={() => { handleDeudaSuccess(); setPagoDeuda(null); }}
         cuota={pagoDeuda?.cuota ?? null}
         deudaId={pagoDeuda?.deudaId ?? null}
         deudaNombre={pagoDeuda?.deudaNombre ?? null}

@@ -47,6 +47,7 @@ export function BarChartWidget({
     <WidgetCard
       title={widget.title}
       description={widget.description}
+      subtitle={widget.auto_discovery ? "Resultado aproximado" : undefined}
       accentColor={fillColor}
       onRemove={() => onRemove(widget.id)}
       bodyClassName="h-72 w-full"

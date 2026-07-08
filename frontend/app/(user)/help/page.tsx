@@ -19,7 +19,7 @@ export default function HelpPage() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-1 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-1" />
           </span>
-          Guía de Usuario
+          Guía rápida
         </div>
 
         <Logo />

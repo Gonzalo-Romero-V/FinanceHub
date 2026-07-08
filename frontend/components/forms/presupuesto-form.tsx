@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronRight, ChevronLeft, Loader2, PiggyBank, X } from "lucide-react";
-import { toast } from "sonner";
 
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
 import { cn } from "@/lib/utils";
+import { notifySuccess } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, conceptoColor, childConceptoColor, type Concepto } from "@/lib/api/conceptos";
@@ -138,7 +139,7 @@ export function PresupuestoForm({ open, onClose, onSuccess, editItem }: Presupue
       if (!token) throw new Error("Usuario no autenticado.");
       if (isEdit) {
         await updatePresupuesto(token, editItem!.id, { monto: montoNum, ventana, umbrales, activo });
-        toast.success("Presupuesto actualizado.");
+        notifySuccess("Presupuesto actualizado.");
       } else {
         await createPresupuesto(token, {
           concepto_id: conceptoId!,
@@ -147,7 +148,7 @@ export function PresupuestoForm({ open, onClose, onSuccess, editItem }: Presupue
           umbrales,
           activo,
         });
-        toast.success("Presupuesto creado.");
+        notifySuccess("Presupuesto creado.");
       }
       onSuccess();
       onClose();
@@ -489,11 +490,7 @@ export function PresupuestoForm({ open, onClose, onSuccess, editItem }: Presupue
           </div>
         )}
 
-        {error && (
-          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
+        {error && <FormError message={error} />}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" onClick={onClose} disabled={isSaving}>

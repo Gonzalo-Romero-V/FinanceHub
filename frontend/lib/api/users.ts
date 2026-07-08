@@ -5,6 +5,7 @@ export interface UpdateUserPayload {
   name?: string;
   email?: string;
   password?: string;
+  current_password?: string;
 }
 
 export function getUser(token: string, id: number) {

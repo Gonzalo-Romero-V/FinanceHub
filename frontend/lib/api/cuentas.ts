@@ -1,4 +1,5 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
+import { OFFLINE_CACHE_KEYS, withOfflineCache } from "@/lib/offline/cached-fetch";
 
 export interface Cuenta {
   id: number;
@@ -25,11 +26,15 @@ export interface CuentaPayload {
 }
 
 export function listCuentas(token: string) {
-  return apiFetch<ApiCollection<Cuenta>>("/cuentas", { token });
+  return withOfflineCache(OFFLINE_CACHE_KEYS.cuentas, () =>
+    apiFetch<ApiCollection<Cuenta>>("/cuentas", { token }),
+  );
 }
 
 export function listTiposCuenta(token: string) {
-  return apiFetch<ApiCollection<TipoCuenta>>("/tipos-cuenta", { token });
+  return withOfflineCache(OFFLINE_CACHE_KEYS.tiposCuenta, () =>
+    apiFetch<ApiCollection<TipoCuenta>>("/tipos-cuenta", { token }),
+  );
 }
 
 export function createCuenta(token: string, body: CuentaPayload) {

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Loader2, Scale } from "lucide-react";
-import { toast } from "sonner";
 
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
+import { notifySuccess } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import { createReconciliacion } from "@/lib/api/reconciliaciones";
@@ -58,7 +59,7 @@ export function ReconciliacionModal({
         crear_ajuste: true,
         nota: nota.trim() || undefined,
       });
-      toast.success(
+      notifySuccess(
         hayDiferencia
           ? "Conciliación guardada. Se creó un movimiento de ajuste automático."
           : "Conciliación guardada. El saldo coincide perfectamente."
@@ -158,7 +159,7 @@ export function ReconciliacionModal({
           />
         </div>
 
-        {error && <p className="xs text-destructive">{error}</p>}
+        {error && <FormError message={error} />}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" onClick={handleClose} disabled={isSaving}>

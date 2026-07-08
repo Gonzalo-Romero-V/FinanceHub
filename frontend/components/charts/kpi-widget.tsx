@@ -21,6 +21,7 @@ export function KPIWidget({ widget, onRemove, color = "var(--brand-1)" }: KPIWid
     <WidgetCard
       title={widget.title}
       description={widget.description}
+      subtitle={widget.auto_discovery ? "Resultado aproximado" : undefined}
       accentColor={color}
       onRemove={() => onRemove(widget.id)}
       bodyClassName="flex flex-col justify-center"

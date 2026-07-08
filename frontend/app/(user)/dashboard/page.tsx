@@ -13,10 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { VoiceRecorderButton } from "@/components/voice/voice-recorder-button";
+import { VoiceMovimientoCapture, estadoVozToFormState } from "@/components/voice/voice-movimiento-capture";
+import { MovimientoForm, type MovimientoFormState } from "@/components/forms/movimiento-form";
+import { FormError } from "@/components/ui/form-error";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 
 import { useAuth } from "@/lib/auth/context";
 import { analyzeRequest } from "@/lib/api/llm";
 import { listConceptos, conceptoColor, type Concepto } from "@/lib/api/conceptos";
+import { transcribeAudio } from "@/lib/api/voice";
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
@@ -27,6 +33,11 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [conceptos, setConceptos] = useState<Concepto[]>([]);
 
+  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
+  const [showVoiceCapture, setShowVoiceCapture] = useState(false);
+  const [voiceInitialTexto, setVoiceInitialTexto] = useState<string | undefined>(undefined);
+  const [voiceResolvedState, setVoiceResolvedState] = useState<Partial<MovimientoFormState> | null>(null);
+
   useEffect(() => {
     if (!token) return;
     listConceptos(token)
@@ -34,13 +45,16 @@ export default function DashboardPage() {
       .catch(() => {});
   }, [token]);
 
-  // Mapa nombre → color efectivo para los widgets del LLM
+  // Índices por ID (contrato actual) y nombre (compatibilidad con respuestas viejas).
   const conceptoColors = useMemo(() => {
-    const map: Record<string, string> = {};
+    const byId: Record<string, string> = {};
+    const byName: Record<string, string> = {};
     for (const c of conceptos) {
-      map[c.nombre] = conceptoColor(c);
+      const color = conceptoColor(c);
+      byId[String(c.id)] = color;
+      byName[c.nombre] = color;
     }
-    return map;
+    return { byId, byName };
   }, [conceptos]);
 
   const handleRemoveWidget = (id: string) => {
@@ -51,15 +65,15 @@ export default function DashboardPage() {
     });
   };
 
-  const handleGenerate = async () => {
-    if (!prompt.trim() || !user?.id) return;
+  const handleGenerate = async (overrideText?: string) => {
+    const textoConsulta = overrideText ?? prompt;
+    if (!textoConsulta.trim() || !token) return;
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = (await analyzeRequest({
-        prompt,
-        user_id: user.id,
+      const res = (await analyzeRequest(token, {
+        prompt: textoConsulta,
       })) as AnalysisResponse;
       const applyMode = modeConfig === "auto" ? res.mode : modeConfig;
 
@@ -94,6 +108,25 @@ export default function DashboardPage() {
     }
   };
 
+  const handleVoiceRecording = async (blob: Blob) => {
+    if (!token) return;
+    setIsVoiceProcessing(true);
+    setError(null);
+    try {
+      const { text, intent } = await transcribeAudio(token, blob, { classify: true });
+      if (intent === "registrar_movimiento") {
+        setVoiceInitialTexto(text);
+        setShowVoiceCapture(true);
+      } else {
+        await handleGenerate(text);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo procesar el audio.");
+    } finally {
+      setIsVoiceProcessing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] bg-background p-4 gap-6">
       <aside className="w-full lg:w-80 xl:w-96 flex flex-col gap-5 bg-card border border-border rounded-[2rem] p-6 shadow-sm h-fit lg:sticky lg:top-6 shrink-0">
@@ -125,10 +158,23 @@ export default function DashboardPage() {
           </Select>
         </div>
 
+        <CoachMark
+          id="llm_dashboard"
+          text="Escribí o hablá: preguntá sobre tus finanzas o registrá un movimiento por voz."
+          guideHref="/help"
+        >
         <div className="relative group">
-          <Label className="xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-            Prompt
-          </Label>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="xs font-bold text-muted-foreground uppercase tracking-widest">
+              Prompt
+            </Label>
+            <VoiceRecorderButton
+              onRecordingComplete={handleVoiceRecording}
+              isProcessing={isVoiceProcessing}
+              disabled={!token || isLoading}
+              className="h-7 w-7"
+            />
+          </div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -143,16 +189,13 @@ export default function DashboardPage() {
             className="small w-full bg-muted/50 dark:bg-zinc-900 text-foreground rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-brand-1/50 border border-border resize-none h-32 transition-all disabled:opacity-50"
           />
         </div>
+        </CoachMark>
 
-        {error && (
-          <div className="small text-destructive p-3 bg-destructive/10 border border-destructive/20 rounded-xl font-medium">
-            {error}
-          </div>
-        )}
+        {error && <FormError message={error} />}
 
         <Button
-          onClick={handleGenerate}
-          disabled={isLoading || !prompt.trim()}
+          onClick={() => handleGenerate()}
+          disabled={isLoading || !prompt.trim() || !token}
           className="w-full h-12 bg-brand-1 hover:bg-brand-1/90 text-white rounded-xl font-bold shadow-lg shadow-brand-1/20 transition-all active:scale-95"
         >
           {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
@@ -197,6 +240,24 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      <VoiceMovimientoCapture
+        open={showVoiceCapture}
+        onClose={() => setShowVoiceCapture(false)}
+        initialTexto={voiceInitialTexto}
+        onCompleto={(estado) => {
+          setShowVoiceCapture(false);
+          setVoiceResolvedState(estadoVozToFormState(estado));
+        }}
+      />
+
+      <MovimientoForm
+        open={!!voiceResolvedState}
+        onClose={() => setVoiceResolvedState(null)}
+        onSuccess={() => setVoiceResolvedState(null)}
+        initialState={voiceResolvedState ?? undefined}
+        initialStep={5}
+      />
     </div>
   );
 }

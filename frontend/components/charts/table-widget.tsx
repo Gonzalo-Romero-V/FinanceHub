@@ -43,6 +43,7 @@ export function TableWidget({ widget, onRemove }: TableWidgetProps) {
     <WidgetCard
       title={widget.title}
       description={widget.description}
+      subtitle={widget.auto_discovery ? "Resultado aproximado" : undefined}
       onRemove={() => onRemove(widget.id)}
       className="sm:col-span-2 xl:col-span-3"
     >

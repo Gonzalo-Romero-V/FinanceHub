@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Loader2, TrendingDown } from "lucide-react";
-import { toast } from "sonner";
 
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
+
+import { notifySuccess } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import {
@@ -179,7 +181,7 @@ export function DeudaForm({ open, onClose, onSuccess, editItem }: DeudaFormProps
           notas: notas.trim() || null,
           estado,
         });
-        toast.success("Deuda actualizada.");
+        notifySuccess("Deuda actualizada.");
       } else {
         // Validaciones de creación
         const montoNum = parseFloat(monto);
@@ -225,7 +227,7 @@ export function DeudaForm({ open, onClose, onSuccess, editItem }: DeudaFormProps
         }
 
         await createDeuda(token, payload);
-        toast.success("Deuda registrada. La tabla de cuotas está lista.");
+        notifySuccess("Deuda registrada. La tabla de cuotas está lista.");
       }
 
       onSuccess();
@@ -584,11 +586,7 @@ export function DeudaForm({ open, onClose, onSuccess, editItem }: DeudaFormProps
           </>
         )}
 
-        {error && (
-          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
+        {error && <FormError message={error} />}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" onClick={onClose} disabled={isSaving}>

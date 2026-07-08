@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { AsideShell } from "@/components/layout/aside-shell";
 import { userNavLinks, userSecondaryLinks } from "@/components/layout/nav-links";
 import { useAuth } from "@/lib/auth/context";
+import { useHelpIconAction } from "@/lib/onboarding/use-help-icon-action";
 
 export function AsideUser() {
   const { user, logout } = useAuth();
+  const handleHelp = useHelpIconAction();
 
   return (
     <AsideShell
@@ -25,6 +27,19 @@ export function AsideUser() {
         <>
           {userSecondaryLinks.map((item) => {
             const Icon = item.icon;
+            if (item.href === "/help") {
+              return (
+                <Button
+                  key={item.href}
+                  variant="ghost"
+                  className="h-10 justify-start gap-2 px-3 text-muted-foreground hover:text-brand-1"
+                  onClick={handleHelp}
+                >
+                  <Icon size={16} />
+                  <span>{item.label}</span>
+                </Button>
+              );
+            }
             return (
               <Button
                 key={item.href}

@@ -13,8 +13,28 @@ import { KPIWidget } from "./kpi-widget";
 interface WidgetRendererProps {
   widget: Widget;
   onRemove: (id: string) => void;
-  /** Mapa de nombre de concepto → color hex. Usado en pie charts para colorear por categoría. */
-  conceptoColors?: Record<string, string>;
+  /** Colores efectivos indexados por ID y, para respuestas antiguas, por nombre. */
+  conceptoColors?: {
+    byId: Record<string, string>;
+    byName: Record<string, string>;
+  };
+}
+
+export function getConceptoColor(
+  item: Record<string, unknown>,
+  categoryKey: string,
+  colors: NonNullable<WidgetRendererProps["conceptoColors"]>,
+): string | undefined {
+  const conceptoId = item.concepto_id;
+  if (conceptoId !== undefined && conceptoId !== null && conceptoId !== "") {
+    const colorById = colors.byId[String(conceptoId)];
+    if (colorById) return colorById;
+  }
+
+  const label = item[categoryKey];
+  return label === undefined || label === null
+    ? undefined
+    : colors.byName[String(label)];
 }
 
 export function normalizeWidget(w: Widget): Widget {
@@ -155,11 +175,17 @@ export function WidgetRenderer({ widget, onRemove, conceptoColors }: WidgetRende
       case "line":
         return <LineChartWidget widget={normalized} onRemove={onRemove} strokeColor={semanticColor} />;
       case "pie": {
-        // Derivar colores por label de concepto cuando el mapa está disponible
+        // El ID es estable ante conceptos homónimos o renombrados. El nombre
+        // mantiene compatibilidad con widgets que no incluyen concepto_id.
         const pieColors = conceptoColors
           ? normalized.data.map((item, idx) => {
-              const label = String(item[normalized.categoryKey ?? "label"] ?? "");
-              return conceptoColors[label] ?? DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
+              return (
+                getConceptoColor(
+                  item,
+                  normalized.categoryKey ?? "label",
+                  conceptoColors,
+                ) ?? DEFAULT_COLORS[idx % DEFAULT_COLORS.length]
+              );
             })
           : DEFAULT_COLORS;
         return <PieChartWidget widget={normalized} onRemove={onRemove} colors={pieColors} />;

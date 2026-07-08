@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowDownLeft,
@@ -15,9 +15,11 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 import { cn } from "@/lib/utils";
 
-import { toast } from "sonner";
+import { notifyError, notifyWarning, notifyInfo } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, conceptoColor, childConceptoColor, type Concepto } from "@/lib/api/conceptos";
@@ -28,7 +30,7 @@ import { formatCurrency } from "@/lib/utils/format";
 
 type TipoMovimiento = "Ingreso" | "Egreso" | "Transferencia";
 
-interface MovimientoFormState {
+export interface MovimientoFormState {
   tipo: TipoMovimiento | null;
   concepto_id: number | null;
   concepto_nombre: string;
@@ -56,6 +58,10 @@ interface MovimientoFormProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  /** Precarga el form (ej. datos ya resueltos por el flujo de registro por voz). */
+  initialState?: Partial<MovimientoFormState>;
+  /** Step inicial al abrir (ej. 5 para ir directo al resumen/confirmación). */
+  initialStep?: number;
 }
 
 function StepBar({ current, total }: { current: number; total: number }) {
@@ -131,11 +137,17 @@ function TipoButton({
   );
 }
 
-export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps) {
+export function MovimientoForm({
+  open,
+  onClose,
+  onSuccess,
+  initialState,
+  initialStep,
+}: MovimientoFormProps) {
   const { token } = useAuth();
 
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState<MovimientoFormState>(EMPTY_STATE);
+  const [step, setStep] = useState(initialStep ?? 1);
+  const [form, setForm] = useState<MovimientoFormState>({ ...EMPTY_STATE, ...initialState });
   const [conceptos, setConceptos] = useState<Concepto[]>([]);
   const [cuentas, setCuentas] = useState<Cuenta[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -144,14 +156,19 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
   const [expandedParentId, setExpandedParentId] = useState<number | null>(null);
 
   const reset = useCallback(() => {
-    setStep(1);
-    setForm(EMPTY_STATE);
+    setStep(initialStep ?? 1);
+    setForm({ ...EMPTY_STATE, ...initialState });
     setError(null);
     setExpandedParentId(null);
-  }, []);
+  }, [initialState, initialStep]);
 
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (open) reset();
+    // Reseteo solo al transicionar cerrado→abierto, no en cada re-render
+    // mientras ya está abierto (evita perder progreso si `initialState`
+    // llega como un objeto nuevo en cada render del padre).
+    if (open && !wasOpenRef.current) reset();
+    wasOpenRef.current = open;
   }, [open, reset]);
 
   useEffect(() => {
@@ -218,11 +235,11 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
         : `Alcanzaste el ${alerta.umbral}% del presupuesto ${ventana} de ${alerta.concepto_nombre}`;
 
       if (superado || alerta.umbral >= 90) {
-        toast.error(msg, { duration: 6000 });
+        notifyError(msg);
       } else if (alerta.umbral >= 75) {
-        toast.warning(msg, { duration: 5000 });
+        notifyWarning(msg);
       } else {
-        toast.info(msg, { duration: 4500 });
+        notifyInfo(msg);
       }
     });
   };
@@ -264,35 +281,41 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
       <p className="small text-muted-foreground mb-2">
         ¿Qué tipo de movimiento quieres registrar?
       </p>
-      <div className="grid grid-cols-3 gap-3">
-        <TipoButton
-          label="Ingreso"
-          description="Dinero que entra"
-          icon={ArrowDownLeft}
-          colorClass="text-chart-2"
-          bgClass="bg-chart-2/10"
-          selected={form.tipo === "Ingreso"}
-          onClick={() => handleSelectTipo("Ingreso")}
-        />
-        <TipoButton
-          label="Egreso"
-          description="Dinero que sale"
-          icon={ArrowUpRight}
-          colorClass="text-destructive"
-          bgClass="bg-destructive/10"
-          selected={form.tipo === "Egreso"}
-          onClick={() => handleSelectTipo("Egreso")}
-        />
-        <TipoButton
-          label="Transferencia"
-          description="Entre cuentas"
-          icon={ArrowRightLeft}
-          colorClass="text-brand-1"
-          bgClass="bg-brand-1/10"
-          selected={form.tipo === "Transferencia"}
-          onClick={() => handleSelectTipo("Transferencia")}
-        />
-      </div>
+      <CoachMark
+        id="tipos_movimiento"
+        text="Ingreso = entra dinero. Egreso = sale. Transferencia = entre tus propias cuentas."
+        guideHref="/help"
+      >
+        <div className="grid grid-cols-3 gap-3">
+          <TipoButton
+            label="Ingreso"
+            description="Dinero que entra"
+            icon={ArrowDownLeft}
+            colorClass="text-chart-2"
+            bgClass="bg-chart-2/10"
+            selected={form.tipo === "Ingreso"}
+            onClick={() => handleSelectTipo("Ingreso")}
+          />
+          <TipoButton
+            label="Egreso"
+            description="Dinero que sale"
+            icon={ArrowUpRight}
+            colorClass="text-destructive"
+            bgClass="bg-destructive/10"
+            selected={form.tipo === "Egreso"}
+            onClick={() => handleSelectTipo("Egreso")}
+          />
+          <TipoButton
+            label="Transferencia"
+            description="Entre cuentas"
+            icon={ArrowRightLeft}
+            colorClass="text-brand-1"
+            bgClass="bg-brand-1/10"
+            selected={form.tipo === "Transferencia"}
+            onClick={() => handleSelectTipo("Transferencia")}
+          />
+        </div>
+      </CoachMark>
     </div>
   );
 
@@ -381,6 +404,11 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
           Selecciona la categoría para este{" "}
           <span className="font-semibold text-foreground">{form.tipo}</span>:
         </p>
+        <CoachMark
+          id="conceptos"
+          text="Los conceptos categorizan tus movimientos. Podés crear subcategorías para más detalle (ej. Alimentación → Restaurantes)."
+          guideHref="/help"
+        >
         <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
           {raicesFiltradas.map((raiz) => {
             const hijos = getHijos(raiz.id);
@@ -414,6 +442,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
             );
           })}
         </div>
+        </CoachMark>
       </div>
     );
   };
@@ -616,11 +645,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
         {form.nota && <SummaryRow label="Nota" value={form.nota} />}
       </div>
 
-      {error && (
-        <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
+      {error && <FormError message={error} />}
 
       <div className="flex gap-3">
         <Button
@@ -691,11 +716,7 @@ export function MovimientoForm({ open, onClose, onSuccess }: MovimientoFormProps
           {step === 5 && renderStep5()}
         </div>
 
-        {error && step !== 5 && (
-          <p className="small text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2 mt-3">
-            {error}
-          </p>
-        )}
+        {error && step !== 5 && <FormError message={error} className="mt-3" />}
       </div>
     </Modal>
   );

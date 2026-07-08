@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PiggyBank, Plus, Pencil, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { notifySuccess, notifyError } from "@/lib/ui/notify";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/custom/page-shell";
@@ -175,11 +176,11 @@ export default function PresupuestosPage() {
     setIsDeleting(true);
     try {
       await deletePresupuesto(token, deleteItem.id);
-      toast.success("Presupuesto eliminado.");
+      notifySuccess("Presupuesto eliminado.");
       setDeleteItem(null);
       fetchPresupuestos();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al eliminar.");
+      notifyError(err instanceof Error ? err.message : "Error al eliminar.");
     } finally {
       setIsDeleting(false);
     }
@@ -197,13 +198,21 @@ export default function PresupuestosPage() {
         title="Presupuestos"
         description="Definí límites o metas por categoría y recibí alertas cuando te acercás al umbral."
         action={
-          <Button
-            className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
-            onClick={() => setShowCreate(true)}
+          <CoachMark
+            id="presupuestos"
+            text="Definí un límite de gasto por categoría y te avisamos si te acercás."
+            guideHref="/help"
           >
-            <Plus className="h-4 w-4" />
-            Nuevo presupuesto
-          </Button>
+            <div>
+              <Button
+                className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
+                onClick={() => setShowCreate(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Nuevo presupuesto
+              </Button>
+            </div>
+          </CoachMark>
         }
       />
 

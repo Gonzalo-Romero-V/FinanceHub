@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, CreditCard, CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form-error";
+import { notifySuccess } from "@/lib/ui/notify";
 import {
   Select,
   SelectContent,
@@ -72,7 +73,7 @@ export function PagoCuotaModal({
       const msg = cuentaSeleccionada
         ? "Cuota pagada y movimiento registrado."
         : "Cuota marcada como pagada.";
-      toast.success(msg);
+      notifySuccess(msg);
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar el pago.");
@@ -169,11 +170,7 @@ export function PagoCuotaModal({
           )}
         </div>
 
-        {error && (
-          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
+        {error && <FormError message={error} />}
 
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" onClick={onClose} disabled={isSaving}>

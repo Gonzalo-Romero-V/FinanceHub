@@ -1,4 +1,5 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
+import { OFFLINE_CACHE_KEYS, withOfflineCache } from "@/lib/offline/cached-fetch";
 
 export interface TipoMovimiento {
   id: number;
@@ -44,11 +45,15 @@ export interface ConceptoListResponse {
 }
 
 export function listConceptos(token: string) {
-  return apiFetch<ConceptoListResponse>("/conceptos", { token });
+  return withOfflineCache(OFFLINE_CACHE_KEYS.conceptos, () =>
+    apiFetch<ConceptoListResponse>("/conceptos", { token }),
+  );
 }
 
 export function listTiposMovimiento(token: string) {
-  return apiFetch<ApiCollection<TipoMovimiento>>("/tipos-movimiento", { token });
+  return withOfflineCache(OFFLINE_CACHE_KEYS.tiposMovimiento, () =>
+    apiFetch<ApiCollection<TipoMovimiento>>("/tipos-movimiento", { token }),
+  );
 }
 
 export function createConcepto(token: string, body: ConceptoPayload) {

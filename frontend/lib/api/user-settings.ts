@@ -10,6 +10,7 @@ export interface UserSettings {
   reconciliacion_dia_mes: number | null;    // 1–28, 0 = último día del mes
   reconciliacion_frecuencia_dias: number | null;
   reconciliacion_proxima: string | null;
+  onboarding_seen: Record<string, boolean>;
 }
 
 export interface UserSettingsPayload {
@@ -28,5 +29,22 @@ export function updateUserSettings(token: string, body: UserSettingsPayload) {
     method: "PATCH",
     token,
     body,
+  });
+}
+
+export function markOnboardingSeen(token: string, keys: string[]) {
+  return apiFetch<ApiResource<UserSettings>>("/user-settings/onboarding", {
+    method: "PATCH",
+    token,
+    body: { keys },
+  });
+}
+
+/** Reinicia claves puntuales, o TODO el onboarding si se omite `keys`. */
+export function resetOnboarding(token: string, keys?: string[]) {
+  return apiFetch<ApiResource<UserSettings>>("/user-settings/onboarding/reset", {
+    method: "POST",
+    token,
+    body: keys ? { keys } : {},
   });
 }

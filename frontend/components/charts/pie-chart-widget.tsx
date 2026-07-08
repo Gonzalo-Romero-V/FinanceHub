@@ -51,6 +51,7 @@ export function PieChartWidget({ widget, onRemove, colors = DEFAULT_COLORS }: Pi
     <WidgetCard
       title={widget.title}
       description={widget.description}
+      subtitle={widget.auto_discovery ? "Resultado aproximado" : undefined}
       accentColor={colors[0]}
       onRemove={() => onRemove(widget.id)}
       bodyClassName="h-72 w-full"

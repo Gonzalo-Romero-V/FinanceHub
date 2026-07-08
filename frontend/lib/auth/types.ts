@@ -4,6 +4,7 @@ export interface AuthUser {
   email: string;
   role: string;
   provider?: string;
+  has_password?: boolean;
 }
 
 export interface AuthSession {

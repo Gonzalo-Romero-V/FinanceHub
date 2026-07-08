@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowUpRight, ArrowDownLeft, ArrowRightLeft, Plus } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, ArrowRightLeft, Plus, Mic } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/custom/data-table";
 import { PageShell } from "@/components/custom/page-shell";
 import { PageHeader } from "@/components/custom/page-header";
 import { PageLoading, PageError } from "@/components/custom/page-state";
-import { MovimientoForm } from "@/components/forms/movimiento-form";
+import { MovimientoForm, type MovimientoFormState } from "@/components/forms/movimiento-form";
 import { MovimientoEditForm } from "@/components/forms/movimiento-edit-form";
 import { MovimientoDetailModal } from "@/components/forms/movimiento-detail-modal";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
+import { VoiceMovimientoCapture, estadoVozToFormState } from "@/components/voice/voice-movimiento-capture";
 
 import { useAuth } from "@/lib/auth/context";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/lib/api/movimientos";
 import { conceptoColor } from "@/lib/api/conceptos";
 import { formatNumber, isSameLocalDay } from "@/lib/utils/format";
+import { notifyError } from "@/lib/ui/notify";
 
 type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
 
@@ -33,6 +35,7 @@ interface MovimientoRow {
   monto: number;
   cuenta: string;
   tipo_movimiento: TipoMov;
+  pendiente_sync?: boolean;
 }
 
 function toRow(item: MovimientoRaw): MovimientoRow {
@@ -54,6 +57,7 @@ function toRow(item: MovimientoRaw): MovimientoRow {
     monto: Number(item.monto) || 0,
     cuenta,
     tipo_movimiento: tipo,
+    pendiente_sync: item.pendiente_sync,
   };
 }
 
@@ -65,6 +69,8 @@ export default function MovimientosPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showVoiceCapture, setShowVoiceCapture] = useState(false);
+  const [voiceResolvedState, setVoiceResolvedState] = useState<Partial<MovimientoFormState> | null>(null);
   const [viewItem, setViewItem] = useState<MovimientoRaw | null>(null);
   const [editItem, setEditItem] = useState<MovimientoRaw | null>(null);
   const [deleteItem, setDeleteItem] = useState<MovimientoRow | null>(null);
@@ -102,6 +108,7 @@ export default function MovimientosPage() {
       fetchMovimientos();
     } catch (err) {
       console.error("Error al eliminar:", err);
+      notifyError(err instanceof Error ? err.message : "No se pudo eliminar el movimiento.");
     } finally {
       setIsDeleting(false);
     }
@@ -127,6 +134,7 @@ export default function MovimientosPage() {
     monto: "Monto",
     cuenta: "Cuenta",
     tipo_movimiento: "Tipo",
+    pendiente_sync: "",
   };
 
   if (isLoading) return <PageLoading />;
@@ -138,13 +146,23 @@ export default function MovimientosPage() {
         title="Movimientos"
         description="Aquí podrás registrar y gestionar todos tus movimientos financieros. Filtra por fecha para analizar períodos específicos."
         action={
-          <Button
-            className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
-            onClick={() => setShowCreate(true)}
-          >
-            <Plus className="h-4 w-4" />
-            Registrar movimiento
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="small gap-2"
+              onClick={() => setShowVoiceCapture(true)}
+            >
+              <Mic className="h-4 w-4" />
+              Registrar por voz
+            </Button>
+            <Button
+              className="small bg-brand-1 hover:bg-brand-1/90 text-white gap-2"
+              onClick={() => setShowCreate(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Registrar movimiento
+            </Button>
+          </div>
         }
       />
 
@@ -169,6 +187,14 @@ export default function MovimientosPage() {
                   />
                 )}
                 <span>{val}</span>
+                {item.pendiente_sync && (
+                  <span
+                    className="xs rounded-full bg-amber-500/15 text-amber-600 px-1.5 py-0.5 shrink-0"
+                    title="Todavía no se sincronizó con el servidor"
+                  >
+                    Pendiente
+                  </span>
+                )}
               </div>
             ),
           },
@@ -227,8 +253,8 @@ export default function MovimientosPage() {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={(item) => setDeleteItem(item)}
-        canEdit={(item) => isSameLocalDay(item.fecha)}
-        canDelete={(item) => isSameLocalDay(item.fecha)}
+        canEdit={(item) => isSameLocalDay(item.fecha) && !item.pendiente_sync}
+        canDelete={(item) => isSameLocalDay(item.fecha) && !item.pendiente_sync}
         disabledEditHint="Solo se pueden editar movimientos registrados hoy."
         disabledDeleteHint="Solo se pueden eliminar movimientos registrados hoy."
         rowsOnDisplay={8}
@@ -240,6 +266,23 @@ export default function MovimientosPage() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         onSuccess={fetchMovimientos}
+      />
+
+      <VoiceMovimientoCapture
+        open={showVoiceCapture}
+        onClose={() => setShowVoiceCapture(false)}
+        onCompleto={(estado) => {
+          setShowVoiceCapture(false);
+          setVoiceResolvedState(estadoVozToFormState(estado));
+        }}
+      />
+
+      <MovimientoForm
+        open={!!voiceResolvedState}
+        onClose={() => setVoiceResolvedState(null)}
+        onSuccess={fetchMovimientos}
+        initialState={voiceResolvedState ?? undefined}
+        initialStep={5}
       />
 
       <MovimientoEditForm
