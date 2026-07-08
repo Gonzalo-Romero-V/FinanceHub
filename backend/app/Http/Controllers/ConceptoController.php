@@ -121,8 +121,15 @@ class ConceptoController
             $userId   = auth()->id();
             $concepto = ConceptoModel::where('user_id', $userId)->findOrFail($id);
 
+            // Los conceptos de sistema solo permiten cambiar el color — el
+            // color es puramente visual, el resto (nombre, jerarquía, tipo)
+            // sigue protegido porque son auto-generados y otras partes del
+            // sistema dependen de su identidad.
             if ($concepto->es_sistema) {
-                return response()->json(['mensaje' => 'Los conceptos de sistema no se pueden modificar'], 403);
+                $camposProtegidos = array_intersect(['nombre', 'parent_id', 'tipo_movimiento_id'], array_keys($request->all()));
+                if (!empty($camposProtegidos)) {
+                    return response()->json(['mensaje' => 'Los conceptos de sistema solo permiten cambiar el color'], 403);
+                }
             }
 
             $updates = [];
@@ -131,13 +138,53 @@ class ConceptoController
                 $updates['nombre'] = $request->nombre;
             }
 
-            // Cambio de color solo para raíces
-            if ($request->has('color') && $concepto->isRoot()) {
+            $cambiaJerarquia = $request->has('parent_id');
+            $nuevoParentId   = $cambiaJerarquia ? $request->parent_id : $concepto->parent_id;
+            $seraRaiz        = is_null($nuevoParentId);
+
+            if ($cambiaJerarquia) {
+                if ($nuevoParentId == $concepto->id) {
+                    return response()->json(['mensaje' => 'Un concepto no puede ser su propio padre'], 422);
+                }
+
+                if ($seraRaiz) {
+                    $updates['parent_id'] = null;
+                } else {
+                    // Evita crear un 3er nivel: si ya tiene subcategorías
+                    // propias, no puede a su vez convertirse en subcategoría.
+                    if ($concepto->children()->exists()) {
+                        return response()->json([
+                            'mensaje' => 'No se puede convertir en subcategoría un concepto que ya tiene subcategorías propias',
+                        ], 422);
+                    }
+
+                    $nuevoPadre = ConceptoModel::where('user_id', $userId)
+                        ->whereNull('parent_id')
+                        ->where('es_sistema', false)
+                        ->find($nuevoParentId);
+
+                    if (!$nuevoPadre) {
+                        return response()->json(['mensaje' => 'La nueva categoría padre no es válida'], 422);
+                    }
+
+                    // Hereda el tipo del nuevo padre, igual que al crear.
+                    $updates['parent_id']          = $nuevoParentId;
+                    $updates['tipo_movimiento_id']  = $nuevoPadre->tipo_movimiento_id;
+                    $updates['color']               = null; // los hijos no guardan color propio
+                }
+            }
+
+            // Cambio de color: permitido si el concepto es (o va a ser, según
+            // este mismo request) una raíz — así promover a raíz y elegir
+            // color de una vez quedan en el mismo submit.
+            if ($request->has('color') && $seraRaiz) {
                 $updates['color'] = $request->color;
             }
 
-            // Cambio de tipo solo para raíces sin hijos
-            if ($request->has('tipo_movimiento_id') && $concepto->isRoot()) {
+            // Cambio de tipo solo para raíces sin hijos, y solo si no se está
+            // reasignando jerarquía en el mismo request (eso ya resuelve el
+            // tipo más arriba, heredado del nuevo padre).
+            if ($request->has('tipo_movimiento_id') && $seraRaiz && !$cambiaJerarquia) {
                 if ($concepto->children()->exists()) {
                     return response()->json(['mensaje' => 'No se puede cambiar el tipo de un concepto que tiene subcategorías'], 422);
                 }

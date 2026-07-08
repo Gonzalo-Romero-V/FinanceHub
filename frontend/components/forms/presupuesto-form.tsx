@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { ChevronRight, ChevronLeft, Loader2, PiggyBank, X } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
@@ -66,6 +67,11 @@ export function PresupuestoForm({ open, onClose, onSuccess, editItem }: Presupue
     (c) => !c.es_sistema && c.tipo_movimiento?.nombre !== "Transferencia",
   );
   const raices  = elegibles.filter((c) => !c.parent_id);
+  // Un umbral sirve tanto de límite de gasto como de meta de ingreso, así
+  // que se mantienen ambos tipos seleccionables — pero agrupados, para no
+  // mezclarlos en una sola lista sin distinción (igual que en /conceptos).
+  const raicesIngreso = raices.filter((c) => c.tipo_movimiento?.nombre === "Ingreso");
+  const raicesEgreso  = raices.filter((c) => c.tipo_movimiento?.nombre === "Egreso");
   const getHijos = (pid: number) => elegibles.filter((c) => c.parent_id === pid);
 
   const conceptoSeleccionado = elegibles.find((c) => c.id === conceptoId) ?? null;
@@ -234,45 +240,67 @@ export function PresupuestoForm({ open, onClose, onSuccess, editItem }: Presupue
       );
     }
 
-    // ── Vista: categorías raíz ───────────────────────────────────────────────
-    return (
-      <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
-        {raices.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">No hay categorías disponibles.</p>
-        ) : (
-          raices.map((raiz) => {
-            const hijos    = getHijos(raiz.id);
-            const dotColor = raiz.color ?? "#64748b";
-            const selected = conceptoId === raiz.id ||
-              (conceptoSeleccionado?.parent_id === raiz.id);
+    // ── Vista: categorías raíz, agrupadas por tipo (no mezcladas) ────────────
+    const renderBotonConcepto = (raiz: Concepto) => {
+      const hijos    = getHijos(raiz.id);
+      const dotColor = raiz.color ?? "#64748b";
+      const selected = conceptoId === raiz.id ||
+        (conceptoSeleccionado?.parent_id === raiz.id);
 
-            return (
-              <button
-                key={raiz.id}
-                type="button"
-                onClick={() =>
-                  hijos.length > 0
-                    ? setExpandedParentId(raiz.id)
-                    : setConceptoId(raiz.id)
-                }
-                className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-xl border transition-all text-sm font-medium flex items-center gap-2.5",
-                  selected
-                    ? "border-brand-1 bg-brand-1/10 text-brand-1"
-                    : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
-                )}
-              >
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
-                <span className="flex-1">{raiz.nombre}</span>
-                {hijos.length > 0 && (
-                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground font-normal">
-                    {hijos.length} sub
-                    <ChevronRight className="h-3 w-3" />
-                  </span>
-                )}
-              </button>
-            );
-          })
+      return (
+        <button
+          key={raiz.id}
+          type="button"
+          onClick={() =>
+            hijos.length > 0
+              ? setExpandedParentId(raiz.id)
+              : setConceptoId(raiz.id)
+          }
+          className={cn(
+            "w-full text-left px-3 py-2.5 rounded-xl border transition-all text-sm font-medium flex items-center gap-2.5",
+            selected
+              ? "border-brand-1 bg-brand-1/10 text-brand-1"
+              : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
+          )}
+        >
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+          <span className="flex-1">{raiz.nombre}</span>
+          {hijos.length > 0 && (
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground font-normal">
+              {hijos.length} sub
+              <ChevronRight className="h-3 w-3" />
+            </span>
+          )}
+        </button>
+      );
+    };
+
+    const renderGrupo = (titulo: string, items: Concepto[]) => {
+      if (items.length === 0) return null;
+      return (
+        <div key={titulo} className="flex flex-col gap-1">
+          <p className="xs font-semibold text-muted-foreground uppercase tracking-wide px-1 pt-1">
+            {titulo}
+          </p>
+          {items.map(renderBotonConcepto)}
+        </div>
+      );
+    };
+
+    return (
+      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+        {raices.length === 0 ? (
+          <div className="py-2 space-y-1">
+            <p className="text-sm text-muted-foreground">No hay categorías disponibles.</p>
+            <Link href="/conceptos?crear=1" className="xs text-brand-1 hover:underline">
+              Crea una en Conceptos.
+            </Link>
+          </div>
+        ) : (
+          <>
+            {renderGrupo("Ingresos", raicesIngreso)}
+            {renderGrupo("Egresos", raicesEgreso)}
+          </>
         )}
       </div>
     );

@@ -131,7 +131,7 @@ export function DataTable<T extends { [key: string]: any }>({
   return (
     <div className="w-full bg-background">
       {/* Encabezado sin bordes externos para fundirse con el fondo */}
-      <div className="flex items-center justify-between p-2 md:px-4 bg-transparent mb-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap p-2 md:px-4 bg-transparent mb-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           {titleIcon}
@@ -143,7 +143,7 @@ export function DataTable<T extends { [key: string]: any }>({
                 id="date"
                 variant={"outline"}
                 className={cn(
-                  "w-[260px] justify-start text-left font-normal",
+                  "w-full sm:w-[260px] justify-start text-left font-normal",
                   !date && "text-muted-foreground"
                 )}
               >

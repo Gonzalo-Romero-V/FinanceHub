@@ -38,6 +38,8 @@ interface ConceptoFormProps {
     tipo_movimiento: string;
     parent_id?: number | null;
     color?: string | null;
+    es_sistema?: boolean;
+    hasChildren?: boolean;
   } | null;
   /** Pre-seleccionar un padre al crear desde el árbol */
   defaultParentId?: number | null;
@@ -117,7 +119,7 @@ export function ConceptoForm({
 
     if (!nombre.trim()) return setError("El nombre es obligatorio.");
 
-    if (!esSubconcepto && !tipoId) {
+    if (!isEdit && !esSubconcepto && !tipoId) {
       return setError("Selecciona un tipo de movimiento.");
     }
 
@@ -126,10 +128,22 @@ export function ConceptoForm({
       if (!token) throw new Error("Usuario no autenticado.");
 
       if (isEdit && editItem) {
-        await updateConcepto(token, editItem.id, {
-          nombre: nombre.trim(),
-          ...(color ? { color } : { color: null }),
-        });
+        const payload: Parameters<typeof updateConcepto>[2] = {};
+
+        if (!editItem.es_sistema) {
+          payload.nombre = nombre.trim();
+          if (!editItem.hasChildren) {
+            payload.parent_id = esSubconcepto ? Number(parentId) : null;
+          }
+        }
+
+        // El color es editable siempre (incluso en conceptos de sistema),
+        // pero solo tiene sentido si el resultado de este submit es raíz.
+        if (!esSubconcepto) {
+          payload.color = color || null;
+        }
+
+        await updateConcepto(token, editItem.id, payload);
       } else {
         await createConcepto(token, {
           nombre: nombre.trim(),
@@ -168,8 +182,13 @@ export function ConceptoForm({
             placeholder={esSubconcepto ? "Ej: Restaurante, Víveres…" : "Ej: Alimentación, Salario…"}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || editItem?.es_sistema}
           />
+          {editItem?.es_sistema && (
+            <p className="xs text-muted-foreground">
+              Este concepto es del sistema — solo puedes cambiar el color.
+            </p>
+          )}
         </div>
 
         {/* Tipo de movimiento (solo si es raíz y no edición) */}
@@ -195,8 +214,8 @@ export function ConceptoForm({
           </div>
         )}
 
-        {/* Padre — solo al crear */}
-        {!isEdit && (
+        {/* Padre — siempre al crear; al editar solo si no es de sistema y no tiene subcategorías propias */}
+        {(!isEdit || (!editItem?.es_sistema && !editItem?.hasChildren)) && (
           <div className="flex flex-col gap-1.5">
             <Label>Categoría padre (opcional)</Label>
             {isFetchingData ? (
@@ -220,19 +239,21 @@ export function ConceptoForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">Sin categoría padre</SelectItem>
-                  {(tipoId ? raicesFiltradas : raices).map((r) => (
-                    <SelectItem key={r.id} value={String(r.id)}>
-                      <div className="flex items-center gap-2">
-                        {r.color && (
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: r.color }}
-                          />
-                        )}
-                        {r.nombre}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {(tipoId ? raicesFiltradas : raices)
+                    .filter((r) => r.id !== editItem?.id)
+                    .map((r) => (
+                      <SelectItem key={r.id} value={String(r.id)}>
+                        <div className="flex items-center gap-2">
+                          {r.color && (
+                            <span
+                              className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: r.color }}
+                            />
+                          )}
+                          {r.nombre}
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             )}
@@ -245,6 +266,11 @@ export function ConceptoForm({
               </p>
             )}
           </div>
+        )}
+        {isEdit && editItem?.hasChildren && !editItem?.es_sistema && (
+          <p className="xs text-muted-foreground">
+            Esta categoría tiene subcategorías propias, por eso no se puede convertir en subcategoría de otra.
+          </p>
         )}
 
         {/* Color picker — solo para raíces */}

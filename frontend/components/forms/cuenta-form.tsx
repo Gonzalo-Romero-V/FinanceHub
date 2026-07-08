@@ -73,7 +73,12 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
   }, [open, token]);
 
   useEffect(() => {
-    if (!open) return;
+    // Espera a que el fetch de tipos termine (con o sin datos) antes de
+    // poblar el form — si no, en la primera apertura este efecto corre en
+    // el mismo pase que dispara el fetch, con tiposCuenta todavía vacío, y
+    // el tipo de cuenta ya asignado no encuentra match (queda en blanco
+    // hasta que se reabre el modal una segunda vez).
+    if (!open || isFetchingTypes) return;
     if (editItem) {
       const tipoId = tiposCuenta.find((t) => t.nombre === editItem.tipo_cuenta)?.id;
       setForm({
@@ -88,7 +93,7 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
       setColor("");
     }
     setError(null);
-  }, [open, editItem, tiposCuenta]);
+  }, [open, editItem, tiposCuenta, isFetchingTypes]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,7 +1,7 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
 import type { Concepto } from "./conceptos";
 import type { VentanaPresupuesto } from "./presupuestos";
-import { OFFLINE_CACHE_KEYS, withOfflineCache } from "@/lib/offline/cached-fetch";
+import { OFFLINE_CACHE_KEYS, scopedKey, withOfflineCache } from "@/lib/offline/cached-fetch";
 import { isNativeApp } from "@/lib/offline/platform";
 import { isOnline } from "@/lib/offline/network";
 import { enqueueMovimiento, getQueue, type QueuedMovimiento } from "@/lib/offline/queue";
@@ -51,10 +51,10 @@ export interface MovimientoPayload {
   nota?: string | null;
 }
 
-async function queuedToRaw(item: QueuedMovimiento): Promise<MovimientoRaw> {
+async function queuedToRaw(token: string, item: QueuedMovimiento): Promise<MovimientoRaw> {
   const [conceptosCache, cuentasCache] = await Promise.all([
-    readJson<{ data: Concepto[] }>(OFFLINE_CACHE_KEYS.conceptos),
-    readJson<ApiCollection<{ id: number; nombre: string }>>(OFFLINE_CACHE_KEYS.cuentas),
+    readJson<{ data: Concepto[] }>(scopedKey(OFFLINE_CACHE_KEYS.conceptos, token)),
+    readJson<ApiCollection<{ id: number; nombre: string }>>(scopedKey(OFFLINE_CACHE_KEYS.cuentas, token)),
   ]);
 
   const concepto = conceptosCache?.data.find((c) => c.id === item.payload.concepto_id);
@@ -77,7 +77,7 @@ async function queuedToRaw(item: QueuedMovimiento): Promise<MovimientoRaw> {
 }
 
 export function listMovimientos(token: string) {
-  return withOfflineCache(OFFLINE_CACHE_KEYS.movimientos, async () => {
+  return withOfflineCache(scopedKey(OFFLINE_CACHE_KEYS.movimientos, token), async () => {
     const result = await apiFetch<ApiCollection<MovimientoRaw>>("/movimientos", { token });
     // Se cachea completo tal cual llega (el backend ya ordena por fecha
     // desc); solo se recorta a un tope razonable para no inflar el
@@ -85,19 +85,24 @@ export function listMovimientos(token: string) {
     return { ...result, data: result.data.slice(0, OFFLINE_MOVIMIENTOS_LIMIT) };
   }).then(async (result) => {
     if (!isNativeApp()) return result;
-    const queue = await getQueue();
+    const queue = await getQueue(token);
     if (queue.length === 0) return result;
-    const pending = await Promise.all(queue.map(queuedToRaw));
+    const pending = await Promise.all(queue.map((item) => queuedToRaw(token, item)));
     return { ...result, data: [...pending, ...result.data] };
   });
 }
 
 export async function createMovimiento(token: string, body: MovimientoPayload): Promise<MovimientoResponse> {
   if (isNativeApp() && !(await isOnline())) {
-    await enqueueMovimiento(body);
+    await enqueueMovimiento(token, body);
     return {
       mensaje: "Movimiento guardado sin conexión. Se sincronizará automáticamente.",
-      data: await queuedToRaw({ localId: "temp", payload: body, createdAt: new Date().toISOString() }),
+      data: await queuedToRaw(token, {
+        localId: "temp",
+        payload: body,
+        createdAt: new Date().toISOString(),
+        userId: "",
+      }),
     };
   }
 

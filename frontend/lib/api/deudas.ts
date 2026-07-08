@@ -1,5 +1,5 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
-import { OFFLINE_CACHE_KEYS, withOfflineCache } from "@/lib/offline/cached-fetch";
+import { OFFLINE_CACHE_KEYS, scopedKey, withOfflineCache } from "@/lib/offline/cached-fetch";
 
 export type SistemaAmortizacion = "frances" | "aleman" | "bullet";
 export type EstadoDeuda = "activa" | "pagada" | "cancelada";
@@ -79,7 +79,7 @@ export interface DeudaUpdatePayload {
 }
 
 export function listDeudas(token: string) {
-  return withOfflineCache(OFFLINE_CACHE_KEYS.deudas, () =>
+  return withOfflineCache(scopedKey(OFFLINE_CACHE_KEYS.deudas, token), () =>
     apiFetch<ApiCollection<Deuda>>("/deudas", { token }),
   );
 }

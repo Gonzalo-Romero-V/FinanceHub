@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -37,6 +38,14 @@ export default function ConceptosPage() {
   const [addChildParent, setAddChildParent] = useState<Concepto | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const searchParams = useSearchParams();
+
+  // Soporta ?crear=1 (ej. desde un link de "no tienes conceptos aún" en otro
+  // formulario) para abrir el formulario de alta directamente al llegar.
+  useEffect(() => {
+    if (searchParams.get("crear") === "1") setShowCreate(true);
+  }, [searchParams]);
 
   const fetchConceptos = useCallback(async () => {
     if (!token) { setIsLoading(false); setError("Usuario no autenticado."); return; }
@@ -155,6 +164,8 @@ export default function ConceptosPage() {
                 tipo_movimiento: editItem.tipo_movimiento?.nombre ?? "",
                 parent_id: editItem.parent_id,
                 color: editItem.color,
+                es_sistema: editItem.es_sistema,
+                hasChildren: (editItem.children?.length ?? 0) > 0,
               }
             : null
         }

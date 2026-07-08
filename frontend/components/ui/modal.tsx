@@ -68,14 +68,14 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
         className={cn(
-          "relative z-10 w-full bg-card border border-border rounded-2xl shadow-2xl",
+          "relative z-10 w-full max-h-[90vh] flex flex-col overflow-hidden bg-card border border-border rounded-2xl shadow-2xl",
           "animate-in fade-in-0 zoom-in-95 duration-200",
           sizeClasses[size]
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border shrink-0">
             <h2 id="modal-title" className="h3 text-foreground">
               {title}
             </h2>
@@ -93,8 +93,8 @@ export function Modal({
           </div>
         )}
 
-        {/* Content */}
-        <div className="px-6 py-5">
+        {/* Content — scrollea internamente si el formulario es más alto que la pantalla */}
+        <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0">
           {children}
         </div>
       </div>

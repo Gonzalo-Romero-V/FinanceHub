@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api/client";
+import { getUserIdFromToken } from "@/lib/auth/storage";
 import { isNativeApp } from "./platform";
 import { readJson, writeJson } from "./storage";
 
@@ -36,3 +37,13 @@ export const OFFLINE_CACHE_KEYS = {
   presupuestos: "cache:presupuestos",
   deudas: "cache:deudas",
 } as const;
+
+/**
+ * Escopa una clave de caché por usuario (derivado del token) — sin esto, la
+ * caché es un único valor global que sobrevive el logout, y un usuario
+ * distinto que entre en el mismo dispositivo vería/heredaría datos del
+ * usuario anterior.
+ */
+export function scopedKey(baseKey: string, token: string): string {
+  return `${baseKey}:${getUserIdFromToken(token)}`;
+}

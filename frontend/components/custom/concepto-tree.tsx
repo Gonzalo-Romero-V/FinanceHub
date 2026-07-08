@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -119,7 +120,8 @@ export function ConceptoTree({
                 </TableCell>
 
                 <TableCell>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                  {/* Desktop: hover-reveal */}
+                  <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -149,6 +151,47 @@ export function ConceptoTree({
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
+
+                  {/* Mobile: menú de 3 puntos (sin :hover persistente en touch) */}
+                  <div className="flex md:hidden items-center justify-end">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56 p-1" align="end">
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            variant="ghost"
+                            className="justify-start gap-2 h-9 px-2 small"
+                            onClick={() => onAddChild(raiz)}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Agregar subcategoría
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="justify-start gap-2 h-9 px-2 small"
+                            onClick={() => onEdit(raiz)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="justify-start gap-2 h-9 px-2 small text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                            onClick={() => onDelete(raiz)}
+                            disabled={hasChildren}
+                            title={hasChildren ? "Elimina primero las subcategorías" : undefined}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Eliminar
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </TableCell>
               </TableRow>,
 
@@ -170,7 +213,8 @@ export function ConceptoTree({
                         {formatCurrency(Number(hijo.total_monto) || 0)}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                        {/* Desktop: hover-reveal */}
+                        <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -189,6 +233,37 @@ export function ConceptoTree({
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
+                        </div>
+
+                        {/* Mobile: menú de 3 puntos */}
+                        <div className="flex md:hidden items-center justify-end">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-1" align="end">
+                              <div className="flex flex-col gap-1">
+                                <Button
+                                  variant="ghost"
+                                  className="justify-start gap-2 h-9 px-2 small"
+                                  onClick={() => onEdit(hijo)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  className="justify-start gap-2 h-9 px-2 small text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => onDelete(hijo)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Eliminar
+                                </Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       </TableCell>
                     </TableRow>

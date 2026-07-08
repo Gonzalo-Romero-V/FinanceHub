@@ -1,6 +1,6 @@
 import { apiFetch, type ApiCollection, type ApiResource } from "./client";
 import type { Concepto } from "./conceptos";
-import { OFFLINE_CACHE_KEYS, withOfflineCache } from "@/lib/offline/cached-fetch";
+import { OFFLINE_CACHE_KEYS, scopedKey, withOfflineCache } from "@/lib/offline/cached-fetch";
 
 export type VentanaPresupuesto = "diario" | "semanal" | "mensual" | "anual";
 
@@ -46,7 +46,7 @@ export interface PresupuestoPayload {
 }
 
 export function listPresupuestos(token: string) {
-  return withOfflineCache(OFFLINE_CACHE_KEYS.presupuestos, () =>
+  return withOfflineCache(scopedKey(OFFLINE_CACHE_KEYS.presupuestos, token), () =>
     apiFetch<ApiCollection<Presupuesto>>("/presupuestos", { token }),
   );
 }

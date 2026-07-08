@@ -479,6 +479,17 @@ export function MovimientoForm({
   );
 
   const renderStep3 = () => {
+    if (!isLoadingData && cuentas.length === 0) {
+      return (
+        <div className="text-center py-6 text-muted-foreground small">
+          No tienes cuentas registradas.{" "}
+          <Link className="text-brand-1 font-semibold underline hover:opacity-80" href="/cuentas?crear=1">
+            Crea una en Cuentas.
+          </Link>
+        </div>
+      );
+    }
+
     if (form.tipo === "Transferencia") {
       return (
         <div className="flex flex-col gap-4">

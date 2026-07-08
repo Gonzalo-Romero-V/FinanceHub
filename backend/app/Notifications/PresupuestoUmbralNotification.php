@@ -23,7 +23,7 @@ class PresupuestoUmbralNotification extends Notification
     {
         $pct = round($this->pctActual);
         $monto = number_format($this->montoPresupuesto, 2);
-        return "Ya usaste el {$pct}% de tu presupuesto de \"{$this->conceptoNombre}\" (\${$monto}).";
+        return "Ya alcanzaste el {$pct}% de tu presupuesto de \"{$this->conceptoNombre}\" (\${$monto}).";
     }
 
     public function via($notifiable): array

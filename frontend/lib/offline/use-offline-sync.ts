@@ -6,6 +6,7 @@ import { isNativeApp } from "./platform";
 import { isOnline as checkOnline, onNetworkChange } from "./network";
 import { getQueue } from "./queue";
 import { syncPendingQueue } from "./sync";
+import { notifyError } from "@/lib/ui/notify";
 
 /**
  * Hook mobile-only: se monta una vez en el layout autenticado. Mantiene el
@@ -15,13 +16,14 @@ import { syncPendingQueue } from "./sync";
  * quedado algo pendiente de una sesión offline anterior).
  */
 export function useOfflineSync() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [online, setOnline] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
   const refreshPendingCount = async () => {
-    const queue = await getQueue();
+    if (!token) return;
+    const queue = await getQueue(token);
     setPendingCount(queue.length);
   };
 
@@ -40,8 +42,18 @@ export function useOfflineSync() {
       setOnline(isOnlineNow);
       if (isOnlineNow && token) {
         setSyncing(true);
-        await syncPendingQueue(token);
-        await refreshPendingCount();
+        const result = await syncPendingQueue(token);
+        if (result.authInvalid) {
+          // La misma condición de auth que habilita la UI debe habilitar el
+          // sync — si el servidor ya no reconoce el token, tratar la sesión
+          // como cerrada en vez de dejar el movimiento pendiente para
+          // siempre en silencio (antes la única salida era que el usuario
+          // cerrara sesión manualmente para notar el problema).
+          notifyError("Tu sesión expiró. Inicia sesión de nuevo para sincronizar tus movimientos pendientes.");
+          await logout();
+        } else {
+          await refreshPendingCount();
+        }
         setSyncing(false);
       }
     });

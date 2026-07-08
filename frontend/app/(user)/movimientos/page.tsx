@@ -146,7 +146,7 @@ export default function MovimientosPage() {
         title="Movimientos"
         description="Aquí podrás registrar y gestionar todos tus movimientos financieros. Filtra por fecha para analizar períodos específicos."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               className="small gap-2"

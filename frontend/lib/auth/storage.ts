@@ -14,6 +14,17 @@ export function getAuthToken(): string | null {
 }
 
 /**
+ * El token de Sanctum tiene el formato "{id}|{plaintext40}" — el id de
+ * usuario ya viene embebido en el string, así que se puede derivar sin
+ * pasar `userId` por separado en cada función que ya recibe `token`. Se usa
+ * para escopear datos locales por cuenta (cola offline, cachés) y evitar
+ * que se mezclen entre distintas cuentas logueadas en el mismo dispositivo.
+ */
+export function getUserIdFromToken(token: string): string {
+  return token.split("|")[0];
+}
+
+/**
  * Última copia conocida del usuario, cacheada junto al token. Permite que
  * la app (especialmente en mobile) muestre la sesión como activa
  * inmediatamente al reabrir, sin esperar a una llamada de red — la llamada

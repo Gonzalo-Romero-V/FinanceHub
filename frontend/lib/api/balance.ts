@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import { OFFLINE_CACHE_KEYS, withOfflineCache } from "@/lib/offline/cached-fetch";
+import { OFFLINE_CACHE_KEYS, scopedKey, withOfflineCache } from "@/lib/offline/cached-fetch";
 
 export interface BalanceCuenta {
   id: number;
@@ -23,5 +23,7 @@ export interface Balance {
 }
 
 export function getBalance(token: string) {
-  return withOfflineCache(OFFLINE_CACHE_KEYS.balance, () => apiFetch<Balance>("/balance", { token }));
+  return withOfflineCache(scopedKey(OFFLINE_CACHE_KEYS.balance, token), () =>
+    apiFetch<Balance>("/balance", { token }),
+  );
 }
