@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { AsideShell } from "@/components/layout/aside-shell";
@@ -9,6 +10,7 @@ import { useAuth } from "@/lib/auth/context";
 
 export function AsidePublic() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
 
   return (
     <AsideShell
@@ -24,7 +26,7 @@ export function AsidePublic() {
           >
             Cerrar sesión
           </Button>
-        ) : (
+        ) : pathname === "/login" ? null : (
           <Button asChild className="h-10 justify-center gap-2 bg-brand-1 hover:bg-brand-1/90 text-white">
             <Link href="/login">Acceder</Link>
           </Button>

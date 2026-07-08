@@ -3,6 +3,7 @@ import { AuthGate } from "@/components/auth/auth-gate";
 import { OnboardingProvider } from "@/lib/onboarding/context";
 import { OnboardingRoot } from "@/components/onboarding/onboarding-root";
 import { OfflineStatusBar } from "@/components/offline/offline-status-bar";
+import { PushForegroundListener } from "@/components/notifications/push-foreground-listener";
 
 export default function UserLayout({
   children,
@@ -16,6 +17,7 @@ export default function UserLayout({
           <div className="min-h-screen bg-muted/20">
             <HeaderUser />
             <OfflineStatusBar />
+            <PushForegroundListener />
             <main className="mx-auto w-full max-w-7xl px-4 py-4 md:px-6 md:py-6">{children}</main>
           </div>
         </OnboardingRoot>

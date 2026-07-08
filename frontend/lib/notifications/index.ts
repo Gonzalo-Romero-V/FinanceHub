@@ -20,3 +20,7 @@ export function registerForPush(token: string): Promise<PushRegistrationResult> 
 export function unregisterFromPush(token: string): Promise<void> {
   return currentProvider().unregister(token);
 }
+
+export function isPushActive(): Promise<boolean> {
+  return currentProvider().isActive();
+}

@@ -13,4 +13,7 @@ export interface PushProvider {
   isSupported(): boolean;
   register(token: string): Promise<PushRegistrationResult>;
   unregister(token: string): Promise<void>;
+  /** ¿Ya hay una suscripción activa? Para reflejar el estado real al abrir
+   * Perfil, no solo dentro de la misma sesión donde se activó. */
+  isActive(): Promise<boolean>;
 }

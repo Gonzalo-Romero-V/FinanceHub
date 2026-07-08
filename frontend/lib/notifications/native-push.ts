@@ -38,9 +38,27 @@ export const nativePushProvider: PushProvider = {
   },
 
   async unregister(token: string): Promise<void> {
-    if (!this.isSupported() || !cachedToken) return;
-    await unregisterPushSubscription(token, cachedToken);
-    await FirebaseMessaging.deleteToken();
-    cachedToken = null;
+    if (!this.isSupported()) return;
+    try {
+      // No depender solo del token cacheado en memoria — si la app se
+      // reabrió (sesión nueva), cachedToken está vacío aunque la
+      // suscripción siga activa en el servidor de una sesión anterior.
+      const fcmToken = cachedToken ?? (await FirebaseMessaging.getToken()).token;
+      await unregisterPushSubscription(token, fcmToken);
+      await FirebaseMessaging.deleteToken();
+      cachedToken = null;
+    } catch {
+      // Best-effort — si falla, el usuario puede reintentar desde Perfil.
+    }
+  },
+
+  async isActive(): Promise<boolean> {
+    if (!this.isSupported()) return false;
+    try {
+      const check = await FirebaseMessaging.checkPermissions();
+      return check.receive === "granted";
+    } catch {
+      return false;
+    }
   },
 };

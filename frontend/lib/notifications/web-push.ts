@@ -56,4 +56,15 @@ export const webPushProvider: PushProvider = {
     await unregisterPushSubscription(token, subscription.endpoint);
     await subscription.unsubscribe();
   },
+
+  async isActive(): Promise<boolean> {
+    if (!this.isSupported()) return false;
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      const subscription = await registration?.pushManager.getSubscription();
+      return !!subscription;
+    } catch {
+      return false;
+    }
+  },
 };

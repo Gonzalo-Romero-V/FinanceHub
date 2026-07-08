@@ -25,7 +25,7 @@ import { PageLoading } from "@/components/custom/page-state";
 import { useAuth } from "@/lib/auth/context";
 import { updateUser, type UpdateUserPayload } from "@/lib/api/users";
 import { getUserSettings, updateUserSettings, type UserSettings } from "@/lib/api/user-settings";
-import { isPushSupported, registerForPush } from "@/lib/notifications";
+import { isPushSupported, isPushActive, registerForPush, unregisterFromPush } from "@/lib/notifications";
 
 interface ProfileFormState {
   name: string;
@@ -58,13 +58,23 @@ export default function PerfilPage() {
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
   const [isEnablingPush, setIsEnablingPush] = useState(false);
+  const [isDisablingPush, setIsDisablingPush] = useState(false);
   const [pushStatus, setPushStatus] = useState<
     "idle" | "registered" | "denied" | "unsupported" | "error"
   >("idle");
   const { resetAll } = useOnboarding();
 
   useEffect(() => {
-    if (!isPushSupported()) setPushStatus("unsupported");
+    if (!isPushSupported()) {
+      setPushStatus("unsupported");
+      return;
+    }
+    // Refleja el estado real al abrir Perfil — no solo dentro de la misma
+    // sesión donde se activó (antes siempre arrancaba en "idle" aunque las
+    // notificaciones ya estuvieran activas de antes).
+    isPushActive().then((active) => {
+      if (active) setPushStatus("registered");
+    });
   }, []);
 
   const handleEnablePush = async () => {
@@ -89,6 +99,20 @@ export default function PerfilPage() {
       }
     } finally {
       setIsEnablingPush(false);
+    }
+  };
+
+  const handleDisablePush = async () => {
+    if (!token) return;
+    setIsDisablingPush(true);
+    try {
+      await unregisterFromPush(token);
+      setPushStatus("idle");
+      notifySuccess("Notificaciones desactivadas.");
+    } catch {
+      notifyError("No se pudo desactivar las notificaciones. Inténtalo de nuevo.");
+    } finally {
+      setIsDisablingPush(false);
     }
   };
 
@@ -477,21 +501,35 @@ export default function PerfilPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant={pushStatus === "registered" ? "secondary" : "outline"}
-            onClick={handleEnablePush}
-            disabled={isEnablingPush || pushStatus === "registered"}
-            className="gap-2"
-          >
-            {isEnablingPush ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : pushStatus === "registered" ? (
-              <CheckCircle2 className="h-4 w-4 text-chart-2" />
-            ) : (
-              <Bell className="h-4 w-4" />
-            )}
-            {pushStatus === "registered" ? "Notificaciones activadas" : "Activar notificaciones"}
-          </Button>
+          {pushStatus === "registered" ? (
+            <Button
+              variant="outline"
+              onClick={handleDisablePush}
+              disabled={isDisablingPush}
+              className="gap-2"
+            >
+              {isDisablingPush ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-chart-2" />
+              )}
+              Notificaciones activadas — desactivar
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={handleEnablePush}
+              disabled={isEnablingPush}
+              className="gap-2"
+            >
+              {isEnablingPush ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Bell className="h-4 w-4" />
+              )}
+              Activar notificaciones
+            </Button>
+          )}
           {pushStatus === "denied" && (
             <p className="xs text-muted-foreground">
               El permiso fue bloqueado — habilítalo desde la configuración del dispositivo o el navegador.
