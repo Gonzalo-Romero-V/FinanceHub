@@ -29,8 +29,8 @@ import { notifyError, notifyWarning, notifyInfo } from "@/lib/ui/notify";
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
 import { listCuentas, cuentaColor, type Cuenta } from "@/lib/api/cuentas";
-import { updateMovimiento, type AlertaPresupuesto } from "@/lib/api/movimientos";
-import { VENTANA_LABELS } from "@/lib/api/presupuestos";
+import { updateMovimiento, formatAlertaPresupuestoMensaje, type AlertaPresupuesto } from "@/lib/api/movimientos";
+import { triggerNotificationsRefresh } from "@/lib/notifications/refresh-bus";
 
 type TipoMov = "Ingreso" | "Egreso" | "Transferencia";
 
@@ -157,14 +157,12 @@ export function MovimientoEditForm({
   };
 
   const mostrarAlertasPresupuesto = (alertas: AlertaPresupuesto[]) => {
+    if (alertas.length === 0) return;
     alertas.forEach((alerta) => {
-      const ventana = VENTANA_LABELS[alerta.ventana] ?? alerta.ventana;
-      const superado = alerta.pct_actual >= 100;
-      const msg = superado
-        ? `Superaste el presupuesto ${ventana} de ${alerta.concepto_nombre} (${alerta.pct_actual}%)`
-        : `Alcanzaste el ${alerta.umbral}% del presupuesto ${ventana} de ${alerta.concepto_nombre}`;
-
-      if (superado || alerta.umbral >= 90) {
+      // Mismo texto exacto que termina guardado en el inbox/push — antes
+      // decían cosas distintas.
+      const msg = formatAlertaPresupuestoMensaje(alerta);
+      if (alerta.pct_actual >= 100 || alerta.umbral >= 90) {
         notifyError(msg);
       } else if (alerta.umbral >= 75) {
         notifyWarning(msg);
@@ -172,6 +170,9 @@ export function MovimientoEditForm({
         notifyInfo(msg);
       }
     });
+    // La notificación ya quedó guardada en el inbox (mismo request) — avisa
+    // a la campanita para que se refresque ya, sin esperar al próximo poll.
+    triggerNotificationsRefresh();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

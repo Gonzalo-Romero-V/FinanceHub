@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { AsideShell } from "@/components/layout/aside-shell";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { userNavLinks, userSecondaryLinks } from "@/components/layout/nav-links";
 import { useAuth } from "@/lib/auth/context";
 import { useHelpIconAction } from "@/lib/onboarding/use-help-icon-action";
@@ -18,9 +19,12 @@ export function AsideUser() {
       hiddenFrom="lg"
       triggerLabel="Abrir menú de usuario"
       topCluster={
-        <div className="rounded-xl border border-border bg-muted/40 p-3">
-          <p className="small font-semibold text-foreground">{user?.name ?? "Usuario"}</p>
-          <p className="xs text-muted-foreground">Cuenta autenticada</p>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 rounded-xl border border-border bg-muted/40 p-3">
+            <p className="small font-semibold text-foreground">{user?.name ?? "Usuario"}</p>
+            <p className="xs text-muted-foreground">Cuenta autenticada</p>
+          </div>
+          <NotificationBell />
         </div>
       }
       bottomCluster={

@@ -14,6 +14,7 @@ import {
   markNotificationRead,
   type AppNotification,
 } from "@/lib/api/notifications";
+import { onNotificationsRefresh } from "@/lib/notifications/refresh-bus";
 
 /**
  * Ícono de bandeja en el header — componente 100% compartido entre web y
@@ -41,8 +42,16 @@ export function NotificationBell() {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 60_000);
-    return () => clearInterval(interval);
+    // 20s: no hay push real hacia la pestaña abierta, esto es lo más
+    // cercano sin sumar infraestructura de websockets/SSE. Para acciones
+    // que YA sabemos que generaron una notificación (ver refresh-bus.ts)
+    // no hace falta esperar ni eso.
+    const interval = setInterval(refresh, 20_000);
+    const unsubscribe = onNotificationsRefresh(refresh);
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, [refresh]);
 
   const handleOpenChange = async (next: boolean) => {

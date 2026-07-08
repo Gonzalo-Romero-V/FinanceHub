@@ -22,6 +22,18 @@ export interface AlertaPresupuesto {
   monto_presupuesto: number;
 }
 
+/**
+ * Mismo texto exacto que arma el backend en PresupuestoUmbralNotification
+ * (mensaje()) — antes el toast del formulario decía algo distinto a lo que
+ * terminaba guardado en el inbox/push, esto es la única fuente de verdad
+ * para ambos.
+ */
+export function formatAlertaPresupuestoMensaje(alerta: AlertaPresupuesto): string {
+  const pct = Math.round(alerta.pct_actual);
+  const monto = alerta.monto_presupuesto.toFixed(2);
+  return `Ya alcanzaste el ${pct}% de tu presupuesto de "${alerta.concepto_nombre}" ($${monto}).`;
+}
+
 export interface MovimientoResponse extends ApiResource<MovimientoRaw> {
   alertas_presupuesto?: AlertaPresupuesto[];
 }
