@@ -162,6 +162,7 @@ llm-service/
                                   #   Pydantic AnalyzeRequest/AnalysisResponse,
                                   #   header X-Client-Timezone
   app/
+    core/auth.py                  # valida token Sanctum y resuelve user_id
     core/config.py                # Settings (Pydantic) — env_file=.env;
                                   #   valida OPENAI_API_KEY, ALLOWED_ORIGINS,
                                   #   STATEMENT_TIMEOUT_MS, MAX_ROWS_PER_QUERY

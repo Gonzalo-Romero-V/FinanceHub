@@ -164,6 +164,7 @@ Notas:
 
 Headers:
 - `Content-Type: application/json`
+- `Authorization: Bearer <token Sanctum>` (obligatorio). El usuario se deriva del token; `user_id` no es parte del request.
 - `X-Client-Timezone: <IANA>` (ej. `America/Guayaquil`). Igual que el backend
   Laravel. Default `UTC` si falta o es inválida. Validada contra
   `zoneinfo.ZoneInfo` (lanza warning y cae a UTC si no existe).
@@ -171,8 +172,7 @@ Headers:
 Request (Pydantic):
 ```json
 {
-  "prompt": "Muéstrame el gasto mensual en supermercado",
-  "user_id": 42
+  "prompt": "Muestrame el gasto mensual en supermercado"
 }
 ```
 
@@ -200,6 +200,8 @@ Response 200 (Pydantic `AnalysisResponse`):
 ### Guardrails
 
 **Multi-usuario** (defensa en profundidad):
+El servicio valida el id, hash SHA-256, tipo y expiracion del token Sanctum; `:uid` se deriva exclusivamente de ese registro.
+
 1. El prompt al LLM exige usar el placeholder `:uid` para todo filtro por
    usuario; nunca interpolar literales.
 2. `SqlValidator` (post-generación, basado en `sqlglot`):
@@ -234,3 +236,34 @@ Response 200 (Pydantic `AnalysisResponse`):
 Definidos en `lib/api/{cuentas,conceptos,movimientos}.ts` y
 `lib/auth/types.ts`. Cuando agregues campos a un modelo del backend,
 actualizá también la interface TS correspondiente.
+
+---
+
+## Voz (FastAPI)
+
+Todos los endpoints requieren `Authorization: Bearer <token Sanctum>`.
+
+### POST `/api/voice/transcribe`
+
+Request `multipart/form-data`: campo `audio`. Query opcional `classify=true`.
+Usa `OPENAI_TRANSCRIPTION_MODEL` (`gpt-4o-transcribe` por defecto) y rechaza
+archivos mayores a `MAX_AUDIO_BYTES` con 413.
+
+Response:
+```json
+{"text": "gaste 20 en comida", "intent": "registrar_movimiento"}
+```
+
+`intent` es `consulta`, `registrar_movimiento` o `null` si no se solicito
+clasificacion.
+
+### POST `/api/voice/parse-movimiento`
+
+Request:
+```json
+{"texto": "gaste 20 en comida", "estado_previo": null}
+```
+
+Response: `estado` tipado como `MovimientoDraft`, `faltantes`, `pregunta` y
+`completo`. Los ids de concepto y cuenta se aceptan solamente si pertenecen al
+usuario autenticado. El `user_id` nunca se toma del body ni del texto.

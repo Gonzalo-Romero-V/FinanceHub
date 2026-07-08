@@ -30,9 +30,7 @@
 ### Frontend (Next.js)
 - UI, rutas, gestión de sesión en cliente.
 - Llama a Laravel para todo el CRUD (`/api/...` con `Authorization: Bearer`).
-- Llama al LLM service directo en `POST /api/analyze` (sin token; el LLM
-  recibe `user_id` por payload — este es uno de los gaps de seguridad de la
-  versión actual, ver `alcance.md`).
+- Llama al LLM service directo en `POST /api/analyze` con el token Sanctum en `Authorization: Bearer`; nunca envia `user_id` en el payload.
 - Para OAuth Google, el browser hace `window.location.href = ${apiUrl}/auth/google`
   → Laravel → Google → Laravel callback → `redirect` a
   `/auth/callback?token=...` en el frontend.
@@ -45,8 +43,9 @@
 - Maneja el flujo OAuth completo (redirect + callback).
 
 ### LLM Service (FastAPI)
-- Recibe `{prompt, user_id}` + header `X-Client-Timezone`, devuelve
+- Recibe `{prompt}` + headers `Authorization` y `X-Client-Timezone`, devuelve
   `{widgets[], summary, mode, ...}` tipado vía Pydantic.
+- Antes del pipeline, `core.auth.get_current_user_id` valida `{id}|{plaintext}` con SHA-256 contra `personal_access_tokens`; el `user_id` sale solo del token.
 - Pipeline interno:
   1. **Resolución temporal**: valida el header con `zoneinfo.ZoneInfo`,
      calcula `today_iso` en esa TZ. Estos valores se inyectan como bindings
@@ -87,10 +86,8 @@
    `loginWithToken` → `fetchCurrentUser` → guarda sesión → redirige a `/dashboard`.
 
 ### Análisis con IA
-1. Frontend (Dashboard) llama `analyzeRequest({prompt, user_id})` desde
-   `lib/api/llm.ts`, que hace `POST {LLM}/api/analyze` con el header
-   `X-Client-Timezone` ya incluido.
-2. LLM service resuelve la TZ y calcula `today_iso`, ejecuta el pipeline
+1. Frontend (Dashboard) llama `analyzeRequest(token, {prompt})` y envia `Authorization: Bearer` junto con `X-Client-Timezone`.
+2. LLM service valida el token, resuelve el usuario y la TZ y calcula `today_iso`, ejecuta el pipeline
    (planner → sql_gen → validator → db → analyst) y devuelve la
    `AnalysisResponse` validada por Pydantic.
 3. Frontend aplica `mode` (auto/replace/append/update) sobre los widgets
