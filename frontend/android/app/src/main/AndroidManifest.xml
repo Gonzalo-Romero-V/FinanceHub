@@ -43,8 +43,16 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Grabar movimientos por voz (getUserMedia/MediaRecorder en el WebView) -->
+    <!-- Grabar movimientos por voz (getUserMedia/MediaRecorder en el WebView).
+         MODIFY_AUDIO_SETTINGS es un permiso "normal" (no pide diálogo, se
+         concede solo al instalar) pero sin él el subsistema de audio de
+         Android le sigue negando el micrófono al WebView aunque RECORD_AUDIO
+         ya esté otorgado — getUserMedia() falla con NotReadableError/
+         NotFoundError en vez de NotAllowedError, que es justo lo que se
+         reportó (el diálogo del sistema aparece y se acepta, pero igual
+         falla) — https://learn.microsoft.com/en-us/answers/questions/5544772 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- Detectar conectividad para el respaldo offline y su sincronización -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Notificaciones push (FCM) — requerido explícitamente desde Android 13 -->
