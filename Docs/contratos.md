@@ -29,11 +29,17 @@ El cliente del frontend (`lib/api/client.ts`) acepta ambas variantes
 
 | Método | Path | Body | 200 |
 |---|---|---|---|
-| POST | `/auth/login` | `{email, password}` | `{mensaje, data:User, token}` |
-| POST | `/auth/register` | `{name, email, password}` | `{mensaje, data:User, token}` |
+| POST | `/auth/login` | `{email, password}` | `{mensaje, data:User, token}` — 409 si el email no está verificado (sin token) |
+| POST | `/auth/register` | `{name, email, password}` | `{mensaje, data:User}` — **sin token**, manda email de verificación |
+| POST | `/auth/forgot-password` | `{email}` | `{mensaje}` — siempre 200, mensaje neutro (anti-enumeración) |
+| POST | `/auth/reset-password` | `{token, email, password, password_confirmation}` | `{mensaje}` — revoca todos los tokens del usuario |
+| POST | `/auth/resend-verification` | `{email}` | `{mensaje}` — siempre 200, neutro |
+| GET | `/auth/email/verify/{id}/{hash}` | (link firmado, no se llama manualmente) | 302 → `FRONTEND_URL/login?verified=1` |
 | GET | `/auth/google` | — | 302 → Google consent |
 | GET | `/auth/google/callback` | (query de Google) | 302 → `FRONTEND_URL/auth/callback?token=...` |
 | GET | `/login/google/callback` | (alias del anterior) | idem |
+
+Todas las rutas de auth (login/register/forgot-password/reset-password/resend-verification) tienen `throttle:6,1`.
 
 ### Auth (Bearer)
 
@@ -129,6 +135,20 @@ Errores notables:
 ```
 El array está vacío si no se cruzó ningún umbral. El frontend muestra un toast por cada elemento.
 
+### Deudas (Bearer)
+
+| Método | Path | Body | 200 |
+|---|---|---|---|
+| GET | `/deudas` | — | `{data:Deuda[]}` (cada una enriquecida con `proxima_cuota`, `total_pagado`, `total_a_pagar`) |
+| POST | `/deudas` | `{nombre, sistema, monto_original, plazo_meses, fecha_inicio, tasa_mensual?, acreedor?, notas?}` | `{data:Deuda}` — genera automáticamente el plan de cuotas (`sistema`: `frances\|aleman\|bullet`) y un concepto de sistema asociado |
+| GET | `/deudas/{id}` | — | `{data:Deuda}` con `cuotas[]` |
+| PATCH | `/deudas/{id}` | `{estado?, notas?, ...}` | `{data:Deuda}` |
+| DELETE | `/deudas/{id}` | — | `{mensaje}` |
+| POST | `/deudas/{deudaId}/cuotas/{cuotaId}/pagar` | `{cuenta_id?}` | `{mensaje}` — marca la cuota pagada; si viene `cuenta_id` crea además el movimiento de egreso correspondiente (con ownership check) |
+
+Registrar un movimiento manual contra el concepto de una deuda activa
+auto-marca la próxima cuota pendiente como pagada (`MovimientoController::store`).
+
 ### Balance (Bearer)
 
 | Método | Path | 200 |
@@ -146,7 +166,7 @@ Campos adicionales en `GET /balance` (v2):
 |---|---|---|---|---|
 | GET | `/users` | solo admin | — | `{mensaje, data:User[]}` |
 | GET | `/users/{id}` | self o admin | — | `{mensaje, data:User}` |
-| PATCH | `/users/{id}` | self o admin | `{name?, email?, password?}` | `{mensaje, data:User}` |
+| PATCH | `/users/{id}` | self o admin | `{name?, email?, password?, current_password?}` | `{mensaje, data:User}` |
 | DELETE | `/users/{id}` | solo admin | — | `{mensaje}` |
 
 Notas:
@@ -155,6 +175,37 @@ Notas:
 - El campo `password` se bcrypta automáticamente en el modelo
   (`setPasswordAttribute`).
 - Si `auth()->id() !== id` y el usuario no es admin → 403.
+- **Cambiar la propia contraseña exige `current_password` correcto** (422
+  si falta o no coincide) — no aplica si el usuario no tenía password
+  todavía (cuenta 100% Google seteando una por primera vez) ni si un admin
+  edita a otro usuario.
+- `User` incluye `has_password: bool` (calculado) — el frontend lo usa
+  para saber si debe pedir `current_password`.
+
+### Notificaciones (Bearer)
+
+| Método | Path | Body | 200 |
+|---|---|---|---|
+| GET | `/notifications` | — | `{data:Notification[], unread_count}` — últimas 50, más recientes primero |
+| PATCH | `/notifications/{id}/leida` | — | `{mensaje}` — 404 si la notificación no es del usuario autenticado |
+| PATCH | `/notifications/leer-todas` | — | `{mensaje}` |
+
+`Notification.data` es un objeto libre por tipo, siempre con al menos
+`{titulo, mensaje}`. `Notification.type` es el FQCN de la clase PHP que la
+generó (`App\Notifications\ReconciliacionProximaNotification`,
+`CuotaDeudaProximaNotification`, `PresupuestoUmbralNotification`,
+`LimiteIADiarioNotification`).
+
+### Push Subscriptions (Bearer)
+
+| Método | Path | Body | 200 |
+|---|---|---|---|
+| POST | `/push-subscriptions` | `{tipo: "web"\|"fcm", identificador, payload}` | `{mensaje, data}` — `updateOrCreate` por `identificador`, no duplica en re-registro |
+| DELETE | `/push-subscriptions` | `{identificador}` | `{mensaje}` |
+
+`identificador` es el endpoint de la suscripción Push API (`tipo: "web"`)
+o el token FCM (`tipo: "fcm"`). `payload` guarda las claves `p256dh`/`auth`
+(web) o queda vacío (fcm, el token ya es suficiente).
 
 ---
 
@@ -228,6 +279,12 @@ El servicio valida el id, hash SHA-256, tipo y expiracion del token Sanctum; `:u
 - "Hoy", "ayer", "este mes" se interpretan en la TZ del usuario, no en UTC.
 
 **CORS**: leído de `ALLOWED_ORIGINS` (CSV; default `http://localhost:3000`).
+
+**Límite diario**: `/api/analyze` y los endpoints de voz comparten
+`enforce_daily_limit` (reemplaza a `get_current_user_id` como dependencia,
+lo envuelve) — 429 con mensaje humano al superar `DAILY_LLM_LIMIT`
+(~50/día por usuario). 1 request de usuario = 1 uso, sin importar
+reintentos internos del auto-discovery.
 
 ---
 

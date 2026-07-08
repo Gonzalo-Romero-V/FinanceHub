@@ -9,7 +9,7 @@ Base de datos: **PostgreSQL** `financehub`. Las migraciones canónicas viven en
 | id | bigserial PK | |
 | name | string | |
 | email | string unique | |
-| email_verified_at | timestamp nullable | |
+| email_verified_at | timestamp nullable | **Bloqueante desde esta sesión**: login rechaza con 409 si es null (cuentas tradicionales). Cuentas Google se verifican solas al crearse. Cuentas ya existentes antes de esta funcionalidad quedaron confirmadas retroactivamente por una migración de backfill. |
 | password | string nullable | Null cuando el usuario entró por OAuth. |
 | provider | string nullable | `google`, etc. |
 | provider_id | string nullable | id del proveedor OAuth. |
@@ -18,6 +18,12 @@ Base de datos: **PostgreSQL** `financehub`. Las migraciones canónicas viven en
 | timestamps | created_at / updated_at | |
 
 Índice: `(provider, provider_id)`.
+
+`has_password: bool` es un atributo calculado (no columna) expuesto en el
+JSON — cierto si `password` no es null. Puede ser `true` en una cuenta
+Google que además configuró login híbrido desde Perfil o vía
+"olvidé mi contraseña". El frontend lo usa para saber si debe pedir
+`current_password` al cambiar la contraseña.
 
 ## tipos_cuenta
 | Columna | Tipo |
@@ -67,8 +73,13 @@ Valores semilla típicos: `Ingreso`, `Egreso`, `Transferencia`.
 | fecha | timestamp | UTC. Se setea en backend con `now()` al crear. **Inmutable**: no se modifica en updates. Ver `Docs/contratos.md` para la regla "solo editar movimientos del día actual". |
 
 ⚠️ La tabla `movimientos` NO tiene `user_id` directo. La pertenencia al usuario
-se deduce vía `concepto.user_id` (o `cuenta_*.user_id`). Está en `PENDIENTES.md`
-agregar `NOT NULL` en origen/destino según corresponda.
+se deduce vía `cuenta_origen.user_id`/`cuenta_destino.user_id` (todos los
+controllers ya filtran así). **Importante**: al editar un movimiento, hay que
+revalidar la ownership de los valores *nuevos* que vengan en el body
+(`concepto_id`, `cuenta_origen_id`, `cuenta_destino_id`), no solo la del
+movimiento original — hubo un IDOR real acá (`MovimientoController::update()`
+dejaba mover saldo hacia/desde la cuenta de otro usuario), corregido con
+`verificarConceptoDelUsuario()`/`verificarCuentaDelUsuario()`.
 
 ## Relaciones (resumen)
 
@@ -81,6 +92,12 @@ conceptos 0..1──* conceptos (parent_id — auto-referencial, max 2 niveles)
 conceptos 1───* movimientos
 cuentas 1───* movimientos (cuenta_origen_id)
 cuentas 1───* movimientos (cuenta_destino_id)
+users 1───* deudas
+deudas 1───* cuotas
+deudas 0..1──1 conceptos (concepto_id, es_sistema=true)
+users 1───* push_subscriptions
+users 1───* notifications (polimórfico, vía Notifiable)
+users 1───1 llm_usage_daily (por día — usage_date compuesto en la unique)
 ```
 
 ## Reglas de dominio (validación viva en backend)
@@ -163,5 +180,80 @@ Al crear o editar un movimiento, el backend detecta qué umbrales del presupuest
 | reconciliacion_dia_semana | tinyint unsigned nullable | 1=lun … 7=dom. Aplica para tipo `semanal` y `quincenal`. |
 | reconciliacion_dia_mes | tinyint unsigned nullable | 1–28, 0 = último día del mes. Aplica para tipo `mensual`. |
 | reconciliacion_frecuencia_dias | int nullable | Solo para tipo `personalizado`: cada N días. |
-| reconciliacion_proxima | date nullable | Calculada automáticamente según el tipo al guardar. |
+| reconciliacion_proxima | date nullable | Calculada por `UserSettingsModel::calcularProximaReconciliacion()` — al guardar la preferencia Y al reconciliar (antes solo se reprogramaba para el tipo `personalizado`, era un bug). |
+| onboarding_seen | jsonb default `{}` | Claves de coach marks/carrusel ya vistas. Se resetea (total o por clave) desde Perfil o el ícono de ayuda. |
 | updated_at | timestamp nullable | |
+
+## deudas
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| user_id | bigint FK → users.id | |
+| nombre | string | |
+| acreedor | string nullable | |
+| sistema | string(20) | `frances` \| `aleman` \| `bullet` — determina cómo se genera el plan de `cuotas` al crear. |
+| monto_original | decimal(14,2) | |
+| plazo_meses | int | |
+| fecha_inicio | date | |
+| tasa_mensual | decimal(8,6) nullable | |
+| cuota_directa | decimal(14,2) nullable | |
+| total_informal | decimal(14,2) nullable | |
+| notas | text nullable | |
+| estado | string(20) default 'activa' | `activa` \| `pagada` \| `cancelada` |
+| concepto_id | bigint FK nullable → conceptos.id | Concepto de sistema (`es_sistema=true`) creado junto con la deuda — registrar un movimiento contra él auto-marca la próxima cuota pendiente como pagada. |
+| timestamps | | |
+
+## cuotas
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| deuda_id | bigint FK → deudas.id | |
+| numero_cuota | int | |
+| fecha_vencimiento | date | Casteada como `date` en el modelo (necesario para comparar con `isPast()` en los triggers de notificación). |
+| cuota_total | decimal(14,2) | |
+| capital | decimal(14,2) nullable | |
+| interes | decimal(14,2) nullable | |
+| saldo_restante | decimal(14,2) | |
+| pagada | bool default false | |
+| fecha_pago | timestamp nullable | |
+| movimiento_id | bigint FK nullable → movimientos.id | |
+
+UNIQUE `(deuda_id, numero_cuota)`. Sin `timestamps` (`public $timestamps = false`).
+
+## notifications
+Tabla nativa de Laravel (no custom) — generada con `php artisan notifications:table`, usada vía el trait `Notifiable` que `UserModel` ya tenía para mail.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| type | string | FQCN de la clase de notificación (`App\Notifications\ReconciliacionProximaNotification`, etc.) |
+| notifiable_type / notifiable_id | polimórfico | Siempre `App\Models\UserModel` acá. |
+| data | text | JSON serializado — siempre incluye al menos `{titulo, mensaje}`. |
+| read_at | timestamp nullable | |
+| timestamps | | |
+
+## push_subscriptions
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| user_id | bigint FK → users.id ON DELETE CASCADE | Un usuario puede tener varias (web + Android, o varios navegadores). |
+| tipo | enum('web','fcm') | Transporte — Web Push y FCM tienen payloads distintos. |
+| identificador | text | Endpoint de la suscripción Push API (`web`) o token del dispositivo (`fcm`). |
+| payload | jsonb | Claves `p256dh`/`auth` (web) o vacío (fcm). |
+| timestamps | | |
+
+UNIQUE `(user_id, identificador)` — re-registrar el mismo dispositivo actualiza en vez de duplicar.
+
+## llm_usage_daily
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | bigserial PK | |
+| user_id | bigint FK → users.id ON DELETE CASCADE | |
+| usage_date | date | |
+| count | unsigned int default 0 | |
+| timestamps | | |
+
+UNIQUE `(user_id, usage_date)`. El schema vive acá (Laravel gestiona esta
+DB compartida) pero quien lee/escribe en tiempo real es el llm-service
+(Python, acceso directo a Postgres vía SQLAlchemy) — mismo patrón que ya
+usa para validar `personal_access_tokens` sin pasar por HTTP a Laravel.
