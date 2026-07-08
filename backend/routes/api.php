@@ -24,7 +24,9 @@ Route::prefix('auth')->group(function () {
 // PROTEGIDAS
 // =====================
 
-Route::middleware('auth:sanctum')->group(function () {
+// Generoso para uso normal (una pantalla puede disparar varias llamadas al
+// cargar), pero pone techo real contra scraping/abuso o un token filtrado.
+Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
 
     // =====================
     // CUENTAS
@@ -93,6 +95,20 @@ Route::middleware('auth:sanctum')->group(function () {
     // =====================
     Route::prefix('deudas')->group(function () {
         require __DIR__ . '/deudas/DeudasRouter.php';
+    });
+
+    // =====================
+    // NOTIFICACIONES
+    // =====================
+    Route::prefix('notifications')->group(function () {
+        require __DIR__ . '/notifications/NotificationsRouter.php';
+    });
+
+    // =====================
+    // PUSH SUBSCRIPTIONS
+    // =====================
+    Route::prefix('push-subscriptions')->group(function () {
+        require __DIR__ . '/push_subscriptions/PushSubscriptionsRouter.php';
     });
 
 });

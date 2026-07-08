@@ -24,11 +24,13 @@ class CuotaModel extends Model
     ];
 
     protected $casts = [
-        'cuota_total'    => 'float',
-        'capital'        => 'float',
-        'interes'        => 'float',
-        'saldo_restante' => 'float',
-        'pagada'         => 'boolean',
+        'cuota_total'       => 'float',
+        'capital'           => 'float',
+        'interes'           => 'float',
+        'saldo_restante'    => 'float',
+        'pagada'            => 'boolean',
+        'fecha_vencimiento' => 'date',
+        'fecha_pago'        => 'datetime',
     ];
 
     public function deuda()

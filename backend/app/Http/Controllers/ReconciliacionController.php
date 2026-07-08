@@ -131,11 +131,13 @@ class ReconciliacionController
                     'fecha'               => CarbonImmutable::now('UTC'),
                 ]);
 
-                // Actualizar próxima fecha de reconciliación si el usuario tiene frecuencia configurada
+                // Reprogramar la próxima fecha de reconciliación (cualquier
+                // tipo de calendario configurado, no solo "personalizado" —
+                // antes solo avanzaba si había reconciliacion_frecuencia_dias).
                 $settings = UserSettingsModel::where('user_id', $userId)->first();
-                if ($settings && $settings->reconciliacion_frecuencia_dias) {
+                if ($settings) {
                     $settings->update([
-                        'reconciliacion_proxima' => now()->addDays($settings->reconciliacion_frecuencia_dias)->toDateString(),
+                        'reconciliacion_proxima' => $settings->calcularProximaReconciliacion(),
                     ]);
                 }
             });

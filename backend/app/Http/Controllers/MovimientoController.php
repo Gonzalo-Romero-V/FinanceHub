@@ -9,6 +9,8 @@ use App\Models\ConceptoModel;
 use App\Models\DeudaModel;
 use App\Models\CuotaModel;
 use App\Models\PresupuestoModel;
+use App\Models\UserModel;
+use App\Notifications\PresupuestoUmbralNotification;
 use Illuminate\Support\Facades\DB;
 use Carbon\CarbonImmutable;
 use Exception;
@@ -16,6 +18,29 @@ use Exception;
 class MovimientoController
 {
     // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    /**
+     * Verifica que el concepto pertenezca al usuario autenticado antes de
+     * dejarlo usar en un movimiento — sin esto, cualquier usuario podía
+     * registrar/editar un movimiento con el concepto_id de otro usuario
+     * (fuga de nombre/categoría privada al quedar embebido en su propio
+     * movimiento vía eager-load de concepto.tipoMovimiento/parent).
+     */
+    private function verificarConceptoDelUsuario(int $conceptoId, int $userId): ConceptoModel
+    {
+        return ConceptoModel::where('id', $conceptoId)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+    }
+
+    /**
+     * Verifica que una cuenta (si viene informada) pertenezca al usuario.
+     */
+    private function verificarCuentaDelUsuario(?int $cuentaId, int $userId): void
+    {
+        if (!$cuentaId) return;
+        CuentaModel::where('id', $cuentaId)->where('user_id', $userId)->firstOrFail();
+    }
 
     /**
      * Devuelve el nombre del tipo de movimiento dado un concepto_id.
@@ -165,6 +190,16 @@ class MovimientoController
                         'total_actual'      => $totalActual,
                         'monto_presupuesto' => $monto,
                     ];
+
+                    // Persistir en el inbox (no solo el toast efímero que ya
+                    // consume el frontend con esta misma respuesta).
+                    $user = UserModel::find($userId);
+                    $user?->notify(new PresupuestoUmbralNotification(
+                        $presupuesto->id,
+                        $presupuesto->concepto?->nombre ?? '',
+                        round($pctActual, 1),
+                        $monto,
+                    ));
                 }
             }
         }
@@ -203,20 +238,14 @@ class MovimientoController
         ]);
 
         $userId = auth()->id();
+
+        // Validamos que el concepto y las cuentas referenciadas pertenezcan al usuario
+        $this->verificarConceptoDelUsuario((int) $request->concepto_id, $userId);
+        $this->verificarCuentaDelUsuario($request->cuenta_origen_id, $userId);
+        $this->verificarCuentaDelUsuario($request->cuenta_destino_id, $userId);
+
         $tipo   = $this->getTipoMovimiento((int) $request->concepto_id);
         $monto  = (float) $request->monto;
-
-        // Validamos que las cuentas referenciadas pertenezcan al usuario
-        if ($request->cuenta_origen_id) {
-            CuentaModel::where('id', $request->cuenta_origen_id)
-                ->where('user_id', $userId)
-                ->firstOrFail();
-        }
-        if ($request->cuenta_destino_id) {
-            CuentaModel::where('id', $request->cuenta_destino_id)
-                ->where('user_id', $userId)
-                ->firstOrFail();
-        }
 
         try {
             DB::transaction(function () use ($request, $tipo, $monto, $userId, &$nuevoMovimiento) {
@@ -336,6 +365,21 @@ class MovimientoController
 
         if (empty($datos)) {
             return response()->json(['mensaje' => 'No se enviaron campos para actualizar'], 400);
+        }
+
+        // Si el request cambia concepto/cuentas, validar que las nuevas
+        // referencias sigan perteneciendo al usuario (antes solo se
+        // validaba la propiedad del movimiento original, no de los valores
+        // nuevos — permitía mover saldo hacia/desde la cuenta de otro
+        // usuario, o adoptar el concepto de otro usuario).
+        if (isset($datos['concepto_id'])) {
+            $this->verificarConceptoDelUsuario((int) $datos['concepto_id'], $userId);
+        }
+        if (array_key_exists('cuenta_origen_id', $datos)) {
+            $this->verificarCuentaDelUsuario($datos['cuenta_origen_id'], $userId);
+        }
+        if (array_key_exists('cuenta_destino_id', $datos)) {
+            $this->verificarCuentaDelUsuario($datos['cuenta_destino_id'], $userId);
         }
 
         // Capturar valores anteriores para el cálculo de alertas

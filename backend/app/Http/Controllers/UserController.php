@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\UserModel;
 use Exception;
+use Illuminate\Support\Facades\Hash;
 
 class UserController
 {
@@ -57,7 +58,8 @@ class UserController
         $request->validate([
             'name' => 'sometimes|string|max:100',
             'email' => 'sometimes|email',
-            'password' => 'sometimes|string|min:6'
+            'password' => 'sometimes|string|min:6',
+            'current_password' => 'sometimes|string',
         ]);
 
         $datos = $request->only(['name', 'email', 'password']);
@@ -76,10 +78,24 @@ class UserController
             ], 404);
         }
 
-        if (auth()->id() !== $user->id && auth()->user()->role !== 'admin') {
+        $isSelf = auth()->id() === $user->id;
+
+        if (!$isSelf && auth()->user()->role !== 'admin') {
             return response()->json([
                 'mensaje' => 'No autorizado'
             ], 403);
+        }
+
+        // Cambiar la propia contraseña exige verificar la actual — evita que
+        // un token robado (XSS, sesión abierta) alcance para tomar la cuenta.
+        // No aplica si el usuario todavía no tiene password (ej. cuenta
+        // Google seteando una por primera vez) ni si un admin edita a otro.
+        if (isset($datos['password']) && $isSelf && $user->password) {
+            if (!$request->filled('current_password') || !Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'mensaje' => 'La contraseña actual es incorrecta.'
+                ], 422);
+            }
         }
 
         try {
