@@ -14,7 +14,12 @@ class PushSubscriptionController
         $request->validate([
             'tipo' => 'required|in:web,fcm',
             'identificador' => 'required|string',
-            'payload' => 'required|array',
+            // "required" en un array vacío falla en Laravel (lo trata como
+            // "no presente") — FCM no necesita nada más que el token, así
+            // que manda payload: {} vacío desde el cliente nativo, cosa que
+            // web push nunca hace (siempre manda { keys: ... }). Por eso
+            // esto solo rompía el registro de notificaciones en Android.
+            'payload' => 'nullable|array',
         ]);
 
         $subscription = PushSubscriptionModel::updateOrCreate(
@@ -24,7 +29,7 @@ class PushSubscriptionController
             ],
             [
                 'tipo' => $request->tipo,
-                'payload' => $request->payload,
+                'payload' => $request->payload ?? [],
             ]
         );
 

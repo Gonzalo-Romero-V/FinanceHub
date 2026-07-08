@@ -101,6 +101,28 @@ class NotificationsTest extends TestCase
         ]);
     }
 
+    public function test_register_fcm_push_subscription_with_empty_payload(): void
+    {
+        // El cliente nativo (Android/FCM) no necesita nada más que el token
+        // y manda payload: {} vacío — un array vacío no puede ser "required"
+        // en Laravel (lo trata como no presente), así que esto reproduce el
+        // bug real: el registro de notificaciones fallaba siempre en Android.
+        $user = $this->makeUser();
+
+        $response = $this->actingAs($user)->postJson('/api/push-subscriptions', [
+            'tipo' => 'fcm',
+            'identificador' => 'device-token-abc',
+            'payload' => [],
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('push_subscriptions', [
+            'user_id' => $user->id,
+            'tipo' => 'fcm',
+            'identificador' => 'device-token-abc',
+        ]);
+    }
+
     public function test_registering_same_identificador_twice_updates_not_duplicates(): void
     {
         $user = $this->makeUser();
