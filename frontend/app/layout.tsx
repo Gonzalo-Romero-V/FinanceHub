@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth/context";
+import { DeepLinkListener } from "@/components/auth/deep-link-listener";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -37,6 +38,7 @@ export default function RootLayout({
   `}
       >
         <AuthProvider>
+          <DeepLinkListener />
           {children}
           <Toaster richColors position="bottom-right" duration={4500} />
         </AuthProvider>

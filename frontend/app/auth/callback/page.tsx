@@ -11,12 +11,24 @@ function AuthCallbackContent() {
   
   useEffect(() => {
     const token = searchParams.get("token");
-    
-    if (token) {
-      void loginWithToken(token);
-    } else {
+
+    if (!token) {
       router.push("/login?error=no_token");
+      return;
     }
+
+    // Si esta página cargó en el navegador del sistema porque Google
+    // bloqueó el WebView de la app (ver DeepLinkListener), intentamos
+    // devolver el control a la app antes de completar el login acá. Es
+    // un no-op inofensivo en desktop / si la app no está instalada — el
+    // navegador sigue de largo y completa el login web normal abajo.
+    window.location.href = `cc.financehub.app://auth/callback?token=${token}`;
+
+    const timer = setTimeout(() => {
+      void loginWithToken(token);
+    }, 700);
+
+    return () => clearTimeout(timer);
   }, [loginWithToken, router, searchParams]);
 
   return (
