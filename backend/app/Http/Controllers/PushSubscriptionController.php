@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PushSubscriptionModel;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Http\Request;
 
 class PushSubscriptionController
@@ -32,6 +33,13 @@ class PushSubscriptionController
                 'payload' => $request->payload ?? [],
             ]
         );
+
+        // Solo la primera vez que se registra este canal en particular —
+        // sirve de prueba real de que el envío funciona de punta a punta,
+        // no solo que el permiso del dispositivo está concedido.
+        if ($subscription->wasRecentlyCreated) {
+            auth()->user()->notify(new WelcomeNotification());
+        }
 
         return response()->json([
             'mensaje' => 'Canal de notificaciones registrado',

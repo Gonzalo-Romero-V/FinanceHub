@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\UserModel;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class NotificationsTest extends TestCase
@@ -121,6 +123,31 @@ class NotificationsTest extends TestCase
             'tipo' => 'fcm',
             'identificador' => 'device-token-abc',
         ]);
+    }
+
+    public function test_welcome_notification_sent_only_on_first_registration(): void
+    {
+        // Sirve de prueba real de punta a punta cuando el usuario activa
+        // notificaciones — no debe reenviarse en cada actualización del
+        // mismo canal (ej. el token de FCM rota pero es el mismo device).
+        Notification::fake();
+        $user = $this->makeUser();
+
+        $this->actingAs($user)->postJson('/api/push-subscriptions', [
+            'tipo' => 'fcm',
+            'identificador' => 'device-token-welcome',
+            'payload' => [],
+        ])->assertCreated();
+
+        Notification::assertSentTo($user, WelcomeNotification::class);
+
+        $this->actingAs($user)->postJson('/api/push-subscriptions', [
+            'tipo' => 'fcm',
+            'identificador' => 'device-token-welcome',
+            'payload' => [],
+        ])->assertCreated();
+
+        Notification::assertSentToTimes($user, WelcomeNotification::class, 1);
     }
 
     public function test_registering_same_identificador_twice_updates_not_duplicates(): void
