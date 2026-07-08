@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | URL del frontend Next.js — usada para armar links que apuntan ahí
+    | (callback de Google OAuth, links de emails de reset/verificación).
+    | Se lee acá (no con env() directo en controllers/models) para que siga
+    | funcionando aunque el config esté cacheado (`php artisan config:cache`).
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
 ];

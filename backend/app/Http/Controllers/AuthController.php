@@ -140,11 +140,11 @@ class AuthController
             $token = $user->createToken('auth_token')->plainTextToken;
 
             // Redirect to frontend with the token
-            return redirect()->away(env('FRONTEND_URL', 'http://localhost:3000') . '/auth/callback?token=' . $token);
+            return redirect()->away(config('app.frontend_url') . '/auth/callback?token=' . $token);
 
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Google Auth Error: ' . $e->getMessage());
-            return redirect()->away(env('FRONTEND_URL', 'http://localhost:3000') . '/login?error=google_auth_failed');
+            return redirect()->away(config('app.frontend_url') . '/login?error=google_auth_failed');
         }
     }
 
@@ -206,7 +206,7 @@ class AuthController
     // patrón que el callback de Google) y redirige al frontend al terminar.
     public function verifyEmail(Request $request, $id, $hash)
     {
-        $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
+        $frontendUrl = rtrim(config('app.frontend_url'), '/');
 
         $user = UserModel::find($id);
 

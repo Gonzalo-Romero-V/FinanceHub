@@ -19,6 +19,8 @@
 /public/.user.ini
 /storage/*.key
 /storage/pail
+/storage/*firebase*.json
+/storage/financehub-f4bb8-firebase-adminsdk-fbsvc-97a40c3b11.json
 /vendor
 Homestead.json
 Homestead.yaml
