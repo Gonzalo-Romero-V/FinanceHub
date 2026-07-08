@@ -118,7 +118,7 @@ export function ConceptoForm({
     if (!nombre.trim()) return setError("El nombre es obligatorio.");
 
     if (!esSubconcepto && !tipoId) {
-      return setError("Seleccioná un tipo de movimiento.");
+      return setError("Selecciona un tipo de movimiento.");
     }
 
     setIsLoading(true);

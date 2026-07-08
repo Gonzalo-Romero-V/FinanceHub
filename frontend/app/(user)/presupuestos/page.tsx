@@ -198,11 +198,11 @@ export default function PresupuestosPage() {
     <PageShell>
       <PageHeader
         title="Presupuestos"
-        description="Definí límites o metas por categoría y recibí alertas cuando te acercás al umbral."
+        description="Define límites o metas por categoría y recibe alertas cuando te acerques al umbral."
         action={
           <CoachMark
             id="presupuestos"
-            text="Definí un límite de gasto por categoría y te avisamos si te acercás."
+            text="Define un límite de gasto por categoría y te avisamos si te acercas."
             guideHref="/help"
           >
             <div>
@@ -220,7 +220,7 @@ export default function PresupuestosPage() {
 
       <CoachMark
         id="presupuestos_umbrales"
-        text="Cada presupuesto puede tener varios umbrales (ej. 50%, 75%, 90%) — te avisamos cada vez que cruzás uno, no solo al llegar al límite total."
+        text="Cada presupuesto puede tener varios umbrales (ej. 50%, 75%, 90%) — te avisamos cada vez que cruzas uno, no solo al llegar al límite total."
         guideHref="/help"
         enabled={isSeen("presupuestos")}
       >
@@ -237,7 +237,7 @@ export default function PresupuestosPage() {
           <div>
             <p className="font-semibold text-foreground">Sin presupuestos aún</p>
             <p className="small text-muted-foreground mt-1">
-              Creá uno para controlar tus gastos por categoría.
+              Crea uno para controlar tus gastos por categoría.
             </p>
           </div>
           <Button

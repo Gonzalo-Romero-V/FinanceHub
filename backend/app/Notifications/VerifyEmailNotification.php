@@ -30,11 +30,11 @@ class VerifyEmailNotification extends Notification
         $greeting = $notifiable->name ? "Hola {$notifiable->name}," : 'Hola,';
 
         return (new MailMessage)
-            ->subject('Confirmá tu cuenta — FinanceHub')
+            ->subject('Confirma tu cuenta — FinanceHub')
             ->greeting($greeting)
-            ->line('Gracias por registrarte en FinanceHub. Confirmá tu email para poder iniciar sesión.')
+            ->line('Gracias por registrarte en FinanceHub. Confirma tu email para poder iniciar sesión.')
             ->action('Confirmar email', $url)
             ->line('Este enlace vence en 60 minutos.')
-            ->line('Si no creaste esta cuenta, podés ignorar este email.');
+            ->line('Si no creaste esta cuenta, puedes ignorar este email.');
     }
 }

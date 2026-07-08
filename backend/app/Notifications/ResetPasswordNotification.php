@@ -24,11 +24,11 @@ class ResetPasswordNotification extends Notification
         $greeting = $notifiable->name ? "Hola {$notifiable->name}," : 'Hola,';
 
         return (new MailMessage)
-            ->subject('Restablecé tu contraseña — FinanceHub')
+            ->subject('Restablece tu contraseña — FinanceHub')
             ->greeting($greeting)
             ->line('Recibimos una solicitud para restablecer la contraseña de tu cuenta.')
             ->action('Restablecer contraseña', $this->url)
             ->line('Este enlace vence en 60 minutos.')
-            ->line('Si no pediste esto, podés ignorar este email — tu contraseña actual sigue funcionando.');
+            ->line('Si no pediste esto, puedes ignorar este email — tu contraseña actual sigue funcionando.');
     }
 }

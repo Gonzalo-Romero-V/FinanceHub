@@ -54,8 +54,13 @@ export function VoiceRecorderButton({
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
-    } catch {
-      notifyError("No se pudo acceder al micrófono. Revisá los permisos del navegador.");
+    } catch (error) {
+      const denied = error instanceof DOMException && error.name === "NotAllowedError";
+      notifyError(
+        denied
+          ? "No se concedió el permiso de micrófono. Puedes habilitarlo desde los ajustes de la aplicación."
+          : "No se pudo acceder al micrófono. Verifica que el dispositivo tenga uno disponible.",
+      );
       setIsRecording(false);
       stopStream();
     }
@@ -76,20 +81,28 @@ export function VoiceRecorderButton({
   };
 
   return (
-    <Button
-      type="button"
-      size="icon"
-      variant={isRecording ? "destructive" : "outline"}
-      onClick={handleClick}
-      disabled={disabled || isProcessing}
-      aria-label={isRecording ? "Detener grabación" : "Grabar por voz"}
-      className={cn(className)}
-    >
-      {isProcessing ? (
-        <Loader2 className="animate-spin" />
-      ) : (
-        <Mic className={cn(isRecording && "animate-pulse")} />
+    <span className="relative inline-flex">
+      {isRecording && (
+        <>
+          <span className="absolute inset-0 rounded-md bg-destructive/40 animate-ping" />
+          <span className="absolute inset-0 rounded-md bg-destructive/20 animate-pulse" />
+        </>
       )}
-    </Button>
+      <Button
+        type="button"
+        size="icon"
+        variant={isRecording ? "destructive" : "outline"}
+        onClick={handleClick}
+        disabled={disabled || isProcessing}
+        aria-label={isRecording ? "Detener grabación" : "Grabar por voz"}
+        className={cn("relative", isRecording && "scale-105", className)}
+      >
+        {isProcessing ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          <Mic className={cn("transition-transform duration-300", isRecording && "scale-110")} />
+        )}
+      </Button>
+    </span>
   );
 }

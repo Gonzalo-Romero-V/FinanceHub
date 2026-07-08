@@ -24,15 +24,15 @@ FAILURE_MESSAGES: dict[WidgetFailureReason, str] = {
     ),
     WidgetFailureReason.TABLA_NO_DISPONIBLE: (
         "Esa información todavía no está disponible desde el asistente (por "
-        "ejemplo, deudas o presupuestos) — probá consultarlo desde su "
+        "ejemplo, deudas o presupuestos) — intenta consultarlo desde su "
         "sección correspondiente."
     ),
     WidgetFailureReason.ERROR_SQL: (
-        "Tuve un problema técnico generando esa consulta. Intentá "
+        "Tuve un problema técnico generando esa consulta. Intenta "
         "reformularla de otra manera."
     ),
     WidgetFailureReason.TIMEOUT: (
-        "La consulta tardó demasiado en responder. Probá acotar el período "
+        "La consulta tardó demasiado en responder. Intenta acotar el período "
         "o simplificar la pregunta."
     ),
 }

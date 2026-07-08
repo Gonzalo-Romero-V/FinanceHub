@@ -33,8 +33,8 @@ class ReconciliacionProximaNotification extends Notification
     private function mensaje(): string
     {
         return $this->vencida
-            ? "Tu reconciliación programada del {$this->fecha} ya venció. Revisá tus cuentas cuando puedas."
-            : "Tenés una reconciliación programada para el {$this->fecha}.";
+            ? "Tu reconciliación programada del {$this->fecha} ya venció. Revisa tus cuentas cuando puedas."
+            : "Tienes una reconciliación programada para el {$this->fecha}.";
     }
 
     public function toDatabase($notifiable): array

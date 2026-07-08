@@ -554,20 +554,20 @@ export default function CuentasPage() {
         <div className="flex items-center gap-3 rounded-lg border border-chart-4/30 bg-chart-4/10 px-4 py-3 mb-4">
           <AlertTriangle className="h-4 w-4 text-chart-4 shrink-0" />
           <p className="text-sm text-chart-4">
-            Tenés una reconciliación pendiente desde el{" "}
+            Tienes una reconciliación pendiente desde el{" "}
             <span className="font-semibold">
               {balance?.proxima_reconciliacion
                 ? new Date(balance.proxima_reconciliacion).toLocaleDateString("es")
                 : "fecha no disponible"}
             </span>
-            . Usá el ícono <span className="font-semibold">⚖</span> en cada cuenta para conciliarla.
+            . Usa el ícono <span className="font-semibold">⚖</span> en cada cuenta para conciliarla.
           </p>
         </div>
       )}
 
       <CoachMark
         id="balance_general"
-        text="Cada movimiento que registrás actualiza este número al instante: tu Balance General es Activos menos Pasivos."
+        text="Cada movimiento que registras actualiza este número al instante: tu Balance General es Activos menos Pasivos."
         guideHref="/help"
         enabled={isSeen("tipos_movimiento") && isSeen("conceptos")}
       >
@@ -582,7 +582,7 @@ export default function CuentasPage() {
         {/* Activos */}
         <CoachMark
           id="cuentas_activos"
-          text="Acá van tus cuentas con dinero disponible: banco, efectivo, ahorros. Sumá al menos una para empezar."
+          text="Aquí van tus cuentas con dinero disponible: banco, efectivo, ahorros. Suma al menos una para empezar."
           guideHref="/help"
         >
         <div>
@@ -634,12 +634,12 @@ export default function CuentasPage() {
 
         <CoachMark
           id="cuentas_conciliaciones"
-          text="Usá el ícono ⚖ junto a cada cuenta para conciliarla: comparás el saldo real con el del sistema y ajustamos la diferencia. Podés configurar un recordatorio periódico en Ajustes."
+          text="Usa el ícono ⚖ junto a cada cuenta para conciliarla: compara el saldo real con el del sistema y ajustamos la diferencia. Puedes configurar un recordatorio periódico en Ajustes."
           guideHref="/perfil#recordatorio-conciliacion"
           enabled={isSeen("cuentas_activos")}
         >
           <p className="xs text-muted-foreground flex items-center gap-1.5 px-2">
-            <span aria-hidden>⚖</span> Tocá el ícono de balanza en una cuenta para conciliarla.
+            <span aria-hidden>⚖</span> Toca el ícono de balanza en una cuenta para conciliarla.
           </p>
         </CoachMark>
 
@@ -647,7 +647,7 @@ export default function CuentasPage() {
         <div className="w-full">
           <CoachMark
             id="pasivos"
-            text="Tus deudas van acá: tarjetas, préstamos. Armamos la tabla de cuotas sola y la restamos de tu Balance General."
+            text="Tus deudas van aquí: tarjetas, préstamos. Armamos la tabla de cuotas sola y la restamos de tu Balance General."
             guideHref="/help"
             enabled={isSeen("balance_general")}
           >

@@ -37,14 +37,14 @@ export default function ForgotPasswordPage() {
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="h2">¿Olvidaste tu contraseña?</CardTitle>
             <CardDescription>
-              Ingresá tu email y te mandamos un enlace para restablecerla.
+              Ingresa tu email y te mandamos un enlace para restablecerla.
             </CardDescription>
           </CardHeader>
           {sent ? (
             <CardContent className="space-y-4">
               <div className="small p-3 rounded bg-chart-2/10 text-chart-2">
                 Si el email existe en nuestro sistema, vas a recibir un enlace para restablecer tu
-                contraseña. Revisá también la carpeta de spam.
+                contraseña. Revisa también la carpeta de spam.
               </div>
             </CardContent>
           ) : (

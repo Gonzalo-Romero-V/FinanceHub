@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form-error";
 import { useOnboarding } from "@/lib/onboarding/context";
-import { notifySuccess } from "@/lib/ui/notify";
+import { notifySuccess, notifyError } from "@/lib/ui/notify";
 import {
   Select,
   SelectContent,
@@ -58,9 +58,9 @@ export default function PerfilPage() {
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
   const [isEnablingPush, setIsEnablingPush] = useState(false);
-  const [pushStatus, setPushStatus] = useState<"idle" | "registered" | "denied" | "unsupported">(
-    "idle",
-  );
+  const [pushStatus, setPushStatus] = useState<
+    "idle" | "registered" | "denied" | "unsupported" | "error"
+  >("idle");
   const { resetAll } = useOnboarding();
 
   useEffect(() => {
@@ -77,8 +77,15 @@ export default function PerfilPage() {
         notifySuccess("Notificaciones activadas.");
       } else if (result.reason === "permission-denied") {
         setPushStatus("denied");
+        notifyError("No se concedió el permiso de notificaciones.");
       } else if (result.reason === "unsupported") {
         setPushStatus("unsupported");
+      } else {
+        // "error" | "not-configured" — el permiso se pudo haber concedido,
+        // pero el registro con el servidor falló. Sin esto el botón se
+        // quedaba exactamente igual y el usuario no se enteraba de nada.
+        setPushStatus("error");
+        notifyError("No se pudo completar el registro de notificaciones. Inténtalo de nuevo en unos minutos.");
       }
     } finally {
       setIsEnablingPush(false);
@@ -196,7 +203,7 @@ export default function PerfilPage() {
         return;
       }
       if (hasPassword && !form.currentPassword) {
-        setError("Ingresá tu contraseña actual para poder cambiarla.");
+        setError("Ingresa tu contraseña actual para poder cambiarla.");
         return;
       }
     }
@@ -465,19 +472,21 @@ export default function PerfilPage() {
         <div>
           <h2 className="h3 text-foreground">Notificaciones</h2>
           <p className="small text-muted-foreground mt-1">
-            Activá los avisos push para enterarte de reconciliaciones próximas, alertas de
-            presupuesto y cuotas de deuda por vencer apenas pasan, sin tener que abrir la app.
+            Activa los avisos push para enterarte de reconciliaciones próximas, alertas de
+            presupuesto y cuotas de deuda por vencer apenas ocurren, sin tener que abrir la app.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
+            variant={pushStatus === "registered" ? "secondary" : "outline"}
             onClick={handleEnablePush}
             disabled={isEnablingPush || pushStatus === "registered"}
             className="gap-2"
           >
             {isEnablingPush ? (
               <Loader2 className="h-4 w-4 animate-spin" />
+            ) : pushStatus === "registered" ? (
+              <CheckCircle2 className="h-4 w-4 text-chart-2" />
             ) : (
               <Bell className="h-4 w-4" />
             )}
@@ -485,20 +494,23 @@ export default function PerfilPage() {
           </Button>
           {pushStatus === "denied" && (
             <p className="xs text-muted-foreground">
-              El navegador bloqueó el permiso — habilitalo desde la configuración del sitio.
+              El permiso fue bloqueado — habilítalo desde la configuración del dispositivo o el navegador.
             </p>
           )}
           {pushStatus === "unsupported" && (
-            <p className="xs text-muted-foreground">Tu navegador no soporta notificaciones push.</p>
+            <p className="xs text-muted-foreground">Tu navegador no admite notificaciones push.</p>
+          )}
+          {pushStatus === "error" && (
+            <p className="xs text-destructive">No se pudo completar el registro. Intenta de nuevo.</p>
           )}
         </div>
       </section>
 
       <section className="mt-10 rounded-2xl border border-border bg-card p-6 flex flex-col gap-4">
         <div>
-          <h2 className="h3 text-foreground">¿Necesitás ayuda?</h2>
+          <h2 className="h3 text-foreground">¿Necesitas ayuda?</h2>
           <p className="small text-muted-foreground mt-1">
-            Consultá la guía rápida o volvé a ver las guías paso a paso de la app.
+            Consulta la guía rápida o vuelve a ver las guías paso a paso de la app.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">

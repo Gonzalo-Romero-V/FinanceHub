@@ -203,25 +203,25 @@ export function DeudaForm({ open, onClose, onSuccess, editItem }: DeudaFormProps
         if (sistema === "frances") {
           if (modoFrances === "formal") {
             const tasaNum = parseFloat(tasa);
-            if (isNaN(tasaNum) || tasaNum < 0) return setError("Ingresá una tasa mensual válida.");
+            if (isNaN(tasaNum) || tasaNum < 0) return setError("Ingresa una tasa mensual válida.");
             payload.tasa_mensual = tasaNum;
           } else {
             const cdNum = parseFloat(cuotaDirecta);
-            if (isNaN(cdNum) || cdNum <= 0) return setError("Ingresá una cuota directa válida.");
+            if (isNaN(cdNum) || cdNum <= 0) return setError("Ingresa una cuota directa válida.");
             payload.cuota_directa = cdNum;
           }
         } else if (sistema === "aleman") {
           const tasaNum = parseFloat(tasa);
-          if (isNaN(tasaNum) || tasaNum < 0) return setError("Ingresá una tasa mensual válida.");
+          if (isNaN(tasaNum) || tasaNum < 0) return setError("Ingresa una tasa mensual válida.");
           payload.tasa_mensual = tasaNum;
         } else if (sistema === "bullet") {
           if (modoBullet === "formal") {
             const tasaNum = parseFloat(tasa);
-            if (isNaN(tasaNum) || tasaNum < 0) return setError("Ingresá una tasa mensual válida.");
+            if (isNaN(tasaNum) || tasaNum < 0) return setError("Ingresa una tasa mensual válida.");
             payload.tasa_mensual = tasaNum;
           } else {
             const tiNum = parseFloat(totalInformal);
-            if (isNaN(tiNum) || tiNum <= 0) return setError("Ingresá el monto total a pagar.");
+            if (isNaN(tiNum) || tiNum <= 0) return setError("Ingresa el monto total a pagar.");
             payload.total_informal = tiNum;
           }
         }

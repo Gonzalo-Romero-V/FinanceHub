@@ -26,9 +26,9 @@ function AuthForm() {
 
   useEffect(() => {
     if (searchParams.get("verified") === "1") {
-      notifySuccess("Email confirmado. Ya podés iniciar sesión.")
+      notifySuccess("Email confirmado. Ya puedes iniciar sesión.")
     } else if (searchParams.get("error") === "invalid_verification_link") {
-      setError("El enlace de confirmación no es válido o ya expiró. Pedí uno nuevo iniciando sesión.")
+      setError("El enlace de confirmación no es válido o ya expiró. Pide uno nuevo iniciando sesión.")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -50,7 +50,7 @@ function AuthForm() {
           login(data.token, data.data)
         } else {
           setIsLogin(true)
-          setError("Registro exitoso. Te enviamos un email para confirmar tu cuenta — revisá tu bandeja de entrada.")
+          setError("Registro exitoso. Te enviamos un email para confirmar tu cuenta — revisa tu bandeja de entrada.")
         }
       }
     } catch (err) {

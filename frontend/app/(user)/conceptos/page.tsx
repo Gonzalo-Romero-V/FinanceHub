@@ -124,7 +124,7 @@ export default function ConceptosPage() {
 
       <CoachMark
         id="conceptos_subcategorias"
-        text="Cada categoría puede desglosarse en subcategorías propias — tocá el + junto a una categoría (ej. 'Comida' → 'Restaurantes', 'Supermercado'). Heredan el color y el tipo de la categoría padre."
+        text="Cada categoría puede desglosarse en subcategorías propias — toca el + junto a una categoría (ej. 'Comida' → 'Restaurantes', 'Supermercado'). Heredan el color y el tipo de la categoría padre."
         guideHref="/help"
       >
         <div className="space-y-10">

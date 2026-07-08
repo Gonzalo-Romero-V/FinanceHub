@@ -19,17 +19,17 @@ const SLIDES: Slide[] = [
   {
     icon: Wallet,
     title: "Bienvenido a FinanceHub",
-    text: "Organizá tus cuentas, movimientos y presupuestos en un solo lugar.",
+    text: "Organiza tus cuentas, movimientos y presupuestos en un solo lugar.",
   },
   {
     icon: Scale,
     title: "Tu Balance General, siempre actualizado",
-    text: "Sumamos lo que tenés y restamos lo que debés automáticamente con cada movimiento.",
+    text: "Sumamos lo que tienes y restamos lo que debes automáticamente con cada movimiento.",
   },
   {
     icon: Mic,
-    title: "Preguntale a tu asistente",
-    text: "Escribí o hablá para consultar tus finanzas o registrar un movimiento.",
+    title: "Pregúntale a tu asistente",
+    text: "Escribe o habla para consultar tus finanzas o registrar un movimiento.",
   },
 ];
 
@@ -79,7 +79,7 @@ export function WelcomeCarousel({ open, onClose }: WelcomeCarouselProps) {
             </div>
             <div className="space-y-2">
               <h3 className="h3 text-foreground">Empecemos</h3>
-              <p className="small text-muted-foreground">Lo primero: registrá tu primera cuenta.</p>
+              <p className="small text-muted-foreground">Lo primero: registra tu primera cuenta.</p>
             </div>
           </>
         )}

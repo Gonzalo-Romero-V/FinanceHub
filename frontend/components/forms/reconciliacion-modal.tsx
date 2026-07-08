@@ -47,7 +47,7 @@ export function ReconciliacionModal({
   const handleSubmit = async () => {
     if (!token || !cuenta) return;
     if (!saldoReal || isNaN(saldoRealNum) || saldoRealNum < 0) {
-      setError("Ingresá un saldo real válido (mayor o igual a cero).");
+      setError("Ingresa un saldo real válido (mayor o igual a cero).");
       return;
     }
 
@@ -103,7 +103,7 @@ export function ReconciliacionModal({
             onChange={(e) => setSaldoReal(e.target.value)}
           />
           <p className="xs text-muted-foreground">
-            Lo que realmente tenés en esta cuenta ahora.
+            Lo que realmente tienes en esta cuenta ahora.
           </p>
         </div>
 

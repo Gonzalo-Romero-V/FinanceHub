@@ -125,7 +125,7 @@ export function PagoCuotaModal({
 
         {/* Selector de cuenta */}
         <div className="flex flex-col gap-1.5">
-          <Label>¿Desde qué cuenta realizás el pago?</Label>
+          <Label>¿Desde qué cuenta realizas el pago?</Label>
           {isLoadingCuentas ? (
             <div className="flex items-center gap-2 text-muted-foreground small py-2">
               <Loader2 className="h-4 w-4 animate-spin" />

@@ -108,7 +108,7 @@ export function NotificationBell() {
         </div>
         <div className="max-h-80 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="small p-4 text-center text-muted-foreground">No tenés notificaciones.</p>
+            <p className="small p-4 text-center text-muted-foreground">No tienes notificaciones.</p>
           ) : (
             items.map((n) => (
               <button

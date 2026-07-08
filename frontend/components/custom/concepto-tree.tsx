@@ -143,7 +143,7 @@ export function ConceptoTree({
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       onClick={() => onDelete(raiz)}
-                      title={hasChildren ? "Eliminá primero las subcategorías" : "Eliminar"}
+                      title={hasChildren ? "Elimina primero las subcategorías" : "Eliminar"}
                       disabled={hasChildren}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

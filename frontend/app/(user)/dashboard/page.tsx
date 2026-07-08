@@ -185,7 +185,7 @@ export default function DashboardPage() {
 
         <CoachMark
           id="llm_dashboard"
-          text="Escribí o hablá: preguntá sobre tus finanzas o registrá un movimiento por voz."
+          text="Escribe o habla: pregunta sobre tus finanzas o registra un movimiento por voz."
           guideHref="/help"
         >
         <div className="relative group">

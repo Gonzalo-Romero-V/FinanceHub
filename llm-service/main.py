@@ -98,7 +98,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     return JSONResponse(
         status_code=500,
         content={
-            "detail": "El servicio de análisis no está disponible en este momento. Intentá de nuevo en unos minutos."
+            "detail": "El servicio de análisis no está disponible en este momento. Intenta de nuevo en unos minutos."
         },
     )
 
@@ -377,7 +377,7 @@ async def voice_transcribe(
     except Exception:
         log.exception("Transcripción de audio falló (user_id=%s).", user_id)
         raise HTTPException(
-            status_code=502, detail="No se pudo transcribir el audio. Intentá de nuevo."
+            status_code=502, detail="No se pudo transcribir el audio. Intenta de nuevo."
         )
 
     intent = await classify_intent(texto) if classify else None
@@ -430,7 +430,7 @@ async def voice_parse_movimiento(
     except Exception:
         log.exception("Parseo de movimiento por voz falló (user_id=%s).", user_id)
         raise HTTPException(
-            status_code=502, detail="No pude interpretar el movimiento. Intentá de nuevo."
+            status_code=502, detail="No pude interpretar el movimiento. Intenta de nuevo."
         )
     return ParseMovimientoResponse(**result)
 

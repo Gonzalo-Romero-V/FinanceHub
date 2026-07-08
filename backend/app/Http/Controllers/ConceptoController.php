@@ -169,7 +169,7 @@ class ConceptoController
 
             if ($concepto->children()->exists()) {
                 return response()->json([
-                    'mensaje' => 'No se puede eliminar una categoría que tiene subcategorías. Eliminá primero las subcategorías.',
+                    'mensaje' => 'No se puede eliminar una categoría que tiene subcategorías. Elimina primero las subcategorías.',
                 ], 422);
             }
 

@@ -406,7 +406,7 @@ export function MovimientoForm({
         </p>
         <CoachMark
           id="conceptos"
-          text="Los conceptos categorizan tus movimientos. Podés crear subcategorías para más detalle (ej. Alimentación → Restaurantes)."
+          text="Los conceptos categorizan tus movimientos. Puedes crear subcategorías para más detalle (ej. Alimentación → Restaurantes)."
           guideHref="/help"
         >
         <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">

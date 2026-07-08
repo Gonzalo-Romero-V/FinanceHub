@@ -61,12 +61,12 @@ function ResetPasswordForm() {
         <Card>
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="h2">Restablecer contraseña</CardTitle>
-            <CardDescription>Elegí una nueva contraseña para tu cuenta.</CardDescription>
+            <CardDescription>Elige una nueva contraseña para tu cuenta.</CardDescription>
           </CardHeader>
 
           {linkInvalido ? (
             <CardContent>
-              <FormError message="Este enlace no es válido. Pedí uno nuevo desde “¿Olvidaste tu contraseña?”." />
+              <FormError message="Este enlace no es válido. Pide uno nuevo desde “¿Olvidaste tu contraseña?”." />
             </CardContent>
           ) : done ? (
             <CardContent>

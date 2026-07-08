@@ -1,10 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { isNativeApp } from "@/lib/offline/platform";
+import { useAuth } from "@/lib/auth/context";
 
 function MobileWelcome() {
   return (
@@ -22,7 +26,28 @@ function MobileWelcome() {
 }
 
 export default function Home() {
-  if (isNativeApp()) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const native = isNativeApp();
+
+  useEffect(() => {
+    // En la app instalada, cada arranque en frío vuelve a esta pantalla —
+    // si ya hay una sesión válida, saltarla directo al dashboard en vez de
+    // mostrar "Comenzar ahora" y forzar un login que no hace falta.
+    if (native && !loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [native, loading, user, router]);
+
+  if (native && (loading || user)) {
+    return (
+      <div className="grid min-h-[60vh] flex-1 place-items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-1" />
+      </div>
+    );
+  }
+
+  if (native) {
     return <MobileWelcome />;
   }
 

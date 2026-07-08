@@ -34,6 +34,14 @@ export function AsideShell({
     setMounted(true);
   }, []);
 
+  // Cierra el menú apenas cambia la ruta — cubre cualquier link que
+  // navegue, incluidos los de topCluster/bottomCluster (ej. Perfil, Ayuda),
+  // que al venir de afuera como ReactNode no tienen forma directa de tocar
+  // el estado `open` de acá.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   const hideClass = hiddenFrom === "md" ? "md:hidden" : "lg:hidden";
 
   const menuContent = (

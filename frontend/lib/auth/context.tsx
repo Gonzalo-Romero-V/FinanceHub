@@ -3,8 +3,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { clearAuthToken, getAuthToken, persistAuthToken } from "./storage";
+import { clearAuthToken, getAuthToken, getCachedAuthUser, persistAuthToken } from "./storage";
 import { fetchCurrentUser, logoutRequest } from "./api";
+import { ApiError } from "@/lib/api/client";
 import type { AuthUser } from "./types";
 
 interface AuthContextType {
@@ -40,6 +41,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (storedToken) {
       setToken(storedToken);
+      // Restaura la última sesión conocida al instante (sin esperar red) —
+      // clave en mobile, donde re-loguearse cada vez que se reabre la app
+      // no es el comportamiento esperado. La validación real contra el
+      // servidor sigue disparándose abajo, en segundo plano.
+      const cachedUser = getCachedAuthUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+        setLoading(false);
+      }
       void refreshSessionFromToken(storedToken);
     } else {
       setLoading(false);
@@ -47,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const syncSession = (authToken: string, currentUser: AuthUser) => {
-    persistAuthToken(authToken);
+    persistAuthToken(authToken, currentUser);
     setToken(authToken);
     setUser(currentUser);
   };
@@ -58,7 +68,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       syncSession(authToken, currentUser);
     } catch (error) {
       console.error("Error fetching user:", error);
-      clearSession();
+      // Solo un rechazo real del servidor (401/403 — el token ya no es
+      // válido) debe cerrar la sesión. Cualquier otro fallo (red, CORS,
+      // timeout, 5xx) es transitorio: no hay que desloguear al usuario por
+      // un hiccup de conexión al abrir la app, sobre todo en mobile donde
+      // el arranque en frío puede tardar en tener red lista.
+      const isAuthRejection = error instanceof ApiError && (error.status === 401 || error.status === 403);
+      if (isAuthRejection) {
+        clearSession();
+      }
     } finally {
       setLoading(false);
     }

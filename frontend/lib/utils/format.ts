@@ -37,7 +37,7 @@ export interface FormatMetricOptions {
   currency?: string | null;
   /** Sufijo opcional ("movimientos", "ventas", ...). Acepta null. */
   unit?: string | null;
-  /** Cuando el valor venga como ratio 0-1 y quieras mostrarlo como %, pasá 100. */
+  /** Cuando el valor venga como ratio 0-1 y quieras mostrarlo como %, pasa 100. */
   valueScale?: number;
   /** Render cuando el valor es nulo o no numérico. */
   fallback?: string;

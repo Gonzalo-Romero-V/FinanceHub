@@ -159,7 +159,7 @@ export function VoiceMovimientoCapture({
         )}
 
         <p className="small text-muted-foreground">
-          {pregunta ?? "Contame qué movimiento querés registrar."}
+          {pregunta ?? "Cuéntame qué movimiento quieres registrar."}
         </p>
 
         {error && <FormError message={error} />}
@@ -182,7 +182,7 @@ export function VoiceMovimientoCapture({
                 handleTextSubmit();
               }
             }}
-            placeholder="O escribí la respuesta..."
+            placeholder="O escribe la respuesta..."
             disabled={isProcessing}
           />
           <Button

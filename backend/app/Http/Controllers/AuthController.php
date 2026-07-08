@@ -33,7 +33,7 @@ class AuthController
             $user->sendEmailVerificationNotification();
 
             return response()->json([
-                'mensaje' => 'Registro exitoso. Te enviamos un email para confirmar tu cuenta — revisá tu bandeja de entrada antes de iniciar sesión.',
+                'mensaje' => 'Registro exitoso. Te enviamos un email para confirmar tu cuenta — revisa tu bandeja de entrada antes de iniciar sesión.',
                 'data' => $user,
             ], 201);
 
@@ -65,7 +65,7 @@ class AuthController
             if (!$user->hasVerifiedEmail()) {
                 Auth::logout();
                 return response()->json([
-                    'mensaje' => 'Confirmá tu email antes de iniciar sesión. Revisá tu bandeja de entrada (o spam) por el enlace que te mandamos al registrarte.',
+                    'mensaje' => 'Confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada (o spam) por el enlace que te mandamos al registrarte.',
                 ], 409);
             }
 
@@ -190,13 +190,13 @@ class AuthController
 
         if ($status === Password::PASSWORD_RESET) {
             return response()->json([
-                'mensaje' => 'Contraseña restablecida correctamente. Iniciá sesión con tu nueva contraseña.',
+                'mensaje' => 'Contraseña restablecida correctamente. Inicia sesión con tu nueva contraseña.',
             ], 200);
         }
 
         return response()->json([
             'mensaje' => $status === Password::INVALID_TOKEN
-                ? 'El enlace no es válido o ya expiró. Solicitá uno nuevo.'
+                ? 'El enlace no es válido o ya expiró. Solicita uno nuevo.'
                 : 'No se pudo restablecer la contraseña.',
         ], 422);
     }
