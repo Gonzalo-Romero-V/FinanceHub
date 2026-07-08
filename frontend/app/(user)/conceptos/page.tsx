@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/custom/page-header";
 import { PageLoading, PageError } from "@/components/custom/page-state";
 import { ConceptoForm } from "@/components/forms/concepto-form";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 
 import { useAuth } from "@/lib/auth/context";
 import {
@@ -121,11 +122,17 @@ export default function ConceptosPage() {
         }
       />
 
-      <div className="space-y-10">
-        {renderSection("Ingresos", "Ingreso", ArrowDownLeft, "text-chart-2")}
-        {renderSection("Transferencias", "Transferencia", ArrowRightLeft, "text-brand-1")}
-        {renderSection("Egresos", "Egreso", ArrowUpRight, "text-destructive")}
-      </div>
+      <CoachMark
+        id="conceptos_subcategorias"
+        text="Cada categoría puede desglosarse en subcategorías propias — tocá el + junto a una categoría (ej. 'Comida' → 'Restaurantes', 'Supermercado'). Heredan el color y el tipo de la categoría padre."
+        guideHref="/help"
+      >
+        <div className="space-y-10">
+          {renderSection("Ingresos", "Ingreso", ArrowDownLeft, "text-chart-2")}
+          {renderSection("Transferencias", "Transferencia", ArrowRightLeft, "text-brand-1")}
+          {renderSection("Egresos", "Egreso", ArrowUpRight, "text-destructive")}
+        </div>
+      </CoachMark>
 
       {/* Modal crear / crear hijo */}
       <ConceptoForm

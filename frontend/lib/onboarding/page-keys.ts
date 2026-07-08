@@ -5,9 +5,10 @@
  * no todo el recorrido (eso vive en Perfil → "Reiniciar recorrido").
  */
 export const PAGE_ONBOARDING_KEYS: Record<string, string[]> = {
-  "/cuentas": ["cuentas_activos", "balance_general", "pasivos"],
+  "/cuentas": ["cuentas_activos", "balance_general", "pasivos", "cuentas_conciliaciones"],
   "/movimientos": ["tipos_movimiento", "conceptos"],
-  "/presupuestos": ["presupuestos"],
+  "/conceptos": ["conceptos_subcategorias"],
+  "/presupuestos": ["presupuestos", "presupuestos_umbrales"],
   "/dashboard": ["llm_dashboard"],
 };
 

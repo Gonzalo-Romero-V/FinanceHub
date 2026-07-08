@@ -36,6 +36,7 @@ interface CuentaConSaldo {
   saldo_inicial: number;
   saldo: number;
   fecha_creacion?: string;
+  color?: string | null;
 }
 
 interface HistorialBalanceProps {
@@ -460,6 +461,14 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
 
   const isMulti = selectedId === "todas";
 
+  const cuentaColorById = useMemo(() => {
+    const map: Record<number, string> = {};
+    for (const c of cuentas) {
+      if (c.color) map[c.id] = c.color;
+    }
+    return map;
+  }, [cuentas]);
+
   const windowDays: number | null = PRESETS.find((p) => p.key === preset)?.days ?? null;
 
   // ── Frame para navegación mensual ─────────────────────────────────────────
@@ -685,7 +694,7 @@ export function HistorialBalance({ cuentas, onRefresh }: HistorialBalanceProps) 
                       type="monotone"
                       dataKey={s.key}
                       name={s.key}
-                      stroke={chartCategoricalColors[i % chartCategoricalColors.length]}
+                      stroke={cuentaColorById[s.id] ?? chartCategoricalColors[i % chartCategoricalColors.length]}
                       strokeWidth={2}
                       dot={false}
                       activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--background)" }}

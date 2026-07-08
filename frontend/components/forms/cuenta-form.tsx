@@ -23,6 +23,7 @@ import {
   updateCuenta,
   type TipoCuenta,
 } from "@/lib/api/cuentas";
+import { COLOR_PALETTE } from "@/lib/ui/color-palette";
 
 interface CuentaFormData {
   nombre: string;
@@ -41,6 +42,7 @@ interface CuentaFormProps {
     tipo_cuenta: string;
     saldo: number;
     activa: string;
+    color?: string | null;
   } | null;
 }
 
@@ -52,6 +54,7 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingTypes, setIsFetchingTypes] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [color, setColor] = useState("");
 
   const [form, setForm] = useState<CuentaFormData>({
     nombre: "",
@@ -79,8 +82,10 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
         saldo: String(editItem.saldo),
         activa: editItem.activa === "Activa",
       });
+      setColor(editItem.color ?? "");
     } else {
       setForm({ nombre: "", tipo_cuenta_id: "", saldo: "0", activa: true });
+      setColor("");
     }
     setError(null);
   }, [open, editItem, tiposCuenta]);
@@ -103,6 +108,7 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
           nombre: form.nombre.trim(),
           tipo_cuenta_id: Number(form.tipo_cuenta_id),
           activa: form.activa,
+          color: color || null,
         });
       } else {
         await createCuenta(token, {
@@ -110,6 +116,7 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
           tipo_cuenta_id: Number(form.tipo_cuenta_id),
           activa: form.activa,
           saldo: Number(form.saldo),
+          color: color || null,
         });
       }
 
@@ -186,6 +193,42 @@ export function CuentaForm({ open, onClose, onSuccess, editItem }: CuentaFormPro
             </p>
           </div>
         )}
+
+        <div className="flex flex-col gap-2">
+          <Label>Color de identificación</Label>
+          <div className="flex flex-wrap gap-2">
+            {COLOR_PALETTE.map((p) => (
+              <button
+                key={p.hex}
+                type="button"
+                title={p.name}
+                onClick={() => setColor(color === p.hex ? "" : p.hex)}
+                className="relative w-7 h-7 rounded-full transition-transform hover:scale-110 focus:outline-none"
+                style={{ backgroundColor: p.hex }}
+                disabled={isLoading}
+              >
+                {color === p.hex && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="w-2 h-2 rounded-full bg-white shadow" />
+                  </span>
+                )}
+              </button>
+            ))}
+            {color && (
+              <button
+                type="button"
+                onClick={() => setColor("")}
+                className="px-2 h-7 rounded-full text-xs text-muted-foreground border border-border hover:bg-muted/50"
+                disabled={isLoading}
+              >
+                Quitar
+              </button>
+            )}
+          </div>
+          {!color && (
+            <p className="xs text-muted-foreground">Sin color (se mostrará en gris).</p>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           <input

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Send, LayoutDashboard, Loader2, Activity } from "lucide-react";
 
-import { WidgetRenderer, AnalysisResponse } from "@/components/charts";
+import { WidgetRenderer, AnalysisResponse, UsageBar } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,8 +20,9 @@ import { FormError } from "@/components/ui/form-error";
 import { CoachMark } from "@/components/onboarding/coach-mark";
 
 import { useAuth } from "@/lib/auth/context";
-import { analyzeRequest } from "@/lib/api/llm";
+import { analyzeRequest, getUsage, type UsageResponse } from "@/lib/api/llm";
 import { listConceptos, conceptoColor, type Concepto } from "@/lib/api/conceptos";
+import { listCuentas, cuentaColor, type Cuenta } from "@/lib/api/cuentas";
 import { transcribeAudio } from "@/lib/api/voice";
 
 export default function DashboardPage() {
@@ -32,17 +33,29 @@ export default function DashboardPage() {
   const [modeConfig, setModeConfig] = useState<"auto" | "replace" | "append">("auto");
   const [error, setError] = useState<string | null>(null);
   const [conceptos, setConceptos] = useState<Concepto[]>([]);
+  const [cuentas, setCuentas] = useState<Cuenta[]>([]);
+  const [usage, setUsage] = useState<UsageResponse | null>(null);
 
   const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
   const [showVoiceCapture, setShowVoiceCapture] = useState(false);
   const [voiceInitialTexto, setVoiceInitialTexto] = useState<string | undefined>(undefined);
   const [voiceResolvedState, setVoiceResolvedState] = useState<Partial<MovimientoFormState> | null>(null);
 
+  const refreshUsage = () => {
+    if (!token) return;
+    getUsage(token).then(setUsage).catch(() => {});
+  };
+
   useEffect(() => {
     if (!token) return;
     listConceptos(token)
       .then((res) => setConceptos(Array.isArray(res.data) ? res.data : []))
       .catch(() => {});
+    listCuentas(token)
+      .then((res) => setCuentas(Array.isArray(res.data) ? res.data : []))
+      .catch(() => {});
+    refreshUsage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Índices por ID (contrato actual) y nombre (compatibilidad con respuestas viejas).
@@ -56,6 +69,17 @@ export default function DashboardPage() {
     }
     return { byId, byName };
   }, [conceptos]);
+
+  const cuentaColors = useMemo(() => {
+    const byId: Record<string, string> = {};
+    const byName: Record<string, string> = {};
+    for (const c of cuentas) {
+      const color = cuentaColor(c);
+      byId[String(c.id)] = color;
+      byName[c.nombre] = color;
+    }
+    return { byId, byName };
+  }, [cuentas]);
 
   const handleRemoveWidget = (id: string) => {
     if (!analysis) return;
@@ -105,6 +129,7 @@ export default function DashboardPage() {
       setError(err instanceof Error ? err.message : "Ocurrió un error inesperado al generar los widgets.");
     } finally {
       setIsLoading(false);
+      refreshUsage();
     }
   };
 
@@ -201,6 +226,8 @@ export default function DashboardPage() {
           {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
           {isLoading ? "Analizando & Dibujando..." : "Generar Insights"}
         </Button>
+
+        {usage && <UsageBar used={usage.used} limit={usage.limit} />}
       </aside>
 
       <main className="flex-1 w-full overflow-hidden">
@@ -224,6 +251,7 @@ export default function DashboardPage() {
                   widget={widget}
                   onRemove={handleRemoveWidget}
                   conceptoColors={conceptoColors}
+                  cuentaColors={cuentaColors}
                 />
               ))}
             </div>

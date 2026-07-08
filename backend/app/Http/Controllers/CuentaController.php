@@ -15,10 +15,11 @@ class CuentaController
             'nombre'        => 'required|string|max:100',
             'tipo_cuenta_id'=> 'required|integer',
             'saldo'         => 'required|numeric|min:0',
-            'activa'        => 'required|boolean'
+            'activa'        => 'required|boolean',
+            'color'         => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
-        $data = $request->only(['nombre', 'tipo_cuenta_id', 'saldo', 'activa']);
+        $data = $request->only(['nombre', 'tipo_cuenta_id', 'saldo', 'activa', 'color']);
         $data['user_id']       = auth()->id();
         // El saldo inicial es el saldo de apertura; el saldo corriente parte igual.
         $data['saldo_inicial'] = $data['saldo'];
@@ -64,7 +65,8 @@ class CuentaController
             'nombre'        => 'sometimes|string|max:100',
             'tipo_cuenta_id'=> 'sometimes|integer',
             // 'saldo' está intencionalmente excluido: solo se modifica mediante movimientos.
-            'activa'        => 'sometimes|boolean'
+            'activa'        => 'sometimes|boolean',
+            'color'         => ['sometimes', 'nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $cuenta = CuentaModel::where('id', $id)
@@ -72,7 +74,7 @@ class CuentaController
             ->firstOrFail();
 
         // Solo permitimos editar metadatos; el saldo es gestionado por movimientos.
-        $cuenta->update($request->only(['nombre', 'tipo_cuenta_id', 'activa']));
+        $cuenta->update($request->only(['nombre', 'tipo_cuenta_id', 'activa', 'color']));
 
         return response()->json([
             'mensaje' => 'Cuenta actualizada exitosamente',

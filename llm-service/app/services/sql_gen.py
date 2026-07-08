@@ -83,18 +83,26 @@ def _output_contract_for(widget_type: str) -> str:
         "y usa exactamente `conceptos.nombre AS label`, sin concatenar, traducir, "
         "normalizar ni transformar el nombre."
     )
+    account_category_contract = (
+        " Si la categoría proviene de `cuentas` (ej. comparar saldos o "
+        "movimientos por cuenta), devuelve además `cuenta_id` (el `cuentas.id` "
+        "de la misma fila usada como categoría) y usa exactamente "
+        "`cuentas.nombre AS label`, sin transformar el nombre."
+    )
     if widget_type == "kpi":
         return "Devuelve UNA fila con UNA columna llamada `metric` (numérica)."
     if widget_type == "pie":
         return (
             "Devuelve `label` (texto) y `value` (numérico)."
             + concept_category_contract
+            + account_category_contract
         )
     if widget_type in {"bar", "line"}:
         return (
             "Devuelve dos columnas: una categórica o temporal (alias `label` o "
             "`x`) y una numérica (alias `value` o `y`)."
             + concept_category_contract
+            + account_category_contract
         )
     return "Devuelve columnas tabulares con alias legibles."
 
@@ -171,7 +179,16 @@ REGLAS OBLIGATORIAS (el SQL será validado automáticamente y rechazado si las v
             = date_trunc('month', (:today)::date)
        GROUP BY raiz.id, raiz.nombre
 
-8. FECHAS Y ZONAS HORARIAS:
+8. CATEGORIZACIÓN POR CUENTA:
+   - Cuando la categoría del widget sea una cuenta (comparar saldos o
+     movimientos entre cuentas), devuelve el ID y nombre de la MISMA cuenta:
+     `<alias>.id AS cuenta_id, <alias>.nombre AS label`. El `label` debe ser
+     exactamente `cuentas.nombre`, sin transformaciones.
+   - `cuentas` no tiene jerarquía (a diferencia de conceptos) — es una tabla
+     plana, no hace falta resolver ninguna raíz.
+   - Cada alias de `cuentas` debe quedar filtrado por `user_id = :uid`.
+
+9. FECHAS Y ZONAS HORARIAS:
    - `movimientos.fecha` y `cuentas.fecha_creacion` se almacenan en UTC.
    - Para comparar contra el día calendario del usuario, convierte a TZ local:
        ((m.fecha AT TIME ZONE 'UTC') AT TIME ZONE :tz)::date
@@ -188,12 +205,12 @@ REGLAS OBLIGATORIAS (el SQL será validado automáticamente y rechazado si las v
                        >= ((:today)::date - INTERVAL '6 days')
    - Si el usuario no especifica rango, asume "mes actual".
 
-9. AGREGACIONES PARA GRÁFICOS:
+10. AGREGACIONES PARA GRÁFICOS:
    - pie: `SELECT <categoría> AS label, SUM(...) AS value`.
    - bar/line: una columna categórica/temporal y una numérica, con alias claros.
    - kpi: una sola fila, una sola columna `metric`.
 
-10. FORMATO DE RESPUESTA:
+11. FORMATO DE RESPUESTA:
    - Devuelve ÚNICAMENTE el SQL ejecutable.
    - Sin markdown, sin explicaciones, sin texto adicional.
 

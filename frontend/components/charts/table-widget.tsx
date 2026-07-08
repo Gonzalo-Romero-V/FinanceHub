@@ -13,7 +13,17 @@ const CURRENCY_HINTS = ["monto", "saldo", "balance", "total", "amount", "value",
 const COUNT_HINTS = ["count", "cantidad", "n_movimientos", "movimientos", "total_movimientos"];
 const PERCENT_HINTS = ["porcentaje", "pct", "ratio", "share", "%"];
 
+/** `concepto_id`, `cuenta_id`, `id`, etc. — un id no es un monto ni un porcentaje. */
+function isIdColumn(column: string): boolean {
+  const c = column.toLowerCase();
+  return c === "id" || c.endsWith("_id");
+}
+
 function pickColumnFormat(column: string, widgetFormat: MetricFormat | undefined): MetricFormat | null {
+  // Se chequea ANTES que el formato a nivel widget: si el widget entero es
+  // "currency" (por su columna principal, ej. monto), no debe contagiarle
+  // el símbolo $ a una columna de id que también sea numérica.
+  if (isIdColumn(column)) return null;
   if (widgetFormat && widgetFormat !== "auto") return widgetFormat;
   const c = column.toLowerCase();
   if (PERCENT_HINTS.some((h) => c.includes(h))) return "percent";

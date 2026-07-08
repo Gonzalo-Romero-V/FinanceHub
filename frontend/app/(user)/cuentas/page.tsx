@@ -69,6 +69,7 @@ interface CuentaRow {
   activa: string;
   fecha_creacion: string;
   fecha_creacion_raw: string;
+  color: string | null;
 }
 
 function toCuentaRow(item: CuentaApi): CuentaRow {
@@ -81,6 +82,7 @@ function toCuentaRow(item: CuentaApi): CuentaRow {
     activa: item.activa ? "Activa" : "Inactiva",
     fecha_creacion: formatDate(item.fecha_creacion),
     fecha_creacion_raw: item.fecha_creacion,
+    color: item.color,
   };
 }
 
@@ -513,6 +515,7 @@ export default function CuentasPage() {
     activa: "Estado",
     fecha_creacion: "Fecha creación",
     fecha_creacion_raw: "Fecha creación",
+    color: "",
   };
 
   if (isLoading) return <PageLoading />;
@@ -525,6 +528,7 @@ export default function CuentasPage() {
     saldo_inicial: c.saldo_inicial,
     saldo: c.saldo,
     fecha_creacion: c.fecha_creacion_raw,
+    color: c.color,
   }));
 
   const activos = cuentas.filter((c) => c.tipo_cuenta === "Activo");
@@ -589,6 +593,17 @@ export default function CuentasPage() {
           columns={columns}
           columnHeaders={columnHeaders}
           columnConfig={{
+            nombre: {
+              render: (val, item) => (
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: item.color ?? "#64748b" }}
+                  />
+                  <span>{val}</span>
+                </div>
+              ),
+            },
             saldo: {
               align: "right",
               render: (val) => (
@@ -615,6 +630,17 @@ export default function CuentasPage() {
           }
         />
         </div>
+        </CoachMark>
+
+        <CoachMark
+          id="cuentas_conciliaciones"
+          text="Usá el ícono ⚖ junto a cada cuenta para conciliarla: comparás el saldo real con el del sistema y ajustamos la diferencia. Podés configurar un recordatorio periódico en Ajustes."
+          guideHref="/perfil#recordatorio-conciliacion"
+          enabled={isSeen("cuentas_activos")}
+        >
+          <p className="xs text-muted-foreground flex items-center gap-1.5 px-2">
+            <span aria-hidden>⚖</span> Tocá el ícono de balanza en una cuenta para conciliarla.
+          </p>
         </CoachMark>
 
         {/* Pasivos / Deudas */}

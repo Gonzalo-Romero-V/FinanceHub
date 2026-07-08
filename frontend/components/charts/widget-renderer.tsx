@@ -10,31 +10,49 @@ import { PieChartWidget } from "./pie-chart-widget";
 import { TableWidget } from "./table-widget";
 import { KPIWidget } from "./kpi-widget";
 
+interface EntityColorMap {
+  byId: Record<string, string>;
+  byName: Record<string, string>;
+}
+
 interface WidgetRendererProps {
   widget: Widget;
   onRemove: (id: string) => void;
   /** Colores efectivos indexados por ID y, para respuestas antiguas, por nombre. */
-  conceptoColors?: {
-    byId: Record<string, string>;
-    byName: Record<string, string>;
-  };
+  conceptoColors?: EntityColorMap;
+  /** Mismo mecanismo para widgets categorizados por cuenta en vez de concepto. */
+  cuentaColors?: EntityColorMap;
 }
 
-export function getConceptoColor(
+/**
+ * Resuelve el color real de una fila de datos del LLM, sin importar si esa
+ * fila viene categorizada por concepto (`concepto_id`) o por cuenta
+ * (`cuenta_id`) — el contrato de sql_gen.py garantiza que a lo sumo uno de
+ * los dos viene presente en cada fila. El match por ID es preferido (estable
+ * ante homónimos/renombres); el match por nombre es compatibilidad con
+ * respuestas viejas sin id.
+ */
+export function getEntityColor(
   item: Record<string, unknown>,
   categoryKey: string,
-  colors: NonNullable<WidgetRendererProps["conceptoColors"]>,
+  conceptoColors?: EntityColorMap,
+  cuentaColors?: EntityColorMap,
 ): string | undefined {
   const conceptoId = item.concepto_id;
-  if (conceptoId !== undefined && conceptoId !== null && conceptoId !== "") {
-    const colorById = colors.byId[String(conceptoId)];
+  if (conceptoColors && conceptoId !== undefined && conceptoId !== null && conceptoId !== "") {
+    const colorById = conceptoColors.byId[String(conceptoId)];
+    if (colorById) return colorById;
+  }
+
+  const cuentaId = item.cuenta_id;
+  if (cuentaColors && cuentaId !== undefined && cuentaId !== null && cuentaId !== "") {
+    const colorById = cuentaColors.byId[String(cuentaId)];
     if (colorById) return colorById;
   }
 
   const label = item[categoryKey];
-  return label === undefined || label === null
-    ? undefined
-    : colors.byName[String(label)];
+  if (label === undefined || label === null) return undefined;
+  return conceptoColors?.byName[String(label)] ?? cuentaColors?.byName[String(label)];
 }
 
 export function normalizeWidget(w: Widget): Widget {
@@ -151,7 +169,7 @@ const DEFAULT_COLORS = [
   "var(--chart-8)",
 ];
 
-export function WidgetRenderer({ widget, onRemove, conceptoColors }: WidgetRendererProps) {
+export function WidgetRenderer({ widget, onRemove, conceptoColors, cuentaColors }: WidgetRendererProps) {
   if (!widget) return null;
 
   if (widget.type !== "kpi" && (!widget.data || !Array.isArray(widget.data) || widget.data.length === 0)) {
@@ -175,15 +193,16 @@ export function WidgetRenderer({ widget, onRemove, conceptoColors }: WidgetRende
       case "line":
         return <LineChartWidget widget={normalized} onRemove={onRemove} strokeColor={semanticColor} />;
       case "pie": {
-        // El ID es estable ante conceptos homónimos o renombrados. El nombre
-        // mantiene compatibilidad con widgets que no incluyen concepto_id.
-        const pieColors = conceptoColors
+        // El ID es estable ante conceptos/cuentas homónimos o renombrados. El
+        // nombre mantiene compatibilidad con widgets que no incluyen id.
+        const pieColors = conceptoColors || cuentaColors
           ? normalized.data.map((item, idx) => {
               return (
-                getConceptoColor(
+                getEntityColor(
                   item,
                   normalized.categoryKey ?? "label",
                   conceptoColors,
+                  cuentaColors,
                 ) ?? DEFAULT_COLORS[idx % DEFAULT_COLORS.length]
               );
             })

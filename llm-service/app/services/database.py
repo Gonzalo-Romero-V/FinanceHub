@@ -176,11 +176,12 @@ class DatabaseService:
         try:
             with self.engine.connect() as conn:
                 if user_id is not None and table_name in USER_SCOPED_TABLES:
-                    sample_columns = (
-                        "nombre, parent_id, color"
-                        if table_name == "conceptos"
-                        else "nombre"
-                    )
+                    if table_name == "conceptos":
+                        sample_columns = "nombre, parent_id, color"
+                    elif table_name == "cuentas":
+                        sample_columns = "nombre, color"
+                    else:
+                        sample_columns = "nombre"
                     sql = text(
                         f"SELECT {sample_columns} FROM {table_name} "
                         "WHERE user_id = :uid LIMIT 5"
@@ -199,6 +200,8 @@ class DatabaseService:
                         }
                         for row in res
                     ]
+                if table_name == "cuentas" and user_id is not None:
+                    return [{"nombre": row[0], "color": row[1]} for row in res]
                 return [row[0] for row in res]
         except Exception:
             log.exception("No se pudieron leer samples de %s", table_name)

@@ -28,7 +28,7 @@ import { notifyError, notifyWarning, notifyInfo } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, type Concepto } from "@/lib/api/conceptos";
-import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
+import { listCuentas, cuentaColor, type Cuenta } from "@/lib/api/cuentas";
 import { updateMovimiento, type AlertaPresupuesto } from "@/lib/api/movimientos";
 import { VENTANA_LABELS } from "@/lib/api/presupuestos";
 
@@ -293,7 +293,13 @@ export function MovimientoEditForm({
                 <SelectContent>
                   {cuentas.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
-                      {c.nombre}
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: cuentaColor(c) }}
+                        />
+                        {c.nombre}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -319,7 +325,13 @@ export function MovimientoEditForm({
                     .filter((c) => !cuentaOrigenId || c.id !== Number(cuentaOrigenId))
                     .map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
-                        {c.nombre}
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: cuentaColor(c) }}
+                          />
+                          {c.nombre}
+                        </span>
                       </SelectItem>
                     ))}
                 </SelectContent>

@@ -95,3 +95,22 @@ def enforce_daily_limit(
         )
 
     return user_id
+
+
+def get_current_usage(user_id: int) -> int:
+    """Lectura de solo consulta (no incrementa el contador) — para mostrarle
+    al usuario cuánto lleva usado hoy, ej. una barra de progreso en el
+    dashboard. Devuelve 0 si todavía no usó nada hoy o si falla la consulta.
+    """
+    try:
+        with db_service.engine.connect() as connection:
+            count = connection.execute(
+                text(
+                    "SELECT count FROM llm_usage_daily WHERE user_id = :user_id AND usage_date = CURRENT_DATE"
+                ),
+                {"user_id": user_id},
+            ).scalar_one_or_none()
+        return count or 0
+    except Exception:
+        log.exception("No se pudo leer el uso diario de IA.")
+        return 0

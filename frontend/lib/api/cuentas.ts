@@ -8,6 +8,7 @@ export interface Cuenta {
   saldo_inicial: number;
   fecha_creacion: string;
   activa: boolean;
+  color: string | null;
   tipo_cuenta_id?: number;
   tipo_cuenta?: { id: number; nombre: string };
   tipoCuenta?: { id: number; nombre: string };
@@ -23,6 +24,15 @@ export interface CuentaPayload {
   tipo_cuenta_id: number;
   saldo?: number;
   activa: boolean;
+  color?: string | null;
+}
+
+/**
+ * Color efectivo de una cuenta. A diferencia de conceptos, cuentas no tiene
+ * jerarquía padre/hijo — es simplemente el color propio o el gris default.
+ */
+export function cuentaColor(c: Cuenta): string {
+  return c.color ?? "#64748b";
 }
 
 export function listCuentas(token: string) {

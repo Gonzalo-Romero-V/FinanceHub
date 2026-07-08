@@ -237,6 +237,24 @@ El usuario creó el proyecto Firebase (`financehub-f4bb8`) y colocó `google-ser
 
 ---
 
+## Fase V — Ajustes visuales post-lanzamiento ✅
+
+Pedidos puntuales del usuario tras probar el APK real, ya con el plan original cerrado. Incluye correcciones encontradas en el camino.
+
+- [x] (claude) **Login con Google en Android**: ver commit `07b0613` — Google bloquea OAuth en WebViews embebidos, el navegador del sistema abre correctamente pero no volvía a la app. Deep link `cc.financehub.app://` + `@capacitor/app` + `DeepLinkListener`.
+- [x] (claude) **Pantallas previas al login en Android**: ver commit `21cdff8` — sin header/footer estilo web antes de loguearse, pantalla de bienvenida enfocada. Web sin cambios.
+- [x] (claude) **Color custom en cuentas — mecanismo completo, replicando conceptos**: migración `color` en `cuentas` (sin jerarquía, a diferencia de conceptos), validación regex en `CuentaController`, paleta compartida extraída a `lib/ui/color-palette.ts` (antes solo en conceptos.ts), selector de color en `cuenta-form.tsx`, `cuentaColor()` helper, punto de color en la tabla de Cuentas y en los selectores de cuenta de `movimiento-form.tsx`/`movimiento-edit-form.tsx`.
+  - **llm-service**: `database.py` samplea `cuentas.color` igual que hace con conceptos; `sql_gen.py` tiene un contrato nuevo (regla 8, "CATEGORIZACIÓN POR CUENTA") que exige `cuenta_id`+`cuentas.nombre AS label` cuando un widget categoriza por cuenta, mismo mecanismo que ya existía para conceptos.
+  - **Frontend**: `widget-renderer.tsx` generalizado (`getConceptoColor` → `getEntityColor`, chequea `concepto_id` y `cuenta_id`), `dashboard/page.tsx` arma `cuentaColors` igual que `conceptoColors`, `historial-balance.tsx` usa el color real de cada cuenta en el gráfico comparativo en vez de la paleta genérica indexada.
+  - Tests: `CuentaColorTest.php` (4 tests backend) + `test_cuenta_color.py` (3 tests llm-service). 51 tests backend + 44 llm-service, todos pasan.
+- [x] (claude) **Barra de límite de IA en el dashboard**: nuevo endpoint `GET /api/usage` en llm-service (solo lectura, no cuenta como uso — `get_current_usage()` en `rate_limit.py`), `UsageBar` debajo de "Generar Insights", se refresca después de cada consulta.
+- [x] (claude) **Fix: signo $ en columnas de id**: `table-widget.tsx` aplicaba el `value_format` a nivel widget (ej. "currency" por la columna `monto`) a CUALQUIER columna numérica de la tabla, incluida `concepto_id`/`cuenta_id`. Ahora una columna que termina en `_id` (o se llama `id`) nunca se formatea como moneda/porcentaje, sin importar el formato del widget.
+- [x] (claude) **3 coachmarks nuevos**: `conceptos_subcategorias` (Conceptos), `cuentas_conciliaciones` (Cuentas, con link a `/perfil#recordatorio-conciliacion`), `presupuestos_umbrales` (Presupuestos) — agregados a `PAGE_ONBOARDING_KEYS` para el reset contextual. Se evitó anidar `CoachMark` sobre el mismo elemento (dos Popover de Radix independientes compitiendo por el mismo anchor) — cada uno tiene su propio anchor chico y separado, secuenciados vía `enabled={isSeen(...)}`.
+- [x] (claude) **Verificado, no solo código**: `tsc`/ESLint limpios (únicos hallazgos preexistentes, confirmados con `git show HEAD`), 51 tests backend + 44 llm-service, ambos builds del frontend y `gradlew assembleDebug` compilan.
+- [ ] (claude) **Pendiente de verificación manual real (no puedo probarlo yo)**: ver todo lo agregado a la Sección Z abajo.
+
+---
+
 ## Sección Z — Verificación manual pendiente (todo se prueba junto al final)
 
 Checklist consolidado de todo lo que quedó verificado solo estáticamente (tests automatizados, revisión de diffs, `tsc`/lint) pero no probado a mano en un navegador/dispositivo real. Se acumula acá a medida que avanzan las fases; no se verifica ahora, se deja para una pasada final dedicada.
@@ -254,3 +272,7 @@ Checklist consolidado de todo lo que quedó verificado solo estáticamente (test
 - [ ] **M4 (disparadores)**: con "Activar notificaciones" ya hecho, forzar los 3 triggers a mano (`php artisan notificaciones:reconciliaciones`/`notificaciones:cuotas-deuda` con datos de prueba con fecha próxima, y registrar un movimiento que cruce un umbral de presupuesto) y confirmar que llega un push real del navegador, no solo el registro en el inbox. Confirmar también que `php artisan schedule:run` está corriendo por cron cada minuto en el servidor real (no en local).
 - [ ] **S1 (CORS)**: probar en un navegador real que `https://financehub.cc` sigue pudiendo llamar a la API sin problemas de CORS después del cambio (algo tan simple como loguearse ya lo confirma). Si en algún momento se prueba el APK contra el backend de producción, confirmar que esas llamadas tampoco quedan bloqueadas.
 - [ ] **S2 (límite de IA)**: hacer 51 consultas seguidas al dashboard con el mismo usuario (o bajar `DAILY_LLM_LIMIT` a un número chico temporalmente para probar más rápido) y confirmar que la 51 devuelve el mensaje humano de límite alcanzado, no un error genérico, y que aparece la notificación en la campanita.
+- [ ] **Color de cuentas**: crear una cuenta con color custom, confirmar que aparece en la tabla de Cuentas, en el selector de cuenta al registrar un movimiento, y en el gráfico histórico comparativo (vista "Todas"). Hacerle una consulta al dashboard IA que compare cuentas (ej. "compará el saldo de mis cuentas") y confirmar que el gráfico usa esos mismos colores, no la paleta genérica.
+- [ ] **Barra de límite de IA**: confirmar visualmente que aparece debajo de "Generar Insights" con el conteo correcto, y que sube después de cada consulta.
+- [ ] **Fix del signo $ en ids**: hacer una consulta al dashboard que devuelva una tabla con `concepto_id`/`cuenta_id` visible (ej. algo que dispare auto-discovery) y confirmar que esas columnas ya no muestran `$`.
+- [ ] **Coachmarks nuevos**: con un usuario nuevo (o "Reiniciar recorrido" desde Perfil), recorrer Conceptos, Cuentas y Presupuestos y confirmar que los 3 coachmarks nuevos aparecen anclados correctamente (no superpuestos ni desalineados) y que el link del de Cuentas realmente lleva a la sección de recordatorio de conciliación en Perfil.

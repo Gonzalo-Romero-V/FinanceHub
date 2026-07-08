@@ -13,6 +13,7 @@ import { PresupuestoForm } from "@/components/forms/presupuesto-form";
 import { ConfirmDeleteModal } from "@/components/forms/confirm-delete-modal";
 
 import { useAuth } from "@/lib/auth/context";
+import { useOnboarding } from "@/lib/onboarding/context";
 import {
   listPresupuestos,
   deletePresupuesto,
@@ -146,6 +147,7 @@ function PresupuestoCard({
 
 export default function PresupuestosPage() {
   const { token } = useAuth();
+  const { isSeen } = useOnboarding();
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -215,6 +217,17 @@ export default function PresupuestosPage() {
           </CoachMark>
         }
       />
+
+      <CoachMark
+        id="presupuestos_umbrales"
+        text="Cada presupuesto puede tener varios umbrales (ej. 50%, 75%, 90%) — te avisamos cada vez que cruzás uno, no solo al llegar al límite total."
+        guideHref="/help"
+        enabled={isSeen("presupuestos")}
+      >
+        <p className="xs text-muted-foreground px-2 -mt-6 mb-4">
+          Los porcentajes bajo cada barra son los umbrales de alerta que configuraste.
+        </p>
+      </CoachMark>
 
       {presupuestos.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">

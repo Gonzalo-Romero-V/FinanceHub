@@ -23,7 +23,7 @@ import { notifyError, notifyWarning, notifyInfo } from "@/lib/ui/notify";
 
 import { useAuth } from "@/lib/auth/context";
 import { listConceptos, conceptoColor, childConceptoColor, type Concepto } from "@/lib/api/conceptos";
-import { listCuentas, type Cuenta } from "@/lib/api/cuentas";
+import { listCuentas, cuentaColor, type Cuenta } from "@/lib/api/cuentas";
 import { createMovimiento, type AlertaPresupuesto } from "@/lib/api/movimientos";
 import { VENTANA_LABELS } from "@/lib/api/presupuestos";
 import { formatCurrency } from "@/lib/utils/format";
@@ -467,7 +467,13 @@ export function MovimientoForm({
           : "border-border hover:border-muted-foreground/50 hover:bg-muted/30",
       )}
     >
-      <p className="small font-medium text-foreground">{cuenta.nombre}</p>
+      <div className="flex items-center gap-2">
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: cuentaColor(cuenta) }}
+        />
+        <p className="small font-medium text-foreground">{cuenta.nombre}</p>
+      </div>
       <p className="xs text-muted-foreground">Saldo: {formatCurrency(cuenta.saldo)}</p>
     </button>
   );

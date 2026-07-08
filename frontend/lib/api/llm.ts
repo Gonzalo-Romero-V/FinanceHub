@@ -64,3 +64,21 @@ export async function analyzeRequest(
 
   return (await response.json()) as AnalyzeResponse;
 }
+
+export interface UsageResponse {
+  used: number;
+  limit: number;
+}
+
+/** Consulta de solo lectura — no cuenta contra el límite diario. */
+export async function getUsage(token: string): Promise<UsageResponse> {
+  const response = await fetch(`${getLlmBaseUrl()}/api/usage`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error(`Error ${response.status} al consultar el uso.`);
+  return (await response.json()) as UsageResponse;
+}

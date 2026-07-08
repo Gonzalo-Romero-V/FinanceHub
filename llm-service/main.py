@@ -23,7 +23,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app.core.rate_limit import enforce_daily_limit
+from app.core.auth import get_current_user_id
+from app.core.rate_limit import enforce_daily_limit, get_current_usage
 from app.core.config import settings
 from app.core.failures import (
     FAILURE_MESSAGES,
@@ -432,6 +433,21 @@ async def voice_parse_movimiento(
             status_code=502, detail="No pude interpretar el movimiento. Intentá de nuevo."
         )
     return ParseMovimientoResponse(**result)
+
+
+class UsageResponse(BaseModel):
+    used: int
+    limit: int
+
+
+@app.get("/api/usage", response_model=UsageResponse)
+async def usage(
+    user_id: Annotated[int, Depends(get_current_user_id)],
+) -> UsageResponse:
+    """Consulta de solo lectura (no cuenta como un uso) — para mostrarle al
+    usuario cuánto lleva consumido de su límite diario, ej. una barra de
+    progreso en el dashboard."""
+    return UsageResponse(used=get_current_usage(user_id), limit=settings.DAILY_LLM_LIMIT)
 
 
 if __name__ == "__main__":

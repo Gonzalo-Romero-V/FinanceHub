@@ -347,7 +347,7 @@ export default function PerfilPage() {
       </form>
 
       {/* Configuración de conciliación */}
-      <section className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-5 mt-6">
+      <section id="recordatorio-conciliacion" className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-5 mt-6">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <div>
