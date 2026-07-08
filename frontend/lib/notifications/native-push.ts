@@ -1,26 +1,46 @@
+import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+import { registerPushSubscription, unregisterPushSubscription } from "@/lib/api/notifications";
 import { isNativeApp } from "@/lib/offline/platform";
 import type { PushProvider, PushRegistrationResult } from "./types";
 
-/**
- * FCM vía Capacitor. Queda como stub hasta que exista el proyecto de
- * Firebase (ver M4 en PENDIENTES.md) — a diferencia de Web Push, FCM no se
- * puede armar sin una cuenta/consola externa (Google Cloud), así que no hay
- * nada real que registrar todavía. El contrato (`PushProvider`) ya está
- * fijado para que cuando se instale `@capacitor-firebase/messaging` el
- * único cambio sea completar esta implementación — nada que la consuma
- * (`lib/notifications/index.ts`, el resto de la app) necesita cambiar.
- */
+let cachedToken: string | null = null;
+
 export const nativePushProvider: PushProvider = {
   isSupported() {
     return isNativeApp();
   },
 
-  async register(): Promise<PushRegistrationResult> {
+  async register(token: string): Promise<PushRegistrationResult> {
     if (!this.isSupported()) return { registered: false, reason: "unsupported" };
-    return { registered: false, reason: "not-configured" };
+
+    try {
+      const check = await FirebaseMessaging.checkPermissions();
+      let status = check.receive;
+      if (status === "prompt" || status === "prompt-with-rationale") {
+        const requested = await FirebaseMessaging.requestPermissions();
+        status = requested.receive;
+      }
+      if (status !== "granted") return { registered: false, reason: "permission-denied" };
+
+      const { token: fcmToken } = await FirebaseMessaging.getToken();
+      cachedToken = fcmToken;
+
+      await registerPushSubscription(token, {
+        tipo: "fcm",
+        identificador: fcmToken,
+        payload: {},
+      });
+
+      return { registered: true };
+    } catch {
+      return { registered: false, reason: "error" };
+    }
   },
 
-  async unregister(): Promise<void> {
-    // No-op hasta que haya un provider real registrado.
+  async unregister(token: string): Promise<void> {
+    if (!this.isSupported() || !cachedToken) return;
+    await unregisterPushSubscription(token, cachedToken);
+    await FirebaseMessaging.deleteToken();
+    cachedToken = null;
   },
 };

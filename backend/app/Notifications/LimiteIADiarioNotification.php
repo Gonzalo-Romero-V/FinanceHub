@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Notifications\Channels\WebPushChannel;
+use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -24,7 +25,7 @@ class LimiteIADiarioNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['database', WebPushChannel::class];
+        return ['database', WebPushChannel::class, FcmChannel::class];
     }
 
     private function mensaje(): string

@@ -42,4 +42,6 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Detectar conectividad para el respaldo offline y su sincronización -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Notificaciones push (FCM) — requerido explícitamente desde Android 13 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

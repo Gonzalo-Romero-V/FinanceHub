@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\CuotaModel;
 use App\Notifications\Channels\WebPushChannel;
+use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -17,7 +18,7 @@ class CuotaDeudaProximaNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['database', WebPushChannel::class];
+        return ['database', WebPushChannel::class, FcmChannel::class];
     }
 
     private function vencida(): bool
